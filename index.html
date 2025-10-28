@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prihlásenie – Dochádzka</title>
+<style>
+body {
+  font-family: 'Poppins', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: linear-gradient(135deg, #007bff, #6f42c1);
+  margin: 0;
+}
+
+.login-container {
+  background: white;
+  padding: 40px 45px;
+  border-radius: 18px;
+  box-shadow: 0 5px 25px rgba(0,0,0,0.25);
+  text-align: center;
+  width: 310px;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+h2 {
+  color: #007bff;
+  margin-bottom: 18px;
+  font-size: 22px;
+}
+
+.input-group {
+  position: relative;
+  width: 100%;
+  margin: 10px 0;
+}
+
+input {
+  width: 100%;
+  padding: 10px 40px 10px 12px;
+  border: 1.5px solid #ccc;
+  border-radius: 10px;
+  font-size: 15px;
+  outline: none;
+  transition: 0.3s;
+  box-sizing: border-box;
+}
+
+input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 6px rgba(0,123,255,0.25);
+}
+
+.eye-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 18px;
+  color: #666;
+  user-select: none;
+}
+
+button {
+  width: 100%;
+  background: #007bff;
+  border: none;
+  color: white;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 15px;
+  transition: background 0.3s;
+}
+
+button:hover { background: #0056b3; }
+
+.error-msg {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 8px;
+  border-radius: 8px;
+  margin-top: 10px;
+  font-size: 13px;
+  display: none;
+}
+
+.footer {
+  margin-top: 20px;
+  color: #888;
+  font-size: 13px;
+}
+</style>
+</head>
+<body>
+<div class="login-container">
+  <h2>Prihlásenie</h2>
+  <div class="input-group">
+    <input type="text" id="username" placeholder="Meno">
+  </div>
+  <div class="input-group">
+    <input type="password" id="password" placeholder="Heslo">
+    <span class="eye-toggle" id="togglePassword">👁️‍🗨️</span>
+  </div>
+  <button id="loginBtn">Prihlásiť sa</button>
+  <div id="errorMsg" class="error-msg"></div>
+  <div class="footer">© Dochádzkový systém</div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB5ovJ-_GAnfIExgBsNuQtc4tb6mqhsdj8",
+  authDomain: "dochadzkaesp32.firebaseapp.com",
+  databaseURL: "https://dochadzkaesp32-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "dochadzkaesp32",
+  storageBucket: "dochadzkaesp32.firebasestorage.app",
+  messagingSenderId: "417668021105",
+  appId: "1:417668021105:web:7fa3e144892d8b304854d0",
+  measurementId: "G-ZKQNMZEPHD"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const loginBtn = document.getElementById("loginBtn");
+const errorMsg = document.getElementById("errorMsg");
+const togglePassword = document.getElementById("togglePassword");
+const passwordInput = document.getElementById("password");
+
+togglePassword.addEventListener("click", () => {
+  const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+  passwordInput.setAttribute("type", type);
+  togglePassword.textContent = type === "password" ? "👁️‍🗨️" : "👁️";
+});
+
+function showError(message) {
+  errorMsg.textContent = message;
+  errorMsg.style.display = "block";
+  setTimeout(() => errorMsg.style.display = "none", 4000);
+}
+
+loginBtn.addEventListener("click", async () => {
+  const name = document.getElementById("username").value.trim();
+  const password = passwordInput.value.trim();
+
+  if (!name || !password) {
+    showError("Zadaj meno aj heslo!");
+    return;
+  }
+
+  // ADMIN login
+  if (name === "admin" && password === "1234") {
+    localStorage.setItem("uid", "admin");
+    window.location.href = "admin.html";
+    return;
+  }
+
+  try {
+    const snapshot = await get(ref(db, "users/"));
+    if (!snapshot.exists()) {
+      showError("Žiadni používatelia v databáze!");
+      return;
+    }
+
+    let found = false;
+    snapshot.forEach(child => {
+      const user = child.val();
+      if (user.name === name && user.password === password) {
+        localStorage.setItem("uid", child.key);
+        found = true;
+        window.location.href = "employee.html";
+      }
+    });
+
+    if (!found) showError("Nesprávne meno alebo heslo!");
+
+  } catch (err) {
+    console.error(err);
+    showError("Chyba pri prihlasovaní!");
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dochádzka – Zamestnanec</title>
+<style>
+:root {
+  --bg: #f4f6f9;
+  --text: #222;
+  --card: #fff;
+  --accent: #007bff;
+  --border: #ddd;
+}
+[data-theme="dark"] {
+  --bg: #1e1f22;
+  --text: #f4f4f4;
+  --card: #2a2b31;
+  --accent: #3399ff;
+  --border: #444;
+}
+body {
+  font-family:'Poppins',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  margin:0;
+  padding:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  transition:background 0.3s,color 0.3s;
+}
+header {
+  width:100%;
+  background:var(--card);
+  box-shadow:0 2px 10px rgba(0,0,0,0.1);
+  padding:15px 20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  position:sticky;
+  top:0;
+  z-index:100;
+}
+header h1 { color:var(--accent); font-size:20px; margin:0; }
+button {
+  background:var(--accent);
+  color:white;
+  border:none;
+  border-radius:8px;
+  padding:8px 12px;
+  cursor:pointer;
+  transition:0.3s;
+}
+button:hover { background:#0056b3; }
+
+.container {
+  max-width:700px;
+  width:90%;
+  background:var(--card);
+  margin:40px auto;
+  padding:30px;
+  border-radius:16px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.1);
+  text-align:center;
+  transition:background 0.3s,color 0.3s;
+}
+
+h2 {
+  color:var(--accent);
+  border-bottom:2px solid var(--accent);
+  padding-bottom:6px;
+  margin-top:0;
+}
+
+.filter {
+  margin:15px 0;
+}
+.filter input {
+  padding:6px 10px;
+  border-radius:6px;
+  border:1px solid var(--border);
+  background:var(--card);
+  color:var(--text);
+}
+
+table {
+  width:100%;
+  border-collapse:collapse;
+  margin-top:20px;
+  font-size:15px;
+}
+th,td {
+  border:1px solid var(--border);
+  padding:10px;
+  text-align:center;
+}
+th {
+  background:var(--accent);
+  color:white;
+}
+tr:nth-child(even) {
+  background:rgba(0,0,0,0.03);
+}
+.status-prichod { color:green; font-weight:600; }
+.status-odchod { color:#dc3545; font-weight:600; }
+
+.dark-toggle {
+  background:none;
+  color:var(--accent);
+  border:1px solid var(--accent);
+  padding:6px 10px;
+  border-radius:8px;
+}
+.dark-toggle:hover {
+  background:var(--accent);
+  color:white;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>👋 Vitaj, <span id="userName">Zamestnanec</span></h1>
+  <div>
+    <button id="darkModeBtn" class="dark-toggle">🌙 Dark mode</button>
+    <button id="logoutBtn">Odhlásiť sa</button>
+  </div>
+</header>
+
+<div class="container">
+  <h2>📅 Moja dochádzka</h2>
+  <div class="filter">
+    <label for="filterDate">Filtrovať podľa dátumu:</label>
+    <input type="date" id="filterDate">
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Čas</th><th>Stav</th></tr>
+    </thead>
+    <tbody id="myAttendanceBody">
+      <tr><td colspan="2">Načítavam údaje...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getDatabase, ref, get, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey:"AIzaSyB5ovJ-_GAnfIExgBsNuQtc4tb6mqhsdj8",
+  authDomain:"dochadzkaesp32.firebaseapp.com",
+  databaseURL:"https://dochadzkaesp32-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"dochadzkaesp32",
+  storageBucket:"dochadzkaesp32.firebasestorage.app",
+  messagingSenderId:"417668021105",
+  appId:"1:417668021105:web:7fa3e144892d8b304854d0",
+  measurementId:"G-ZKQNMZEPHD"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const userId = localStorage.getItem("uid");
+if(!userId){
+  alert("Nie si prihlásený!");
+  window.location.href = "index.html";
+}
+
+const myAttendanceBody = document.getElementById("myAttendanceBody");
+const userNameEl = document.getElementById("userName");
+const filterDate = document.getElementById("filterDate");
+
+let allRecords = [];
+
+get(ref(db, "users/" + userId)).then(snapshot => {
+  if (!snapshot.exists()) {
+    alert("Používateľ nenájdený!");
+    window.location.href = "index.html";
+    return;
+  }
+
+  const userData = snapshot.val();
+  userNameEl.textContent = userData.name;
+  const chipUid = userData.chipUid;
+
+  onValue(ref(db, "dochadzka/" + chipUid), snap => {
+    myAttendanceBody.innerHTML = "";
+    allRecords = [];
+    if (!snap.exists()) {
+      myAttendanceBody.innerHTML = "<tr><td colspan='2'>Žiadne záznamy</td></tr>";
+      return;
+    }
+    snap.forEach(childSnap => {
+      if (childSnap.key === "posledny_stav") return;
+      const z = childSnap.val();
+      allRecords.push(z);
+    });
+    renderTable();
+  });
+});
+
+function renderTable() {
+  myAttendanceBody.innerHTML = "";
+  let filtered = allRecords;
+  const selectedDate = filterDate.value;
+  if (selectedDate) {
+    filtered = filtered.filter(r => r.cas.startsWith(selectedDate));
+  }
+  if (filtered.length === 0) {
+    myAttendanceBody.innerHTML = "<tr><td colspan='2'>Žiadne záznamy</td></tr>";
+    return;
+  }
+  filtered.reverse().forEach(z => {
+    const row = document.createElement("tr");
+    const statusClass = z.stav.toLowerCase() === "prichod" ? "status-prichod" : "status-odchod";
+    row.innerHTML = `<td>${z.cas}</td><td class="${statusClass}">${z.stav}</td>`;
+    myAttendanceBody.appendChild(row);
+  });
+}
+
+filterDate.addEventListener("change", renderTable);
+
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  localStorage.removeItem("uid");
+  window.location.href = "index.html";
+});
+
+/* --- Dark Mode toggle --- */
+const darkBtn = document.getElementById("darkModeBtn");
+darkBtn.addEventListener("click", () => {
+  const isDark = document.body.getAttribute("data-theme") === "dark";
+  document.body.setAttribute("data-theme", isDark ? "" : "dark");
+  darkBtn.textContent = isDark ? "🌙 Dark mode" : "☀️ Light mode";
+});
+</script>
+</body>
+</html>
