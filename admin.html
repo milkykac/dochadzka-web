@@ -16,7 +16,7 @@ header{background:#fff;box-shadow:0 2px 10px rgba(0,0,0,0.05);color:#333;text-al
 #logoutBtn:hover{background:#b52a3a;}
 main{flex:1;margin-left:250px;margin-top:90px;padding:30px;}
 section{display:none;}
-section.active{display:block;background:#fff;padding:25px;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.05);}
+section.active{display:block;background:#fff;padding:25px;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.05);margin-bottom:30px;}
 h2{color:#007bff;border-bottom:2px solid #007bff;padding-bottom:8px;margin-bottom:20px;}
 input,select{padding:8px 12px;border-radius:8px;border:1px solid #ccc;margin:6px 4px;outline:none;}
 button{background:#007bff;color:white;padding:8px 14px;border:none;border-radius:8px;cursor:pointer;transition:0.3s;}
@@ -67,12 +67,14 @@ tr:nth-child(even){background:#f9f9f9;}
   <!-- Dochádzka -->
   <section id="view-attendance">
     <h2>📅 Prehľad dochádzky</h2>
+
     <div style="margin-bottom:20px;">
       <label>Dátum:</label>
       <input type="date" id="filterDate">
       <label style="margin-left:20px;">Zamestnanec:</label>
       <select id="filterName"><option value="">Všetci</option></select>
     </div>
+
     <div style="margin-bottom:20px;">
       <input type="text" id="chipUidAttendance" placeholder="Chip UID">
       <select id="attendanceType">
@@ -84,6 +86,7 @@ tr:nth-child(even){background:#f9f9f9;}
       <button id="addAttendanceBtn">Pridať záznam</button>
       <button id="exportBtn">⬇️ Exportovať</button>
     </div>
+
     <table id="attendanceTable">
       <thead><tr><th>Zamestnanec</th><th>Čas</th><th>Typ</th></tr></thead>
       <tbody id="attendanceBody"><tr><td colspan="3">Načítavam údaje...</td></tr></tbody>
@@ -313,11 +316,6 @@ loadNewChips();
 </script>
 </body>
 </html>
-
-
-
-
-
 
 
 
