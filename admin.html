@@ -35,6 +35,7 @@ tr:nth-child(even){background:#f9f9f9;}
 </style>
 </head>
 <body>
+
 <div class="sidebar">
   <h2>Admin Panel</h2>
   <ul>
@@ -63,9 +64,9 @@ tr:nth-child(even){background:#f9f9f9;}
     </table>
   </section>
 
-  <!-- Dochádzka -->
+  <!-- Dochádzka a PN -->
   <section id="view-attendance">
-    <h2>📅 Dochádzka</h2>
+    <h2>📅 Prehľad dochádzky</h2>
 
     <div style="margin-bottom:20px;">
       <label>Dátum:</label>
@@ -83,21 +84,20 @@ tr:nth-child(even){background:#f9f9f9;}
         <option value="PN">PN</option>
       </select>
       <button id="addAttendanceBtn">Pridať záznam</button>
+      <button id="exportAttendanceBtn">⬇️ Exportovať dochádzku</button>
+      <button id="exportPnBtn">⬇️ Exportovať PN</button>
     </div>
 
-    <h3>Príchody / Odchody / Prestávky</h3>
     <table id="attendanceTable">
       <thead><tr><th>Zamestnanec</th><th>Dátum</th><th>Čas</th><th>Typ</th></tr></thead>
       <tbody id="attendanceBody"><tr><td colspan="4">Načítavam údaje...</td></tr></tbody>
     </table>
-    <button id="exportAttendanceBtn">⬇️ Export CSV</button>
 
-    <h3>PN</h3>
+    <h2>🩺 PN</h2>
     <table id="pnTable">
       <thead><tr><th>Zamestnanec</th><th>Dátum</th><th>Čas</th></tr></thead>
       <tbody id="pnBody"><tr><td colspan="3">Načítavam údaje...</td></tr></tbody>
     </table>
-    <button id="exportPnBtn">⬇️ Export PN CSV</button>
   </section>
 </main>
 
@@ -121,7 +121,7 @@ const firebaseConfig = {
   authDomain:"dochadzkaesp32.firebaseapp.com",
   databaseURL:"https://dochadzkaesp32-default-rtdb.europe-west1.firebasedatabase.app",
   projectId:"dochadzkaesp32",
-  storageBucket:"dochadzkaesp32.firebasedostorage.app",
+  storageBucket:"dochadzkaesp32.firebasedorage.app",
   messagingSenderId:"417668021105",
   appId:"1:417668021105:web:7fa3e144892d8b304854d0",
   measurementId:"G-ZKQNMZEPHD"
@@ -130,38 +130,38 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// DOM elements
-const nameInput = document.getElementById("name");
-const passInput = document.getElementById("password");
-const chipUidInput = document.getElementById("chipUid");
-const addBtn = document.getElementById("addUserBtn");
-const userBody = document.getElementById("userBody");
-const attendanceBody = document.getElementById("attendanceBody");
-const pnBody = document.getElementById("pnBody");
-const filterDate = document.getElementById("filterDate");
-const filterName = document.getElementById("filterName");
-const chipUidAttendance = document.getElementById("chipUidAttendance");
-const attendanceTypeSelect = document.getElementById("attendanceType");
-const addAttendanceBtn = document.getElementById("addAttendanceBtn");
-const exportAttendanceBtn = document.getElementById("exportAttendanceBtn");
-const exportPnBtn = document.getElementById("exportPnBtn");
-const passwordModal = document.getElementById("passwordModal");
-const newPasswordInput = document.getElementById("newPassword");
-const changePasswordBtn = document.getElementById("changePasswordBtn");
-const closeModal = document.getElementsByClassName("close")[0];
+// Inputs
+const nameInput=document.getElementById("name");
+const passInput=document.getElementById("password");
+const chipUidInput=document.getElementById("chipUid");
+const addBtn=document.getElementById("addUserBtn");
+const userBody=document.getElementById("userBody");
+const attendanceBody=document.getElementById("attendanceBody");
+const pnBody=document.getElementById("pnBody");
+const filterDate=document.getElementById("filterDate");
+const filterName=document.getElementById("filterName");
+const chipUidAttendance=document.getElementById("chipUidAttendance");
+const attendanceTypeSelect=document.getElementById("attendanceType");
+const addAttendanceBtn=document.getElementById("addAttendanceBtn");
+const exportAttendanceBtn=document.getElementById("exportAttendanceBtn");
+const exportPnBtn=document.getElementById("exportPnBtn");
+const passwordModal=document.getElementById("passwordModal");
+const newPasswordInput=document.getElementById("newPassword");
+const changePasswordBtn=document.getElementById("changePasswordBtn");
+const closeModal=document.getElementsByClassName("close")[0];
 
-let allUsers = {}, allAttendance = [], allPn = [], currentUserUid = null;
+let allUsers={}, allAttendance=[], allPn=[], currentUserUid=null;
 
-// --- Load users ---
-const usersRef = ref(db,"users/");
+// --- Načítanie používateľov ---
+const usersRef=ref(db,"users/");
 function loadUsers(){
-  onValue(usersRef,(snap)=>{
-    userBody.innerHTML = ""; allUsers={}; filterName.innerHTML='<option value="">Všetci</option>';
-    if(!snap.exists()){userBody.innerHTML="<tr><td colspan='5'>Žiadni zamestnanci</td></tr>"; return;}
-    snap.forEach(child=>{
-      const data = child.val(); allUsers[child.key] = data;
-      const option = document.createElement("option"); option.value=data.name; option.textContent=data.name; filterName.appendChild(option);
-      const row = document.createElement("tr");
+  onValue(usersRef,(snapshot)=>{
+    userBody.innerHTML=""; allUsers={}; filterName.innerHTML='<option value="">Všetci</option>';
+    if(!snapshot.exists()){userBody.innerHTML="<tr><td colspan='5'>Žiadni zamestnanci</td></tr>"; return;}
+    snapshot.forEach(child=>{
+      const data=child.val(); allUsers[child.key]=data;
+      const option=document.createElement("option"); option.value=data.name; option.textContent=data.name; filterName.appendChild(option);
+      const row=document.createElement("tr");
       row.innerHTML=`<td>${child.key}</td><td>${data.name}</td><td>***</td><td>${data.chipUid||''}</td>
         <td><button class="action-btn" onclick="deleteUser('${child.key}')">Zmazať</button>
         <button class="action-btn" onclick="openPasswordModal('${child.key}')">Zmeniť heslo</button></td>`;
@@ -170,63 +170,73 @@ function loadUsers(){
   });
 }
 
-// --- Load attendance ---
-const attendanceRef = ref(db,"dochadzka/");
+// --- Načítanie dochádzky ---
+const attendanceRef=ref(db,"dochadzka/");
 function loadAttendance(){
-  onValue(attendanceRef,(snap)=>{
-    allAttendance = []; allPn = [];
-    if(snap.exists()){
-      snap.forEach(userSnap=>{
+  allAttendance=[]; allPn=[];
+  onValue(attendanceRef,(snapshot)=>{
+    if(snapshot.exists()){
+      snapshot.forEach(userSnap=>{
         userSnap.forEach(recordSnap=>{
-          const record = recordSnap.val();
-          if(record.stav==="PN") allPn.push({chipUid:userSnap.key,cas:record.cas});
-          else allAttendance.push({chipUid:userSnap.key,cas:record.cas,stav:record.stav});
+          const r=recordSnap.val();
+          if(r.stav==="PN") allPn.push({chipUid:userSnap.key,cas:r.cas});
+          else allAttendance.push({chipUid:userSnap.key,cas:r.cas,stav:r.stav});
         });
       });
     }
-    renderAttendance(); renderPn();
+    applyFilters();
   });
 }
 
-// --- Render attendance ---
-function renderAttendance(){
-  attendanceBody.innerHTML="";
-  const selDate = filterDate.value, selName = filterName.value;
-  let filtered = allAttendance.filter(r=>{
-    const [date,] = r.cas.split(" ");
-    let matchDate = !selDate || date===selDate;
-    let matchName = true;
-    if(selName){ const u=Object.values(allUsers).find(u=>u.chipUid===r.chipUid); matchName = u && u.name===selName;}
-    return matchDate && matchName;
+// --- Filtrovanie a zobrazenie ---
+function applyFilters(){
+  const selDate=filterDate.value, selName=filterName.value;
+  attendanceBody.innerHTML=""; pnBody.innerHTML="";
+
+  // Dochádzka
+  let filtered=allAttendance.filter(r=>{
+    const user=Object.values(allUsers).find(u=>u.chipUid===r.chipUid);
+    const matchName=!selName|| (user && user.name===selName);
+    const matchDate=!selDate|| r.cas.split(" ")[0]===selDate;
+    return matchName && matchDate;
   });
   if(!filtered.length) attendanceBody.innerHTML="<tr><td colspan='4'>Žiadne záznamy</td></tr>";
   else filtered.forEach(r=>{
-    const u=Object.values(allUsers).find(u=>u.chipUid===r.chipUid);
-    const name=u?u.name:r.chipUid; const [date,time]=r.cas.split(" ");
-    const row=document.createElement("tr"); row.innerHTML=`<td>${name}</td><td>${date}</td><td>${time}</td><td>${r.stav}</td>`;
+    const user=Object.values(allUsers).find(u=>u.chipUid===r.chipUid);
+    const name=user?user.name:r.chipUid;
+    const [date,time]=r.cas.split(" ");
+    const row=document.createElement("tr");
+    row.innerHTML=`<td>${name}</td><td>${date}</td><td>${time}</td><td>${r.stav}</td>`;
     attendanceBody.appendChild(row);
   });
-}
 
-// --- Render PN ---
-function renderPn(){
-  pnBody.innerHTML="";
-  if(!allPn.length) pnBody.innerHTML="<tr><td colspan='3'>Žiadne záznamy</td></tr>";
-  else allPn.forEach(r=>{
-    const u=Object.values(allUsers).find(u=>u.chipUid===r.chipUid);
-    const name=u?u.name:r.chipUid; const [date,time]=r.cas.split(" ");
-    const row=document.createElement("tr"); row.innerHTML=`<td>${name}</td><td>${date}</td><td>${time}</td>`;
+  // PN
+  let filteredPn=allPn.filter(r=>{
+    const user=Object.values(allUsers).find(u=>u.chipUid===r.chipUid);
+    const matchName=!selName|| (user && user.name===selName);
+    const matchDate=!selDate|| r.cas.split(" ")[0]===selDate;
+    return matchName && matchDate;
+  });
+  if(!filteredPn.length) pnBody.innerHTML="<tr><td colspan='3'>Žiadne záznamy</td></tr>";
+  else filteredPn.forEach(r=>{
+    const user=Object.values(allUsers).find(u=>u.chipUid===r.chipUid);
+    const name=user?user.name:r.chipUid;
+    const [date,time]=r.cas.split(" ");
+    const row=document.createElement("tr");
+    row.innerHTML=`<td>${name}</td><td>${date}</td><td>${time}</td>`;
     pnBody.appendChild(row);
   });
 }
 
-// --- Add attendance ---
+// --- Pridanie záznamu ---
 addAttendanceBtn.addEventListener("click", async()=>{
-  const chip = chipUidAttendance.value.trim(), type=attendanceTypeSelect.value;
+  const chip=chipUidAttendance.value.trim(), type=attendanceTypeSelect.value;
   if(!chip||!type){alert("Vyplň čip a typ!"); return;}
-  const user=Object.values(allUsers).find(u=>u.chipUid===chip); if(!user){alert("Čip nie je priradený!"); return;}
+  const user=Object.values(allUsers).find(u=>u.chipUid===chip);
+  if(!user){alert("Čip nie je priradený!"); return;}
   const timeStr=new Date().toISOString().replace("T"," ").split(".")[0];
-  await set(push(ref(db,"dochadzka/"+user.name)),{cas:timeStr,stav:type});
+  const recordRef=push(ref(db,"dochadzka/"+user.name));
+  await set(recordRef,{cas:timeStr, stav:type});
   chipUidAttendance.value="";
 });
 
@@ -234,86 +244,105 @@ addAttendanceBtn.addEventListener("click", async()=>{
 exportAttendanceBtn.addEventListener("click",()=>{
   let csv="\uFEFFZamestnanec,Dátum,Čas,Typ\n";
   allAttendance.forEach(r=>{
-    const u=Object.values(allUsers).find(u=>u.chipUid===r.chipUid); const name=u?u.name:r.chipUid;
-    const [date,time]=r.cas.split(" "); csv+=`"${name}","${date}","${time}","${r.stav}"\n`;
+    const u=Object.values(allUsers).find(u=>u.chipUid===r.chipUid);
+    const name=u?u.name:r.chipUid;
+    const [date,time]=r.cas.split(" ");
+    csv+=`"${name}","${date}","${time}","${r.stav}"\n`;
   });
-  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}); const url=URL.createObjectURL(blob);
-  const a=document.createElement('a'); a.href=url; a.download='dochadzka.csv'; a.click(); URL.revokeObjectURL(url);
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='dochadzka.csv'; a.click();
+  URL.revokeObjectURL(url);
 });
-
 exportPnBtn.addEventListener("click",()=>{
   let csv="\uFEFFZamestnanec,Dátum,Čas\n";
   allPn.forEach(r=>{
-    const u=Object.values(allUsers).find(u=>u.chipUid===r.chipUid); const name=u?u.name:r.chipUid;
-    const [date,time]=r.cas.split(" "); csv+=`"${name}","${date}","${time}"\n`;
+    const u=Object.values(allUsers).find(u=>u.chipUid===r.chipUid);
+    const name=u?u.name:r.chipUid;
+    const [date,time]=r.cas.split(" ");
+    csv+=`"${name}","${date}","${time}"\n`;
   });
-  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}); const url=URL.createObjectURL(blob);
-  const a=document.createElement('a'); a.href=url; a.download='pn.csv'; a.click(); URL.revokeObjectURL(url);
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='pn.csv'; a.click();
+  URL.revokeObjectURL(url);
 });
 
-// --- Filters ---
-filterDate.addEventListener("change",renderAttendance);
-filterName.addEventListener("change",renderAttendance);
-
-// --- Users ---
-addBtn.addEventListener("click", async()=>{
-  const name=nameInput.value.trim(), pass=passInput.value.trim(), chip=chipUidInput.value.trim();
-  if(!name||!pass||!chip){alert("Vyplň všetky polia!"); return;}
-  await set(push(ref(db,"users/")),{name,password:pass,chipUid:chip});
-  nameInput.value=passInput.value=chipUidInput.value="";
-});
-
-// --- Delete / password modal ---
-function deleteUser(uid){if(confirm("Naozaj zmazať?")) remove(ref(db,"users/"+uid));}
-window.deleteUser=deleteUser;
-function openPasswordModal(uid){currentUserUid=uid; passwordModal.style.display="block";}
-window.openPasswordModal=openPasswordModal;
-closeModal.onclick=()=>passwordModal.style.display="none";
-window.onclick=(e)=>{if(e.target==passwordModal) passwordModal.style.display="none";}
-changePasswordBtn.addEventListener("click",async()=>{
-  const pass=newPasswordInput.value.trim(); if(!pass){alert("Zadaj nové heslo!"); return;}
-  await update(ref(db,"users/"+currentUserUid),{password:pass}); newPasswordInput.value=""; passwordModal.style.display="none";
-});
-
-// --- Section toggle ---
-document.getElementById("manageUsersTab").addEventListener("click",()=>{
-  document.getElementById("manage-users").classList.add("active");
-  document.getElementById("view-attendance").classList.remove("active");
-  document.getElementById("manageUsersTab").classList.add("active");
-  document.getElementById("viewAttendanceTab").classList.remove("active");
-});
-document.getElementById("viewAttendanceTab").addEventListener("click",()=>{
-  document.getElementById("manage-users").classList.remove("active");
-  document.getElementById("view-attendance").classList.add("active");
-  document.getElementById("viewAttendanceTab").classList.add("active");
-  document.getElementById("manageUsersTab").classList.remove("active");
-});
-
-// --- New chips ---
-const newChipsRef = ref(db,"newChips/");
-function loadNewChips(){ onValue(newChipsRef,(snap)=>{
-  if(!snap.exists()) return; snap.forEach(child=>{
-    if(child.val().status==="unassigned") showNewChipBanner(child.key);
+// --- Nové čipy ---
+const newChipsRef=ref(db,"newChips/");
+function loadNewChips(){
+  onValue(newChipsRef,(snap)=>{
+    if(!snap.exists()) return;
+    snap.forEach(child=>{
+      const uid=child.key, data=child.val();
+      if(data.status==="unassigned") showNewChipPrompt(uid);
+    });
   });
-});}
-function showNewChipBanner(uid){
+}
+function showNewChipPrompt(uid){
   if(document.getElementById("newChipBanner")) return;
-  const b=document.createElement("div"); b.id="newChipBanner"; b.className="new-chip-banner";
-  b.innerHTML=`🪪 Nový čip <b>${uid}</b> <button id="assignBtn">Priradiť</button> <button id="dismissBtn">Zavrieť</button>`;
-  document.body.appendChild(b);
+  const banner=document.createElement("div");
+  banner.id="newChipBanner"; banner.className="new-chip-banner";
+  banner.innerHTML=`🪪 Našiel sa nový čip <b>${uid}</b> 
+    <button id="assignBtn">Priradiť</button> <button id="dismissBtn">Zavrieť</button>`;
+  document.body.appendChild(banner);
   document.getElementById("assignBtn").addEventListener("click",()=>{
-    const name=prompt("Meno pre čip "+uid); if(name){ set(push(ref(db,"users/")),{name,password:"default",chipUid:uid}); update(ref(db,"newChips/"+uid),{status:"assigned"}); b.remove();}
+    const name=prompt("Zadaj meno pre čip "+uid);
+    if(name){
+      const newRef=push(ref(db,"users/"));
+      set(newRef,{name,password:"default",chipUid:uid});
+      update(ref(db,"newChips/"+uid),{status:"assigned"});
+      banner.remove();
+    }
   });
-  document.getElementById("dismissBtn").addEventListener("click",()=>b.remove());
+  document.getElementById("dismissBtn").addEventListener("click",()=>banner.remove());
 }
 
-// --- Refresh every 3 sec ---
-setInterval(()=>{loadUsers(); loadAttendance(); loadNewChips();},3000);
+// --- Pridanie používateľa ---
+addBtn.addEventListener("click", async ()=>{
+  const name=nameInput.value.trim(),password=passInput.value.trim(),chipUid=chipUidInput.value.trim();
+  if(!name||!password||!chipUid){alert("Vyplň všetky polia!");return;}
+  try{
+    const newRef=push(ref(db,"users/"));
+    await set(newRef,{name,password,chipUid});
+    nameInput.value=""; passInput.value=""; chipUidInput.value="";
+  }catch(e){alert("Chyba: "+e);}
+});
+
+// --- Zmena hesla ---
+function openPasswordModal(uid){currentUserUid=uid; passwordModal.style.display="block";}
+closeModal.onclick=()=>passwordModal.style.display="none";
+changePasswordBtn.onclick=()=>{
+  const np=newPasswordInput.value.trim(); if(!np){alert("Zadaj nové heslo");return;}
+  update(ref(db,"users/"+currentUserUid),{password:np}); newPasswordInput.value=""; passwordModal.style.display="none";
+};
+
+// --- Vymazanie používateľa ---
+window.deleteUser=async(uid)=>{
+  if(confirm("Naozaj zmazať používateľa?")) await remove(ref(db,"users/"+uid));
+};
+
+// --- Navigácia ---
+document.getElementById("manageUsersTab").onclick=()=>{showSection("manage-users");};
+document.getElementById("viewAttendanceTab").onclick=()=>{showSection("view-attendance");};
+function showSection(id){
+  document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  document.querySelectorAll(".sidebar li").forEach(l=>l.classList.remove("active"));
+  document.querySelector(`#${id==="manage-users"?"manageUsersTab":"viewAttendanceTab"}`).classList.add("active");
+}
+
+// --- Odhlásenie ---
+document.getElementById("logoutBtn").onclick=()=>{localStorage.removeItem("uid");window.location.href="index.html";};
+
+// --- Spustenie ---
 loadUsers(); loadAttendance(); loadNewChips();
+setInterval(applyFilters,3000);
 
 </script>
 </body>
 </html>
+
 
 
 
