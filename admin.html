@@ -55,7 +55,7 @@ tr:nth-child(even){background:#f9f9f9;}
     <input type="password" id="password" placeholder="Heslo">
     <input type="text" id="chipUid" placeholder="Chip UID">
     <button id="addUserBtn">Pridať / Aktualizovať</button>
-    <table>
+    <table id="userTable">
       <thead><tr><th>UID</th><th>Meno</th><th>Heslo</th><th>Chip UID</th><th>Akcie</th></tr></thead>
       <tbody id="userBody"><tr><td colspan="5">Načítavam údaje...</td></tr></tbody>
     </table>
@@ -81,7 +81,7 @@ tr:nth-child(even){background:#f9f9f9;}
       </select>
       <button id="addAttendanceBtn">Pridať záznam</button>
     </div>
-    <table>
+    <table id="attendanceTable">
       <thead><tr><th>Zamestnanec</th><th>Dátum</th><th>Čas</th><th>Typ</th></tr></thead>
       <tbody id="attendanceBody"><tr><td colspan="4">Načítavam údaje...</td></tr></tbody>
     </table>
@@ -91,7 +91,7 @@ tr:nth-child(even){background:#f9f9f9;}
   <!-- Prestávky -->
   <section id="view-breaks">
     <h2>☕ Prestávky</h2>
-    <table>
+    <table id="breaksTable">
       <thead><tr><th>Zamestnanec</th><th>Dátum</th><th>Čas</th></tr></thead>
       <tbody id="breaksBody"><tr><td colspan="3">Žiadne prestávky</td></tr></tbody>
     </table>
@@ -100,7 +100,7 @@ tr:nth-child(even){background:#f9f9f9;}
   <!-- PN -->
   <section id="view-pn">
     <h2>🏥 PN</h2>
-    <table>
+    <table id="pnTable">
       <thead><tr><th>Zamestnanec</th><th>Dátum</th><th>Čas</th></tr></thead>
       <tbody id="pnBody"><tr><td colspan="3">Žiadne PN</td></tr></tbody>
     </table>
@@ -115,13 +115,12 @@ tr:nth-child(even){background:#f9f9f9;}
   </section>
 </main>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getDatabase, ref, set, onValue, push, remove, update } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 import CryptoJS from "https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js";
 
+// Kontrola admin prístupu
 if(localStorage.getItem("uid")!=="admin"){ alert("Nemáš prístup!"); window.location.href="index.html"; }
 
 const firebaseConfig = {
@@ -136,7 +135,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// Elements
+// Elementy
 const nameInput=document.getElementById("name");
 const passInput=document.getElementById("password");
 const chipUidInput=document.getElementById("chipUid");
@@ -154,13 +153,12 @@ const passwordNameInput=document.getElementById("passwordName");
 const newPasswordInput=document.getElementById("newPassword");
 const updatePasswordBtn=document.getElementById("updatePasswordBtn");
 
-// Data
 let allUsers={}, allAttendance=[], allBreaks=[], allPN=[];
 
-// Hash hesla
+// Hashovanie hesiel
 async function hashPassword(password){ return CryptoJS.SHA256(password).toString(); }
 
-// Load Users
+// Načítanie používateľov
 function loadUsers(){
   const usersRef = ref(db,"users/");
   onValue(usersRef,(snapshot)=>{
@@ -174,39 +172,30 @@ function loadUsers(){
         <td><button class="action-btn" onclick="deleteUser('${child.key}')">Zmazať</button></td>`;
       userBody.appendChild(row);
     });
+    renderTables();
   });
 }
 
-// Delete User
-function deleteUser(uid){if(confirm("Naozaj zmazať?")) remove(ref(db,"users/"+uid));}
-window.deleteUser=deleteUser;
-
-// Add / Update User
-addBtn.addEventListener("click", async()=>{
-  const name=nameInput.value.trim();
-  const password=passInput.value.trim();
-  const chipUid=chipUidInput.value.trim();
-  if(!name||!password){ alert("Vyplň meno a heslo!"); return; }
-  const hashedPassword=await hashPassword(password);
-  await set(ref(db,"users/"+name),{name,password:hashedPassword,chipUid});
-  alert("Používateľ pridaný/aktualizovaný!");
-  nameInput.value=""; passInput.value=""; chipUidInput.value="";
-  loadUsers();
-});
-
-// Load Attendance
+// Načítanie dochádzky
+const attendanceRef=ref(db,"dochadzka/");
 function loadAttendance(){
-  const attendanceRef=ref(db,"dochadzka/");
   onValue(attendanceRef,(snapshot)=>{
     allAttendance=[]; allBreaks=[]; allPN=[];
     if(snapshot.exists()){
       snapshot.forEach(userSnap=>{
+        const chip = userSnap.key;
+        let userName = chip; // fallback
+        for (const uid in allUsers) {
+          if (allUsers[uid].chipUid === chip) {
+            userName = allUsers[uid].name;
+            break;
+          }
+        }
         userSnap.forEach(recordSnap=>{
           const record=recordSnap.val();
-          const userName=userSnap.key;
-          const casParts = record.cas ? record.cas.split(" ") : ["",""];
-          const date=casParts[0]||"";
-          const time=casParts[1]||"";
+          const casParts = record.cas ? record.cas.split(" ") : ["", ""];
+          const date = casParts[0] || "";
+          const time = casParts[1] || "";
           if(record.stav==="PN") allPN.push({name:userName,date,time});
           else if(record.stav==="PRESTAVKA") allBreaks.push({name:userName,date,time});
           else allAttendance.push({name:userName,date,time,stav:record.stav});
@@ -217,21 +206,23 @@ function loadAttendance(){
   });
 }
 
-// Render Tables
+// Render tabuľky
 function renderTables(){
   attendanceBody.innerHTML=""; breaksBody.innerHTML=""; pnBody.innerHTML="";
-  let filteredAttendance=allAttendance, filteredBreaks=allBreaks, filteredPN=allPN;
-  const selectedDate=filterDate.value;
-  const selectedName=filterName.value;
+  let filteredAttendance = allAttendance;
+  let filteredBreaks = allBreaks;
+  let filteredPN = allPN;
+  const selectedDate = filterDate.value;
+  const selectedName = filterName.value;
   if(selectedDate){
-    filteredAttendance=filteredAttendance.filter(r=>r.date===selectedDate);
-    filteredBreaks=filteredBreaks.filter(r=>r.date===selectedDate);
-    filteredPN=filteredPN.filter(r=>r.date===selectedDate);
+    filteredAttendance = filteredAttendance.filter(r=>r.date===selectedDate);
+    filteredBreaks = filteredBreaks.filter(r=>r.date===selectedDate);
+    filteredPN = filteredPN.filter(r=>r.date===selectedDate);
   }
   if(selectedName){
-    filteredAttendance=filteredAttendance.filter(r=>r.name===selectedName);
-    filteredBreaks=filteredBreaks.filter(r=>r.name===selectedName);
-    filteredPN=filteredPN.filter(r=>r.name===selectedName);
+    filteredAttendance = filteredAttendance.filter(r=>r.name===selectedName);
+    filteredBreaks = filteredBreaks.filter(r=>r.name===selectedName);
+    filteredPN = filteredPN.filter(r=>r.name===selectedName);
   }
 
   if(!filteredAttendance.length) attendanceBody.innerHTML="<tr><td colspan='4'>Žiadne záznamy</td></tr>";
@@ -256,61 +247,91 @@ function renderTables(){
   });
 }
 
-// Add Attendance
-addAttendanceBtn.addEventListener("click", async()=>{
-  const chip=chipUidAttendance.value.trim();
-  const type=attendanceTypeSelect.value;
-  if(!chip){ alert("Vyplň Chip UID!"); return; }
-  const userName=Object.values(allUsers).find(u=>u.chipUid===chip)?.name;
-  if(!userName){ alert("Chip UID nezodpovedá žiadnemu zamestnancovi!"); return; }
-  const now=new Date();
-  const date=now.toISOString().split("T")[0];
-  const time=now.toTimeString().split(" ")[0];
-  const entry={stav:type,cas:`${date} ${time}`};
-  await push(ref(db,"dochadzka/"+userName),entry);
-  chipUidAttendance.value="";
+// Mazanie používateľa
+function deleteUser(uid){if(confirm("Naozaj zmazať?")) remove(ref(db,"users/"+uid));}
+window.deleteUser=deleteUser;
+
+// Pridanie používateľa
+addBtn.addEventListener("click", async()=>{
+  const name=nameInput.value.trim();
+  const password=passInput.value.trim();
+  const chipUid=chipUidInput.value.trim();
+  if(!name||!password){ alert("Vyplň meno a heslo!"); return; }
+  const hashedPassword=await hashPassword(password);
+  await set(ref(db,"users/"+name),{name,password:hashedPassword,chipUid});
+  nameInput.value=""; passInput.value=""; chipUidInput.value="";
 });
 
-// Change Password
+// Filtrovanie tabuliek
+filterDate.addEventListener("change", renderTables);
+filterName.addEventListener("change", renderTables);
+
+// Zmena hesla
 updatePasswordBtn.addEventListener("click", async()=>{
-  const name=passwordNameInput.value.trim();
-  const newPass=newPasswordInput.value.trim();
-  if(!name||!newPass){ alert("Vyplň meno a nové heslo!"); return; }
-  const hashedPassword=await hashPassword(newPass);
-  await update(ref(db,"users/"+name),{password:hashedPassword});
-  alert("Heslo aktualizované!");
+  const uname = passwordNameInput.value.trim();
+  const newPass = newPasswordInput.value.trim();
+  if(!uname || !newPass){ alert("Vyplň meno a nové heslo!"); return; }
+  const hashedPass = await hashPassword(newPass);
+  await update(ref(db,"users/"+uname),{password:hashedPass});
   passwordNameInput.value=""; newPasswordInput.value="";
+  alert("Heslo zmenené!");
 });
 
-// Sidebar Navigation
+// Prepínanie sekcií
 const sections={
-  manageUsers:document.getElementById("manage-users"),
-  viewAttendance:document.getElementById("view-attendance"),
-  viewBreaks:document.getElementById("view-breaks"),
-  viewPn:document.getElementById("view-pn"),
-  changePassword:document.getElementById("change-password")
+  manageUsers: document.getElementById("manage-users"),
+  viewAttendance: document.getElementById("view-attendance"),
+  viewBreaks: document.getElementById("view-breaks"),
+  viewPn: document.getElementById("view-pn"),
+  changePassword: document.getElementById("change-password")
 };
+
+function switchSection(name){
+  Object.values(sections).forEach(s => s.classList.remove("active"));
+  sections[name].classList.add("active");
+  // Sidebar active
+  document.querySelectorAll(".sidebar li").forEach(li => li.classList.remove("active"));
+  const mapping = {
+    manageUsers: "manageUsersTab",
+    viewAttendance: "viewAttendanceTab",
+    viewBreaks: "viewBreaksTab",
+    viewPn: "viewPnTab",
+    changePassword: "changePasswordTab"
+  };
+  document.getElementById(mapping[name]).classList.add("active");
+}
+
+// Event listener pre sidebar
 document.getElementById("manageUsersTab").addEventListener("click",()=>switchSection("manageUsers"));
 document.getElementById("viewAttendanceTab").addEventListener("click",()=>switchSection("viewAttendance"));
 document.getElementById("viewBreaksTab").addEventListener("click",()=>switchSection("viewBreaks"));
 document.getElementById("viewPnTab").addEventListener("click",()=>switchSection("viewPn"));
 document.getElementById("changePasswordTab").addEventListener("click",()=>switchSection("changePassword"));
 
-function switchSection(name){
-  Object.values(sections).forEach(s=>s.classList.remove("active"));
-  sections[name].classList.add("active");
-  document.querySelectorAll(".sidebar li").forEach(li=>li.classList.remove("active"));
-  document.querySelector(`#${name}Tab`).classList.add("active");
-}
+// Event listener pre logout
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  localStorage.removeItem("uid");
+  window.location.href = "index.html";
+});
 
-// Filters
-filterDate.addEventListener("change", renderTables);
-filterName.addEventListener("change", renderTables);
+// Event listener pre pridanie dochádzky
+addAttendanceBtn.addEventListener("click", async () => {
+  const chip = chipUidAttendance.value.trim();
+  const type = attendanceTypeSelect.value;
+  if (!chip) { alert("Vyplň Chip UID!"); return; }
+  const now = new Date();
+  const date = now.toISOString().split('T')[0];
+  const time = now.toTimeString().split(' ')[0];
+  await push(ref(db, "dochadzka/" + chip), { cas: date + " " + time, stav: type });
+  chipUidAttendance.value = "";
+  alert("Záznam pridaný!");
+});
 
-// Initial Load
+// Inicializácia
 loadUsers();
 loadAttendance();
 </script>
+
 </body>
 </html>
 
