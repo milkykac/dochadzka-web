@@ -27,6 +27,12 @@ th{background:#007bff;color:white;}
 tr:nth-child(even){background:#f9f9f9;}
 .action-btn{background:#dc3545;border:none;color:white;padding:6px 10px;border-radius:6px;cursor:pointer;transition:0.3s;}
 .action-btn:hover{background:#b52a3a;}
+
+/* FAREBNÉ ODLÍŠENIE STAVOV */
+.status-prichod { color: green; font-weight:600; }
+.status-odchod { color: #dc3545; font-weight:600; }
+.status-prestavka { color: orange; font-weight:600; }
+.status-pn { color: gray; font-weight:600; }
 </style>
 </head>
 <body>
@@ -201,7 +207,8 @@ function renderTables(){
   if(!filteredAttendance.length) attendanceBody.innerHTML="<tr><td colspan='4'>Žiadne záznamy</td></tr>";
   else filteredAttendance.forEach(r=>{
     const row=document.createElement("tr");
-    row.innerHTML=`<td>${r.name}</td><td>${r.date}</td><td>${r.time}</td><td>${r.stav}</td>`;
+    let cls=r.stav==="PRICHOD"?"status-prichod":"status-odchod";
+    row.innerHTML=`<td>${r.name}</td><td>${r.date}</td><td>${r.time}</td><td class="${cls}">${r.stav}</td>`;
     attendanceBody.appendChild(row);
   });
 
@@ -209,7 +216,7 @@ function renderTables(){
   if(!filteredBreaks.length) breaksBody.innerHTML="<tr><td colspan='3'>Žiadne prestávky</td></tr>";
   else filteredBreaks.forEach(r=>{
     const row=document.createElement("tr");
-    row.innerHTML=`<td>${r.name}</td><td>${r.date}</td><td>${r.time}</td>`;
+    row.innerHTML=`<td>${r.name}</td><td>${r.date}</td><td class="status-prestavka">${r.time}</td>`;
     breaksBody.appendChild(row);
   });
 
@@ -217,7 +224,7 @@ function renderTables(){
   if(!filteredPN.length) pnBody.innerHTML="<tr><td colspan='3'>Žiadne PN</td></tr>";
   else filteredPN.forEach(r=>{
     const row=document.createElement("tr");
-    row.innerHTML=`<td>${r.name}</td><td>${r.date}</td><td>${r.time}</td>`;
+    row.innerHTML=`<td>${r.name}</td><td>${r.date}</td><td class="status-pn">${r.time}</td>`;
     pnBody.appendChild(row);
   });
 }
@@ -291,24 +298,49 @@ document.getElementById("exportUsersPdf").addEventListener("click",()=>{
 document.getElementById("exportAttendancePdf").addEventListener("click",()=>{
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
-  
+
   // Dochádzka
   doc.text("Dochádzka",14,20);
   const attRows = allAttendance.map(r=>[r.name,r.date,r.time,r.stav]);
-  doc.autoTable({head:[["Zamestnanec","Dátum","Čas","Typ"]], body:attRows, startY:30});
-  
+  doc.autoTable({
+    head:[["Zamestnanec","Dátum","Čas","Typ"]],
+    body:attRows,
+    startY:30,
+    didParseCell: function (data) {
+      if(data.column.index===3){
+        const val=data.cell.text[0];
+        if(val==="PRICHOD") data.cell.styles.textColor=[0,128,0];
+        else if(val==="ODCHOD") data.cell.styles.textColor=[220,53,69];
+      }
+    }
+  });
+
   // Prestávky
   doc.addPage();
   doc.text("Prestávky",14,20);
   const breakRows = allBreaks.map(r=>[r.name,r.date,r.time]);
-  doc.autoTable({head:[["Zamestnanec","Dátum","Čas"]], body:breakRows, startY:30});
-  
+  doc.autoTable({
+    head:[["Zamestnanec","Dátum","Čas"]],
+    body:breakRows,
+    startY:30,
+    didParseCell: function (data){
+      if(data.column.index===2) data.cell.styles.textColor=[255,165,0];
+    }
+  });
+
   // PN
   doc.addPage();
   doc.text("PN",14,20);
   const pnRows = allPN.map(r=>[r.name,r.date,r.time]);
-  doc.autoTable({head:[["Zamestnanec","Dátum","Čas"]], body:pnRows, startY:30});
-  
+  doc.autoTable({
+    head:[["Zamestnanec","Dátum","Čas"]],
+    body:pnRows,
+    startY:30,
+    didParseCell: function (data){
+      if(data.column.index===2) data.cell.styles.textColor=[128,128,128];
+    }
+  });
+
   doc.save("dochadzka.pdf");
 });
 </script>
