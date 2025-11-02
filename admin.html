@@ -77,24 +77,36 @@ tr:nth-child(even){background:#f9f9f9;}
       </select>
       <button id="addAttendanceBtn">Pridať záznam</button>
     </div>
+
+    <h3>Dochádzka (Príchod/Odchod)</h3>
     <table id="attendanceTable">
       <thead><tr><th>Zamestnanec</th><th>Dátum</th><th>Čas</th><th>Typ</th></tr></thead>
       <tbody id="attendanceBody"><tr><td colspan="4">Načítavam údaje...</td></tr></tbody>
     </table>
+
+    <h3>Prestávky</h3>
+    <table id="breakTable">
+      <thead><tr><th>Zamestnanec</th><th>Dátum</th><th>Čas</th></tr></thead>
+      <tbody id="breakBody"><tr><td colspan="3">Žiadne prestávky</td></tr></tbody>
+    </table>
+
+    <h3>PN</h3>
     <table id="pnTable">
       <thead><tr><th>Zamestnanec</th><th>Dátum</th><th>Čas</th></tr></thead>
       <tbody id="pnBody"><tr><td colspan="3">Žiadne PN</td></tr></tbody>
     </table>
+
     <button id="exportAttendancePdf">⬇️ Export PDF – Dochádzka</button>
   </section>
 </main>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getDatabase, ref, set, onValue, push, update, remove } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getDatabase, ref, set, onValue, push, remove } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
 if(localStorage.getItem("uid")!=="admin"){ alert("Nemáš prístup!"); window.location.href="index.html"; }
 
@@ -116,6 +128,7 @@ const chipUidInput=document.getElementById("chipUid");
 const addBtn=document.getElementById("addUserBtn");
 const userBody=document.getElementById("userBody");
 const attendanceBody=document.getElementById("attendanceBody");
+const breakBody=document.getElementById("breakBody");
 const pnBody=document.getElementById("pnBody");
 const filterDate=document.getElementById("filterDate");
 const filterName=document.getElementById("filterName");
@@ -123,9 +136,13 @@ const chipUidAttendance=document.getElementById("chipUidAttendance");
 const attendanceTypeSelect=document.getElementById("attendanceType");
 const addAttendanceBtn=document.getElementById("addAttendanceBtn");
 
-let allUsers={}, allAttendance=[], allPN=[];
+let allUsers={}, allAttendance=[], allBreaks=[], allPN=[];
 
-// --- Načítanie používateľov ---
+async function hashPassword(password) {
+  return CryptoJS.SHA256(password).toString();
+}
+
+// Načítanie používateľov
 const usersRef = ref(db,"users/");
 function loadUsers(){
   onValue(usersRef,(snapshot)=>{
@@ -142,18 +159,20 @@ function loadUsers(){
   });
 }
 
-// --- Načítanie dochádzky ---
+// Načítanie dochádzky
 const attendanceRef=ref(db,"dochadzka/");
 function loadAttendance(){
   onValue(attendanceRef,(snapshot)=>{
-    allAttendance=[]; allPN=[];
+    allAttendance=[]; allBreaks=[]; allPN=[];
     if(snapshot.exists()){
       snapshot.forEach(userSnap=>{
         userSnap.forEach(recordSnap=>{
           const record=recordSnap.val();
           const userName=userSnap.key;
-          if(record.stav==="PN") allPN.push({name:userName, date:record.cas.split(" ")[0], time:record.cas.split(" ")[1]});
-          else allAttendance.push({name:userName, date:record.cas.split(" ")[0], time:record.cas.split(" ")[1], stav:record.stav});
+          const [date,time]=record.cas.split(" ");
+          if(record.stav==="PN") allPN.push({name:userName,date,time});
+          else if(record.stav==="PRESTAVKA") allBreaks.push({name:userName,date,time});
+          else allAttendance.push({name:userName,date,time,stav:record.stav});
         });
       });
     }
@@ -162,22 +181,59 @@ function loadAttendance(){
 }
 
 function renderTables(){
-  attendanceBody.innerHTML=""; pnBody.innerHTML="";
-  if(!allAttendance.length) attendanceBody.innerHTML="<tr><td colspan='4'>Žiadne záznamy</td></tr>";
-  else allAttendance.forEach(r=>{
+  attendanceBody.innerHTML=""; breakBody.innerHTML=""; pnBody.innerHTML="";
+  let filteredAttendance = allAttendance;
+  let filteredBreaks = allBreaks;
+  let filteredPN = allPN;
+  const selectedDate = filterDate.value;
+  const selectedName = filterName.value;
+  if(selectedDate){
+    filteredAttendance = filteredAttendance.filter(r=>r.date===selectedDate);
+    filteredBreaks = filteredBreaks.filter(r=>r.date===selectedDate);
+    filteredPN = filteredPN.filter(r=>r.date===selectedDate);
+  }
+  if(selectedName){
+    filteredAttendance = filteredAttendance.filter(r=>r.name===selectedName);
+    filteredBreaks = filteredBreaks.filter(r=>r.name===selectedName);
+    filteredPN = filteredPN.filter(r=>r.name===selectedName);
+  }
+
+  if(!filteredAttendance.length) attendanceBody.innerHTML="<tr><td colspan='4'>Žiadne záznamy</td></tr>";
+  else filteredAttendance.forEach(r=>{
     const row=document.createElement("tr");
     row.innerHTML=`<td>${r.name}</td><td>${r.date}</td><td>${r.time}</td><td>${r.stav}</td>`;
     attendanceBody.appendChild(row);
   });
-  if(!allPN.length) pnBody.innerHTML="<tr><td colspan='3'>Žiadne PN</td></tr>";
-  else allPN.forEach(r=>{
+
+  if(!filteredBreaks.length) breakBody.innerHTML="<tr><td colspan='3'>Žiadne prestávky</td></tr>";
+  else filteredBreaks.forEach(r=>{
+    const row=document.createElement("tr");
+    row.innerHTML=`<td>${r.name}</td><td>${r.date}</td><td>${r.time}</td>`;
+    breakBody.appendChild(row);
+  });
+
+  if(!filteredPN.length) pnBody.innerHTML="<tr><td colspan='3'>Žiadne PN</td></tr>";
+  else filteredPN.forEach(r=>{
     const row=document.createElement("tr");
     row.innerHTML=`<td>${r.name}</td><td>${r.date}</td><td>${r.time}</td>`;
     pnBody.appendChild(row);
   });
 }
 
-// --- Pridanie záznamu dochádzky ---
+// Pridanie používateľa
+addBtn.addEventListener("click", async()=>{
+  const name = nameInput.value.trim();
+  const password = passInput.value.trim();
+  const chipUid = chipUidInput.value.trim();
+  if(!name || !password){ alert("Vyplň meno a heslo!"); return; }
+  const hashedPassword = await hashPassword(password);
+  const userRef = ref(db,"users/"+name);
+  await set(userRef,{name,password:hashedPassword,chipUid});
+  nameInput.value=""; passInput.value=""; chipUidInput.value="";
+  alert("Používateľ pridaný/aktualizovaný!");
+});
+
+// Pridanie záznamu dochádzky
 addAttendanceBtn.addEventListener("click", async()=>{
   const chipUid = chipUidAttendance.value.trim();
   const type = attendanceTypeSelect.value;
@@ -186,15 +242,21 @@ addAttendanceBtn.addEventListener("click", async()=>{
   if(!user){ alert("Čip nie je priradený!"); return; }
   const timeStr = new Date().toISOString().replace("T"," ").split(".")[0];
   const recordRef = push(ref(db,"dochadzka/"+user.name));
-  await set(recordRef, {cas:timeStr, stav:type});
+  await set(recordRef,{cas:timeStr,stav:type});
   chipUidAttendance.value="";
 });
 
-// --- Mazanie ---
-function deleteUser(uid){if(confirm("Naozaj zmazať?"))remove(ref(db,"users/"+uid));}
+// Mazanie
+function deleteUser(uid){if(confirm("Naozaj zmazať?")) remove(ref(db,"users/"+uid));}
 window.deleteUser=deleteUser;
 
-// --- Prepínanie sekcií ---
+// Logout
+document.getElementById("logoutBtn").addEventListener("click",()=>{
+  localStorage.removeItem("uid");
+  window.location.href="index.html";
+});
+
+// Prepínanie sekcií
 document.getElementById("manageUsersTab").addEventListener("click",()=>{
   document.getElementById("manage-users").classList.add("active");
   document.getElementById("view-attendance").classList.remove("active");
@@ -208,18 +270,19 @@ document.getElementById("viewAttendanceTab").addEventListener("click",()=>{
   document.getElementById("manageUsersTab").classList.remove("active");
 });
 
-// --- Automatický refresh ---
-setInterval(()=>{loadUsers(); loadAttendance();},3000);
+// Event listenery pre filtre
+filterDate.addEventListener("change", renderTables);
+filterName.addEventListener("change", renderTables);
 
-// --- Inicialne načítanie ---
+// Inicialne načítanie
 loadUsers(); loadAttendance();
 
-// --- Export PDF ---
+// Export PDF
 document.getElementById("exportUsersPdf").addEventListener("click", ()=>{
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   doc.text("Zamestnanci",14,20);
-  const rows=[];
+  const rows = [];
   for(const uid in allUsers) rows.push([uid,allUsers[uid].name,"***",allUsers[uid].chipUid||""]);
   doc.autoTable({head:[["UID","Meno","Heslo","Chip UID"]], body:rows, startY:30});
   doc.save("zamestnanci.pdf");
@@ -228,13 +291,19 @@ document.getElementById("exportUsersPdf").addEventListener("click", ()=>{
 document.getElementById("exportAttendancePdf").addEventListener("click", ()=>{
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
-  doc.text("Dochádzka",14,20);
-  const attRows = allAttendance.map(r=>[r.name,r.date,r.time,r.stav]);
-  doc.autoTable({head:[["Zamestnanec","Dátum","Čas","Typ"]], body:attRows, startY:30});
+
+  const filteredAttendance = Array.from(attendanceBody.querySelectorAll("tr")).map(tr=>Array.from(tr.children).map(td=>td.textContent));
+  const filteredBreaks = Array.from(breakBody.querySelectorAll("tr")).map(tr=>Array.from(tr.children).map(td=>td.textContent));
+  const filteredPN = Array.from(pnBody.querySelectorAll("tr")).map(tr=>Array.from(tr.children).map(td=>td.textContent));
+
+  doc.text("Dochádzka (Príchod/Odchod)",14,20);
+  doc.autoTable({head:[["Zamestnanec","Dátum","Čas","Typ"]], body:filteredAttendance.filter(r=>r.length===4), startY:30});
+  doc.addPage();
+  doc.text("Prestávky",14,20);
+  doc.autoTable({head:[["Zamestnanec","Dátum","Čas"]], body:filteredBreaks.filter(r=>r.length===3), startY:30});
   doc.addPage();
   doc.text("PN",14,20);
-  const pnRows = allPN.map(r=>[r.name,r.date,r.time]);
-  doc.autoTable({head:[["Zamestnanec","Dátum","Čas"]], body:pnRows, startY:30});
+  doc.autoTable({head:[["Zamestnanec","Dátum","Čas"]], body:filteredPN.filter(r=>r.length===3), startY:30});
   doc.save("dochadzka.pdf");
 });
 </script>
