@@ -150,22 +150,26 @@ async function hashPassword(password){ return CryptoJS.SHA256(password).toString
 
 // Načítanie používateľov
 function loadUsers(){
-  db.ref("users/").on("value", snapshot=>{
-    userBody.innerHTML=""; allUsers={}; filterName.innerHTML='<option value="">Všetci</option>';
-    if(!snapshot.exists()){ userBody.innerHTML="<tr><td colspan='5'>Žiadni zamestnanci</td></tr>"; return; }
-    snapshot.forEach(child=>{
-      const data = child.val(); allUsers[child.key]=data;
-      const option = document.createElement("option");
-      option.value = child.key; // filter podľa UID
-      option.textContent = data.name;
-      filterName.appendChild(option);
-      const row = document.createElement("tr");
-      row.innerHTML=`<td>${child.key}</td><td>${data.name}</td><td>***</td><td>${data.chipUid||''}</td>
-                     <td><button class="action-btn" onclick="deleteUser('${child.key}')">Zmazať</button></td>`;
-      userBody.appendChild(row);
+  try {
+    db.ref("users/").on("value", snapshot=>{
+      userBody.innerHTML=""; allUsers={}; filterName.innerHTML='<option value="">Všetci</option>';
+      if(!snapshot.exists()){ userBody.innerHTML="<tr><td colspan='5'>Žiadni zamestnanci</td></tr>"; return; }
+      snapshot.forEach(child=>{
+        const data = child.val(); allUsers[child.key]=data;
+        const option = document.createElement("option");
+        option.value = data.name; // Oprava: filter podľa mena, nie UID
+        option.textContent = data.name;
+        filterName.appendChild(option);
+        const row = document.createElement("tr");
+        row.innerHTML=`<td>${child.key}</td><td>${data.name}</td><td>***</td><td>${data.chipUid||''}</td>
+                       <td><button class="action-btn" onclick="deleteUser('${child.key}')">Zmazať</button></td>`;
+        userBody.appendChild(row);
+      });
+      loadAttendance(); // Spusti načítanie dochádzky po používateľoch
     });
-    loadAttendance();
-  });
+  } catch (error) {
+    alert("Chyba pri načítaní používateľov: " + error.message);
+  }
 }
 
 // Mazanie používateľa
@@ -178,31 +182,38 @@ addBtn.addEventListener("click", async()=>{
   const password = passInput.value.trim();
   const chipUid = chipUidInput.value.trim();
   if(!name || !password){ alert("Vyplň meno a heslo!"); return; }
-  const hashedPassword = await hashPassword(password);
-  db.ref("users/"+name).set({name,password:hashedPassword,chipUid});
-  nameInput.value=""; passInput.value=""; chipUidInput.value="";
+  try {
+    const hashedPassword = await hashPassword(password);
+    await db.ref("users/"+name).set({name,password:hashedPassword,chipUid});
+    nameInput.value=""; passInput.value=""; chipUidInput.value="";
+    alert("Používateľ pridaný!");
+  } catch (error) {
+    alert("Chyba pri pridávaní: " + error.message);
+  }
 });
 
-// Načítanie dochádzky
+// Načítanie dochádzky (oprava: pod meno, nie chip)
 function loadAttendance(){
-  db.ref("dochadzka/").on("value", snapshot=>{
-    allAttendance=[]; allBreaks=[]; allPN=[];
-    if(snapshot.exists()){
-      snapshot.forEach(chipSnap=>{
-        const chip = chipSnap.key;
-        let userName = chip;
-        for(const uid in allUsers){ if(allUsers[uid].chipUid===chip){ userName=allUsers[uid].name; break; } }
-        chipSnap.forEach(rSnap=>{
-          const r = rSnap.val();
-          const [date,time] = r.cas?r.cas.split(" "):["",""];
-          if(r.stav==="PN") allPN.push({name:userName,date,time});
-          else if(r.stav==="PRESTAVKA") allBreaks.push({name:userName,date,time});
-          else allAttendance.push({name:userName,date,time,stav:r.stav});
+  try {
+    db.ref("dochadzka/").on("value", snapshot=>{
+      allAttendance=[]; allBreaks=[]; allPN=[];
+      if(snapshot.exists()){
+        snapshot.forEach(userSnap=>{
+          const userName = userSnap.key; // Oprava: dáta sú pod meno
+          userSnap.forEach(rSnap=>{
+            const r = rSnap.val();
+            const [date,time] = r.cas ? r.cas.split(" ") : ["",""];
+            if(r.stav==="PN") allPN.push({name:userName,date,time});
+            else if(r.stav==="PRESTAVKA") allBreaks.push({name:userName,date,time});
+            else allAttendance.push({name:userName,date,time,stav:r.stav});
+          });
         });
-      });
-    }
-    renderTables();
-  });
+      }
+      renderTables();
+    });
+  } catch (error) {
+    alert("Chyba pri načítaní dochádzky: " + error.message);
+  }
 }
 
 // Render tabuľky
@@ -212,17 +223,16 @@ function renderTables(){
   let filteredBreaks = allBreaks;
   let filteredPN = allPN;
   const selectedDate = filterDate.value;
-  const selectedUID = filterName.value;
+  const selectedName = filterName.value; // Oprava: teraz je meno
   if(selectedDate){
     filteredAttendance = filteredAttendance.filter(r=>r.date===selectedDate);
     filteredBreaks = filteredBreaks.filter(r=>r.date===selectedDate);
     filteredPN = filteredPN.filter(r=>r.date===selectedDate);
   }
-  if(selectedUID){
-    const name = allUsers[selectedUID]?.name;
-    filteredAttendance = filteredAttendance.filter(r=>r.name===name);
-    filteredBreaks = filteredBreaks.filter(r=>r.name===name);
-    filteredPN = filteredPN.filter(r=>r.name===name);
+  if(selectedName){
+    filteredAttendance = filteredAttendance.filter(r=>r.name===selectedName);
+    filteredBreaks = filteredBreaks.filter(r=>r.name===selectedName);
+    filteredPN = filteredPN.filter(r=>r.name===selectedName);
   }
   if(!filteredAttendance.length) attendanceBody.innerHTML="<tr><td colspan='4'>Žiadne záznamy</td></tr>";
   else filteredAttendance.forEach(r=>attendanceBody.innerHTML+=`<tr><td>${r.name}</td><td>${r.date}</td><td>${r.time}</td><td>${r.stav}</td></tr>`);
@@ -236,17 +246,23 @@ function renderTables(){
 filterDate.addEventListener("change", renderTables);
 filterName.addEventListener("change", renderTables);
 
-// Pridanie dochádzky
+// Pridanie dochádzky (oprava: pod meno, nie chip)
 addAttendanceBtn.addEventListener("click", async()=>{
   const chip = chipUidAttendance.value.trim();
   const type = attendanceTypeSelect.value;
   if(!chip){ alert("Vyplň Chip UID!"); return; }
-  const now = new Date();
-  const date = now.toISOString().split("T")[0];
-  const time = now.toTimeString().split(' ')[0];
-  await db.ref("dochadzka/"+chip).push({cas: date+" "+time, stav:type});
-  chipUidAttendance.value="";
-  alert("Záznam pridaný!");
+  const userName = Object.values(allUsers).find(u=>u.chipUid===chip)?.name;
+  if(!userName){ alert("Chip UID nezodpovedá žiadnemu zamestnancovi!"); return; }
+  try {
+    const now = new Date();
+    const date = now.toISOString().split("T")[0];
+    const time = now.toTimeString().split(' ')[0];
+    await db.ref("dochadzka/"+userName).push({cas: date+" "+time, stav:type});
+    chipUidAttendance.value="";
+    alert("Záznam pridaný!");
+  } catch (error) {
+    alert("Chyba pri pridávaní záznamu: " + error.message);
+  }
 });
 
 // Zmena hesla
@@ -254,10 +270,14 @@ updatePasswordBtn.addEventListener("click", async()=>{
   const uname = passwordNameInput.value.trim();
   const newPass = newPasswordInput.value.trim();
   if(!uname || !newPass){ alert("Vyplň meno a nové heslo!"); return; }
-  const hashedPass = await hashPassword(newPass);
-  await db.ref("users/"+uname).update({password: hashedPass});
-  passwordNameInput.value=""; newPasswordInput.value="";
-  alert("Heslo zmenené!");
+  try {
+    const hashedPass = await hashPassword(newPass);
+    await db.ref("users/"+uname).update({password: hashedPass});
+    passwordNameInput.value=""; newPasswordInput.value="";
+    alert("Heslo zmenené!");
+  } catch (error) {
+    alert("Chyba pri zmene hesla: " + error.message);
+  }
 });
 
 // Prepínanie sekcií
@@ -298,10 +318,5 @@ loadUsers();
 </script>
 </body>
 </html>
-
-
-
-
-
 
 
