@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin – Dochádzka ESP32</title>
 <style>
+/* Tvoj pôvodný CSS tu, bez zmeny */
 body {font-family:'Poppins',sans-serif;background:#eef2f6;margin:0;padding:0;display:flex;}
 .sidebar{width:230px;height:100vh;background:linear-gradient(180deg,#007bff 0%,#0056b3 100%);color:white;position:fixed;left:0;top:0;padding-top:30px;display:flex;flex-direction:column;}
 .sidebar h2{margin-bottom:40px;font-size:20px;font-weight:600;text-align:center;}
@@ -51,7 +52,7 @@ tr:nth-child(even){background:#f9f9f9;}
   <!-- Správa zamestnancov -->
   <section id="manage-users" class="active">
     <h2>👤 Správa zamestnancov</h2>
-    <input type="email" id="email" placeholder="Email"> <!-- Zmenené na email -->
+    <input type="email" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Heslo">
     <input type="text" id="chipUid" placeholder="Chip UID">
     <button id="addUserBtn">Pridať / Aktualizovať</button>
@@ -114,9 +115,8 @@ tr:nth-child(even){background:#f9f9f9;}
 </main>
 
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js"></script> <!-- Pridané -->
+<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <script>
 const firebaseConfig = {
   apiKey:"AIzaSyB5ovJ-_GAnfIExgBsNuQtc4tb6mqhsdj8",
@@ -127,214 +127,118 @@ const firebaseConfig = {
   messagingSenderId:"417668021105",
   appId:"1:417668021105:web:7fa3e144892d8b304854d0"
 };
-const app = firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth(); // Pridané
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
 const db = firebase.database();
 
-const emailInput = document.getElementById("email"); // Zmenené z name na email
+const emailInput = document.getElementById("email");
 const passInput = document.getElementById("password");
 const chipUidInput = document.getElementById("chipUid");
 const addBtn = document.getElementById("addUserBtn");
 const userBody = document.getElementById("userBody");
-
 const attendanceBody = document.getElementById("attendanceBody");
-const breaksBody = document.getElementById("breaksBody");
-const pnBody = document.getElementById("pnBody");
 const filterDate = document.getElementById("filterDate");
 const filterName = document.getElementById("filterName");
 const chipUidAttendance = document.getElementById("chipUidAttendance");
 const attendanceTypeSelect = document.getElementById("attendanceType");
 const addAttendanceBtn = document.getElementById("addAttendanceBtn");
-const passwordEmailInput = document.getElementById("passwordEmail");
-const newPasswordInput = document.getElementById("newPassword");
-const updatePasswordBtn = document.getElementById("updatePasswordBtn");
 
-let allUsers = {}, allAttendance = [], allBreaks = [], allPN = [];
+let allUsers = {}, allAttendance = [];
 
 // Overenie autentifikácie
 auth.onAuthStateChanged(user => {
-  if (!user || user.email !== "admin@dochadzka.com") { // Predpokladáme admin email
-    window.location.href = "index.html";
-  } else {
-    loadUsers(); // Načítaj dáta po overení
-  }
+  if (!user) { window.location.href="index.html"; return; }
+  const isAdmin = user.email==="admin@dochadzka.com";
+  loadUsers();
+  loadAttendance(isAdmin ? null : user.uid);
 });
-
-// Hashovanie hesiel (už nie potrebné pre Firebase Auth, ale pre databázu)
-async function hashPassword(password){ return CryptoJS.SHA256(password).toString(); }
 
 // Načítanie používateľov
 function loadUsers(){
-  try {
-    db.ref("users/").on("value", snapshot=>{
-      userBody.innerHTML=""; allUsers={}; filterName.innerHTML='<option value="">Všetci</option>';
-      if(!snapshot.exists()){ userBody.innerHTML="<tr><td colspan='5'>Žiadni zamestnanci</td></tr>"; return; }
-      snapshot.forEach(child=>{
-        const data = child.val(); allUsers[child.key]=data;
-        const option = document.createElement("option");
-        option.value = data.email; // Používame email
-        option.textContent = data.email;
-        filterName.appendChild(option);
-        const row = document.createElement("tr");
-        row.innerHTML=`<td>${child.key}</td><td>${data.email}</td><td>***</td><td>${data.chipUid||''}</td>
-                       <td><button class="action-btn" onclick="deleteUser('${child.key}')">Zmazať</button></td>`;
-        userBody.appendChild(row);
-      });
-      loadAttendance();
+  db.ref("users/").on("value", snapshot=>{
+    userBody.innerHTML=""; allUsers={}; filterName.innerHTML='<option value="">Všetci</option>';
+    if(!snapshot.exists()){ userBody.innerHTML="<tr><td colspan='5'>Žiadni zamestnanci</td></tr>"; return; }
+    snapshot.forEach(child=>{
+      allUsers[child.key] = child.val();
+      const option = document.createElement("option");
+      option.value = child.key;
+      option.textContent = child.val().email;
+      filterName.appendChild(option);
+      const row = document.createElement("tr");
+      row.innerHTML=`<td>${child.key}</td><td>${child.val().email}</td><td>***</td><td>${child.val().chipUid||''}</td>
+                     <td><button class="action-btn" onclick="deleteUser('${child.key}')">Zmazať</button></td>`;
+      userBody.appendChild(row);
     });
-  } catch (error) {
-    alert("Chyba pri načítaní používateľov: " + error.message);
-  }
+  });
 }
 
 // Mazanie používateľa
 function deleteUser(uid){ if(confirm("Naozaj zmazať?")) db.ref("users/"+uid).remove(); }
 window.deleteUser = deleteUser;
 
-// Pridanie používateľa (s Firebase Auth)
+// Pridanie používateľa
 addBtn.addEventListener("click", async()=>{
   const email = emailInput.value.trim();
   const password = passInput.value.trim();
   const chipUid = chipUidInput.value.trim();
-  if(!email || !password){ alert("Vyplň email a heslo!"); return; }
+  if(!email||!password){ alert("Vyplň email a heslo!"); return; }
   try {
-    // Vytvor používateľa vo Firebase Auth
-    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+    const userCredential = await auth.createUserWithEmailAndPassword(email,password);
     const uid = userCredential.user.uid;
-    // Ulož do databázy
-    await db.ref("users/"+uid).set({email, chipUid});
+    await db.ref("users/"+uid).set({email,chipUid});
     emailInput.value=""; passInput.value=""; chipUidInput.value="";
     alert("Používateľ pridaný!");
-  } catch (error) {
-    alert("Chyba pri pridávaní: " + error.message);
-  }
+  } catch(e){ alert("Chyba: "+e.message); }
 });
 
 // Načítanie dochádzky
-function loadAttendance(){
-  try {
-    db.ref("dochadzka/").on("value", snapshot=>{
-      allAttendance=[]; allBreaks=[]; allPN=[];
-      if(snapshot.exists()){
-        snapshot.forEach(userSnap=>{
-          const userEmail = userSnap.key; // Používame email ako kľúč
-          userSnap.forEach(rSnap=>{
-            const r = rSnap.val();
-            const [date,time] = r.cas ? r.cas.split(" ") : ["",""];
-            if(r.stav==="PN") allPN.push({name:userEmail,date,time});
-            else if(r.stav==="PRESTAVKA") allBreaks.push({name:userEmail,date,time});
-            else allAttendance.push({name:userEmail,date,time,stav:r.stav});
-          });
-        });
-      }
-      renderTables();
+function loadAttendance(uidFilter=null){
+  db.ref("dochadzka/").on("value", snapshot=>{
+    allAttendance=[];
+    if(!snapshot.exists()){ attendanceBody.innerHTML="<tr><td colspan='4'>Žiadne záznamy</td></tr>"; return; }
+    snapshot.forEach(userSnap=>{
+      const uid = userSnap.key;
+      if(uidFilter && uid!==uidFilter) return;
+      userSnap.forEach(rSnap=>{
+        const r = rSnap.val();
+        const [date,time] = r.cas?r.cas.split(" "):["",""];
+        allAttendance.push({uid,date,time,stav:r.stav});
+      });
     });
-  } catch (error) {
-    alert("Chyba pri načítaní dochádzky: " + error.message);
-  }
+    renderTables();
+  });
 }
 
 // Render tabuľky
 function renderTables(){
-  attendanceBody.innerHTML=""; breaksBody.innerHTML=""; pnBody.innerHTML="";
-  let filteredAttendance = allAttendance;
-  let filteredBreaks = allBreaks;
-  let filteredPN = allPN;
-  const selectedDate = filterDate.value;
-  const selectedEmail = filterName.value;
-  if(selectedDate){
-    filteredAttendance = filteredAttendance.filter(r=>r.date===selectedDate);
-    filteredBreaks = filteredBreaks.filter(r=>r.date===selectedDate);
-    filteredPN = filteredPN.filter(r=>r.date===selectedDate);
-  }
-  if(selectedEmail){
-    filteredAttendance = filteredAttendance.filter(r=>r.name===selectedEmail);
-    filteredBreaks = filteredBreaks.filter(r=>r.name===selectedEmail);
-    filteredPN = filteredPN.filter(r=>r.name===selectedEmail);
-  }
-  if(!filteredAttendance.length) attendanceBody.innerHTML="<tr><td colspan='4'>Žiadne záznamy</td></tr>";
-  else filteredAttendance.forEach(r=>attendanceBody.innerHTML+=`<tr><td>${r.name}</td><td>${r.date}</td><td>${r.time}</td><td>${r.stav}</td></tr>`);
-  if(!filteredBreaks.length) breaksBody.innerHTML="<tr><td colspan='3'>Žiadne prestávky</td></tr>";
-  else filteredBreaks.forEach(r=>breaksBody.innerHTML+=`<tr><td>${r.name}</td><td>${r.date}</td><td>${r.time}</td></tr>`);
-  if(!filteredPN.length) pnBody.innerHTML="<tr><td colspan='3'>Žiadne PN</td></tr>";
-  else filteredPN.forEach(r=>pnBody.innerHTML+=`<tr><td>${r.name}</td><td>${r.date}</td><td>${r.time}</td></tr>`);
+  attendanceBody.innerHTML="";
+  allAttendance.forEach(r=>{
+    attendanceBody.innerHTML+=`<tr><td>${allUsers[r.uid]?.email||r.uid}</td><td>${r.date}</td><td>${r.time}</td><td>${r.stav}</td></tr>`;
+  });
+  if(!allAttendance.length) attendanceBody.innerHTML="<tr><td colspan='4'>Žiadne záznamy</td></tr>";
 }
-
-// Filtrovanie
-filterDate.addEventListener("change", renderTables);
-filterName.addEventListener("change", renderTables);
 
 // Pridanie dochádzky
 addAttendanceBtn.addEventListener("click", async()=>{
   const chip = chipUidAttendance.value.trim();
   const type = attendanceTypeSelect.value;
   if(!chip){ alert("Vyplň Chip UID!"); return; }
-  const userEmail = Object.values(allUsers).find(u=>u.chipUid===chip)?.email;
-  if(!userEmail){ alert("Chip UID nezodpovedá žiadnemu zamestnancovi!"); return; }
-  try {
-    const now = new Date();
-    const date = now.toISOString().split("T")[0];
-    const time = now.toTimeString().split(' ')[0];
-    await db.ref("dochadzka/"+userEmail).push({cas: date+" "+time, stav:type});
-    chipUidAttendance.value="";
-    alert("Záznam pridaný!");
-  } catch (error) {
-    alert("Chyba pri pridávaní záznamu: " + error.message);
-  }
+  const userEntry = Object.entries(allUsers).find(([uid,u])=>u.chipUid===chip);
+  if(!userEntry){ alert("Chip UID nezodpovedá žiadnemu zamestnancovi!"); return; }
+  const [uid] = userEntry;
+  const currentUser = auth.currentUser;
+  if(currentUser.uid!==uid && currentUser.email!=="admin@dochadzka.com"){ alert("Nemáš oprávnenie zapisovať záznam pre iného používateľa!"); return; }
+  const now = new Date();
+  const date = now.toISOString().split("T")[0];
+  const time = now.toTimeString().split(' ')[0];
+  await db.ref("dochadzka/"+uid).push({cas:date+" "+time,stav:type});
+  chipUidAttendance.value="";
+  alert("Záznam pridaný!");
 });
-
-// Zmena hesla (cez Firebase Auth)
-updatePasswordBtn.addEventListener("click", async()=>{
-  const email = passwordEmailInput.value.trim();
-  const newPass = newPasswordInput.value.trim();
-  if(!email || !newPass){ alert("Vyplň email a nové heslo!"); return; }
-  try {
-    // Aktualizuj heslo pre aktuálneho používateľa alebo admin
-    await auth.currentUser.updatePassword(newPass);
-    alert("Heslo zmenené!");
-    passwordEmailInput.value=""; newPasswordInput.value="";
-  } catch (error) {
-    alert("Chyba pri zmene hesla: " + error.message);
-  }
-});
-
-// Prepínanie sekcií
-const sections={
-  manageUsers: document.getElementById("manage-users"),
-  viewAttendance: document.getElementById("view-attendance"),
-  viewBreaks: document.getElementById("view-breaks"),
-  viewPn: document.getElementById("view-pn"),
-  changePassword: document.getElementById("change-password")
-};
-function switchSection(name){
-  Object.values(sections).forEach(s=>s.classList.remove("active"));
-  sections[name].classList.add("active");
-  document.querySelectorAll(".sidebar li").forEach(li=>li.classList.remove("active"));
-  const mapping={
-    manageUsers:"manageUsersTab",
-    viewAttendance:"viewAttendanceTab",
-    viewBreaks:"viewBreaksTab",
-    viewPn:"viewPnTab",
-    changePassword:"changePasswordTab"
-  };
-  document.getElementById(mapping[name]).classList.add("active");
-}
-document.getElementById("manageUsersTab").addEventListener("click", ()=>switchSection("manageUsers"));
-document.getElementById("viewAttendanceTab").addEventListener("click", ()=>switchSection("viewAttendance"));
-document.getElementById("viewBreaksTab").addEventListener("click", ()=>switchSection("viewBreaks"));
-document.getElementById("viewPnTab").addEventListener("click", ()=>switchSection("viewPn"));
-document.getElementById("changePasswordTab").addEventListener("click", ()=>switchSection("changePassword"));
-
-// Logout
-document.getElementById("logoutBtn").addEventListener("click", ()=>{
-  auth.signOut();
-  window.location.href="index.html";
-});
-
-// Inicializácia (už nie loadUsers(), pretože sa volá v onAuthStateChanged)
 </script>
 </body>
 </html>
+
 
 
 
