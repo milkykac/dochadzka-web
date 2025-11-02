@@ -59,7 +59,6 @@ tr:nth-child(even){background:#f9f9f9;}
       <thead><tr><th>UID</th><th>Meno</th><th>Heslo</th><th>Chip UID</th><th>Akcie</th></tr></thead>
       <tbody id="userBody"><tr><td colspan="5">Načítavam údaje...</td></tr></tbody>
     </table>
-    <button id="exportUsersPdf">⬇️ Export PDF – Zamestnanci</button>
   </section>
 
   <!-- Dochádzka -->
@@ -85,7 +84,6 @@ tr:nth-child(even){background:#f9f9f9;}
       <thead><tr><th>Zamestnanec</th><th>Dátum</th><th>Čas</th><th>Typ</th></tr></thead>
       <tbody id="attendanceBody"><tr><td colspan="4">Načítavam údaje...</td></tr></tbody>
     </table>
-    <button id="exportAttendancePdf">⬇️ Export PDF – Dochádzka</button>
   </section>
 
   <!-- Prestávky -->
@@ -115,15 +113,11 @@ tr:nth-child(even){background:#f9f9f9;}
   </section>
 </main>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getDatabase, ref, set, onValue, push, remove, update } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
-import CryptoJS from "https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js";
-
-// Kontrola admin prístupu
-if(localStorage.getItem("uid")!=="admin"){ alert("Nemáš prístup!"); window.location.href="index.html"; }
-
-const firebaseConfig = {
+<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<script>
+const app = firebase.initializeApp({
   apiKey:"AIzaSyB5ovJ-_GAnfIExgBsNuQtc4tb6mqhsdj8",
   authDomain:"dochadzkaesp32.firebaseapp.com",
   databaseURL:"https://dochadzkaesp32-default-rtdb.europe-west1.firebasedatabase.app",
@@ -131,71 +125,87 @@ const firebaseConfig = {
   storageBucket:"dochadzkaesp32.firebasestorage.app",
   messagingSenderId:"417668021105",
   appId:"1:417668021105:web:7fa3e144892d8b304854d0"
-};
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+});
+const db = firebase.database();
 
-// Elementy
-const nameInput=document.getElementById("name");
-const passInput=document.getElementById("password");
-const chipUidInput=document.getElementById("chipUid");
-const addBtn=document.getElementById("addUserBtn");
-const userBody=document.getElementById("userBody");
-const attendanceBody=document.getElementById("attendanceBody");
-const breaksBody=document.getElementById("breaksBody");
-const pnBody=document.getElementById("pnBody");
-const filterDate=document.getElementById("filterDate");
-const filterName=document.getElementById("filterName");
-const chipUidAttendance=document.getElementById("chipUidAttendance");
-const attendanceTypeSelect=document.getElementById("attendanceType");
-const addAttendanceBtn=document.getElementById("addAttendanceBtn");
-const passwordNameInput=document.getElementById("passwordName");
-const newPasswordInput=document.getElementById("newPassword");
-const updatePasswordBtn=document.getElementById("updatePasswordBtn");
+const nameInput = document.getElementById("name");
+const passInput = document.getElementById("password");
+const chipUidInput = document.getElementById("chipUid");
+const addBtn = document.getElementById("addUserBtn");
+const userBody = document.getElementById("userBody");
 
-let allUsers={}, allAttendance=[], allBreaks=[], allPN=[];
+const attendanceBody = document.getElementById("attendanceBody");
+const breaksBody = document.getElementById("breaksBody");
+const pnBody = document.getElementById("pnBody");
+const filterDate = document.getElementById("filterDate");
+const filterName = document.getElementById("filterName");
+const chipUidAttendance = document.getElementById("chipUidAttendance");
+const attendanceTypeSelect = document.getElementById("attendanceType");
+const addAttendanceBtn = document.getElementById("addAttendanceBtn");
+const passwordNameInput = document.getElementById("passwordName");
+const newPasswordInput = document.getElementById("newPassword");
+const updatePasswordBtn = document.getElementById("updatePasswordBtn");
+
+let allUsers = {}, allAttendance = [], allBreaks = [], allPN = [];
 
 // Hashovanie hesiel
 async function hashPassword(password){ return CryptoJS.SHA256(password).toString(); }
 
 // Načítanie používateľov
 function loadUsers(){
-  const usersRef = ref(db,"users/");
-  onValue(usersRef,(snapshot)=>{
+  const usersRef = db.ref("users/");
+  usersRef.on("value", snapshot => {
     userBody.innerHTML=""; allUsers={}; filterName.innerHTML='<option value="">Všetci</option>';
-    if(!snapshot.exists()){userBody.innerHTML="<tr><td colspan='5'>Žiadni zamestnanci</td></tr>"; return;}
-    snapshot.forEach(child=>{
-      const data=child.val(); allUsers[child.key]=data;
-      const option=document.createElement("option"); option.value=data.name; option.textContent=data.name; filterName.appendChild(option);
-      const row=document.createElement("tr");
-      row.innerHTML=`<td>${child.key}</td><td>${data.name}</td><td>***</td><td>${data.chipUid||''}</td>
-        <td><button class="action-btn" onclick="deleteUser('${child.key}')">Zmazať</button></td>`;
+    if(!snapshot.exists()){ userBody.innerHTML="<tr><td colspan='5'>Žiadni zamestnanci</td></tr>"; return; }
+    snapshot.forEach(child => {
+      const data = child.val();
+      allUsers[child.key] = data;
+      const option = document.createElement("option");
+      option.value = data.name;
+      option.textContent = data.name;
+      filterName.appendChild(option);
+      const row = document.createElement("tr");
+      row.innerHTML = `<td>${child.key}</td><td>${data.name}</td><td>***</td><td>${data.chipUid||''}</td>
+                       <td><button class="action-btn" onclick="deleteUser('${child.key}')">Zmazať</button></td>`;
       userBody.appendChild(row);
     });
-    renderTables();
+    loadAttendance(); // <-- Načítaj dochádzku až po načítaní používateľov
   });
 }
 
+// Mazanie používateľa
+function deleteUser(uid){ if(confirm("Naozaj zmazať?")) db.ref("users/"+uid).remove(); }
+window.deleteUser = deleteUser;
+
+// Pridanie používateľa
+addBtn.addEventListener("click", async()=>{
+  const name = nameInput.value.trim();
+  const password = passInput.value.trim();
+  const chipUid = chipUidInput.value.trim();
+  if(!name || !password){ alert("Vyplň meno a heslo!"); return; }
+  const hashedPassword = await hashPassword(password);
+  db.ref("users/"+name).set({name, password: hashedPassword, chipUid});
+  nameInput.value = ""; passInput.value = ""; chipUidInput.value = "";
+});
+
 // Načítanie dochádzky
-const attendanceRef=ref(db,"dochadzka/");
 function loadAttendance(){
-  onValue(attendanceRef,(snapshot)=>{
+  const attendanceRef = db.ref("dochadzka/");
+  attendanceRef.on("value", snapshot=>{
     allAttendance=[]; allBreaks=[]; allPN=[];
     if(snapshot.exists()){
       snapshot.forEach(userSnap=>{
         const chip = userSnap.key;
-        let userName = chip; // fallback
-        for (const uid in allUsers) {
-          if (allUsers[uid].chipUid === chip) {
+        let userName = chip;
+        for(const uid in allUsers){
+          if(allUsers[uid].chipUid === chip){
             userName = allUsers[uid].name;
             break;
           }
         }
         userSnap.forEach(recordSnap=>{
-          const record=recordSnap.val();
-          const casParts = record.cas ? record.cas.split(" ") : ["", ""];
-          const date = casParts[0] || "";
-          const time = casParts[1] || "";
+          const record = recordSnap.val();
+          const [date,time] = record.cas ? record.cas.split(" ") : ["",""];
           if(record.stav==="PN") allPN.push({name:userName,date,time});
           else if(record.stav==="PRESTAVKA") allBreaks.push({name:userName,date,time});
           else allAttendance.push({name:userName,date,time,stav:record.stav});
@@ -224,47 +234,42 @@ function renderTables(){
     filteredBreaks = filteredBreaks.filter(r=>r.name===selectedName);
     filteredPN = filteredPN.filter(r=>r.name===selectedName);
   }
-
   if(!filteredAttendance.length) attendanceBody.innerHTML="<tr><td colspan='4'>Žiadne záznamy</td></tr>";
   else filteredAttendance.forEach(r=>{
-    const row=document.createElement("tr");
+    const row = document.createElement("tr");
     row.innerHTML=`<td>${r.name}</td><td>${r.date}</td><td>${r.time}</td><td>${r.stav}</td>`;
     attendanceBody.appendChild(row);
   });
-
   if(!filteredBreaks.length) breaksBody.innerHTML="<tr><td colspan='3'>Žiadne prestávky</td></tr>";
   else filteredBreaks.forEach(r=>{
-    const row=document.createElement("tr");
+    const row = document.createElement("tr");
     row.innerHTML=`<td>${r.name}</td><td>${r.date}</td><td>${r.time}</td>`;
     breaksBody.appendChild(row);
   });
-
   if(!filteredPN.length) pnBody.innerHTML="<tr><td colspan='3'>Žiadne PN</td></tr>";
   else filteredPN.forEach(r=>{
-    const row=document.createElement("tr");
+    const row = document.createElement("tr");
     row.innerHTML=`<td>${r.name}</td><td>${r.date}</td><td>${r.time}</td>`;
     pnBody.appendChild(row);
   });
 }
 
-// Mazanie používateľa
-function deleteUser(uid){if(confirm("Naozaj zmazať?")) remove(ref(db,"users/"+uid));}
-window.deleteUser=deleteUser;
-
-// Pridanie používateľa
-addBtn.addEventListener("click", async()=>{
-  const name=nameInput.value.trim();
-  const password=passInput.value.trim();
-  const chipUid=chipUidInput.value.trim();
-  if(!name||!password){ alert("Vyplň meno a heslo!"); return; }
-  const hashedPassword=await hashPassword(password);
-  await set(ref(db,"users/"+name),{name,password:hashedPassword,chipUid});
-  nameInput.value=""; passInput.value=""; chipUidInput.value="";
-});
-
 // Filtrovanie tabuliek
 filterDate.addEventListener("change", renderTables);
 filterName.addEventListener("change", renderTables);
+
+// Pridanie dochádzky
+addAttendanceBtn.addEventListener("click", async()=>{
+  const chip = chipUidAttendance.value.trim();
+  const type = attendanceTypeSelect.value;
+  if(!chip){ alert("Vyplň Chip UID!"); return; }
+  const now = new Date();
+  const date = now.toISOString().split("T")[0];
+  const time = now.toTimeString().split(' ')[0];
+  await db.ref("dochadzka/"+chip).push({cas: date+" "+time, stav: type});
+  chipUidAttendance.value="";
+  alert("Záznam pridaný!");
+});
 
 // Zmena hesla
 updatePasswordBtn.addEventListener("click", async()=>{
@@ -272,7 +277,7 @@ updatePasswordBtn.addEventListener("click", async()=>{
   const newPass = newPasswordInput.value.trim();
   if(!uname || !newPass){ alert("Vyplň meno a nové heslo!"); return; }
   const hashedPass = await hashPassword(newPass);
-  await update(ref(db,"users/"+uname),{password:hashedPass});
+  await db.ref("users/"+uname).update({password: hashedPass});
   passwordNameInput.value=""; newPasswordInput.value="";
   alert("Heslo zmenené!");
 });
@@ -285,55 +290,37 @@ const sections={
   viewPn: document.getElementById("view-pn"),
   changePassword: document.getElementById("change-password")
 };
-
 function switchSection(name){
-  Object.values(sections).forEach(s => s.classList.remove("active"));
+  Object.values(sections).forEach(s=>s.classList.remove("active"));
   sections[name].classList.add("active");
-  // Sidebar active
-  document.querySelectorAll(".sidebar li").forEach(li => li.classList.remove("active"));
-  const mapping = {
-    manageUsers: "manageUsersTab",
-    viewAttendance: "viewAttendanceTab",
-    viewBreaks: "viewBreaksTab",
-    viewPn: "viewPnTab",
-    changePassword: "changePasswordTab"
+  document.querySelectorAll(".sidebar li").forEach(li=>li.classList.remove("active"));
+  const mapping={
+    manageUsers:"manageUsersTab",
+    viewAttendance:"viewAttendanceTab",
+    viewBreaks:"viewBreaksTab",
+    viewPn:"viewPnTab",
+    changePassword:"changePasswordTab"
   };
   document.getElementById(mapping[name]).classList.add("active");
 }
+document.getElementById("manageUsersTab").addEventListener("click", ()=>switchSection("manageUsers"));
+document.getElementById("viewAttendanceTab").addEventListener("click", ()=>switchSection("viewAttendance"));
+document.getElementById("viewBreaksTab").addEventListener("click", ()=>switchSection("viewBreaks"));
+document.getElementById("viewPnTab").addEventListener("click", ()=>switchSection("viewPn"));
+document.getElementById("changePasswordTab").addEventListener("click", ()=>switchSection("changePassword"));
 
-// Event listener pre sidebar
-document.getElementById("manageUsersTab").addEventListener("click",()=>switchSection("manageUsers"));
-document.getElementById("viewAttendanceTab").addEventListener("click",()=>switchSection("viewAttendance"));
-document.getElementById("viewBreaksTab").addEventListener("click",()=>switchSection("viewBreaks"));
-document.getElementById("viewPnTab").addEventListener("click",()=>switchSection("viewPn"));
-document.getElementById("changePasswordTab").addEventListener("click",()=>switchSection("changePassword"));
-
-// Event listener pre logout
-document.getElementById("logoutBtn").addEventListener("click", () => {
+// Logout
+document.getElementById("logoutBtn").addEventListener("click", ()=>{
   localStorage.removeItem("uid");
-  window.location.href = "index.html";
-});
-
-// Event listener pre pridanie dochádzky
-addAttendanceBtn.addEventListener("click", async () => {
-  const chip = chipUidAttendance.value.trim();
-  const type = attendanceTypeSelect.value;
-  if (!chip) { alert("Vyplň Chip UID!"); return; }
-  const now = new Date();
-  const date = now.toISOString().split('T')[0];
-  const time = now.toTimeString().split(' ')[0];
-  await push(ref(db, "dochadzka/" + chip), { cas: date + " " + time, stav: type });
-  chipUidAttendance.value = "";
-  alert("Záznam pridaný!");
+  window.location.href="index.html";
 });
 
 // Inicializácia
 loadUsers();
-loadAttendance();
 </script>
-
 </body>
 </html>
+
 
 
 
