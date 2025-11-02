@@ -78,16 +78,16 @@ tr:nth-child(even){background:#f9f9f9;}
       <button id="addAttendanceBtn">Pridať záznam</button>
     </div>
 
-    <h3>Dochádzka (Príchod/Odchod)</h3>
+    <h3>Dochádzka (Príchod, Odchod)</h3>
     <table id="attendanceTable">
       <thead><tr><th>Zamestnanec</th><th>Dátum</th><th>Čas</th><th>Typ</th></tr></thead>
       <tbody id="attendanceBody"><tr><td colspan="4">Načítavam údaje...</td></tr></tbody>
     </table>
 
     <h3>Prestávky</h3>
-    <table id="breakTable">
+    <table id="breaksTable">
       <thead><tr><th>Zamestnanec</th><th>Dátum</th><th>Čas</th></tr></thead>
-      <tbody id="breakBody"><tr><td colspan="3">Žiadne prestávky</td></tr></tbody>
+      <tbody id="breaksBody"><tr><td colspan="3">Žiadne prestávky</td></tr></tbody>
     </table>
 
     <h3>PN</h3>
@@ -128,7 +128,7 @@ const chipUidInput=document.getElementById("chipUid");
 const addBtn=document.getElementById("addUserBtn");
 const userBody=document.getElementById("userBody");
 const attendanceBody=document.getElementById("attendanceBody");
-const breakBody=document.getElementById("breakBody");
+const breaksBody=document.getElementById("breaksBody");
 const pnBody=document.getElementById("pnBody");
 const filterDate=document.getElementById("filterDate");
 const filterName=document.getElementById("filterName");
@@ -138,9 +138,8 @@ const addAttendanceBtn=document.getElementById("addAttendanceBtn");
 
 let allUsers={}, allAttendance=[], allBreaks=[], allPN=[];
 
-async function hashPassword(password) {
-  return CryptoJS.SHA256(password).toString();
-}
+// Hashovanie hesiel
+async function hashPassword(password) { return CryptoJS.SHA256(password).toString(); }
 
 // Načítanie používateľov
 const usersRef = ref(db,"users/");
@@ -172,7 +171,7 @@ function loadAttendance(){
           const [date,time]=record.cas.split(" ");
           if(record.stav==="PN") allPN.push({name:userName,date,time});
           else if(record.stav==="PRESTAVKA") allBreaks.push({name:userName,date,time});
-          else allAttendance.push({name:userName,date,time,stav:record.stav});
+          else if(record.stav==="PRICHOD" || record.stav==="ODCHOD") allAttendance.push({name:userName,date,time,stav:record.stav});
         });
       });
     }
@@ -181,7 +180,7 @@ function loadAttendance(){
 }
 
 function renderTables(){
-  attendanceBody.innerHTML=""; breakBody.innerHTML=""; pnBody.innerHTML="";
+  attendanceBody.innerHTML=""; breaksBody.innerHTML=""; pnBody.innerHTML="";
   let filteredAttendance = allAttendance;
   let filteredBreaks = allBreaks;
   let filteredPN = allPN;
@@ -198,6 +197,7 @@ function renderTables(){
     filteredPN = filteredPN.filter(r=>r.name===selectedName);
   }
 
+  // Dochádzka
   if(!filteredAttendance.length) attendanceBody.innerHTML="<tr><td colspan='4'>Žiadne záznamy</td></tr>";
   else filteredAttendance.forEach(r=>{
     const row=document.createElement("tr");
@@ -205,13 +205,15 @@ function renderTables(){
     attendanceBody.appendChild(row);
   });
 
-  if(!filteredBreaks.length) breakBody.innerHTML="<tr><td colspan='3'>Žiadne prestávky</td></tr>";
+  // Prestávky
+  if(!filteredBreaks.length) breaksBody.innerHTML="<tr><td colspan='3'>Žiadne prestávky</td></tr>";
   else filteredBreaks.forEach(r=>{
     const row=document.createElement("tr");
     row.innerHTML=`<td>${r.name}</td><td>${r.date}</td><td>${r.time}</td>`;
-    breakBody.appendChild(row);
+    breaksBody.appendChild(row);
   });
 
+  // PN
   if(!filteredPN.length) pnBody.innerHTML="<tr><td colspan='3'>Žiadne PN</td></tr>";
   else filteredPN.forEach(r=>{
     const row=document.createElement("tr");
@@ -222,26 +224,25 @@ function renderTables(){
 
 // Pridanie používateľa
 addBtn.addEventListener("click", async()=>{
-  const name = nameInput.value.trim();
-  const password = passInput.value.trim();
-  const chipUid = chipUidInput.value.trim();
-  if(!name || !password){ alert("Vyplň meno a heslo!"); return; }
-  const hashedPassword = await hashPassword(password);
-  const userRef = ref(db,"users/"+name);
-  await set(userRef,{name,password:hashedPassword,chipUid});
+  const name=nameInput.value.trim();
+  const password=passInput.value.trim();
+  const chipUid=chipUidInput.value.trim();
+  if(!name||!password){ alert("Vyplň meno a heslo!"); return; }
+  const hashedPassword=await hashPassword(password);
+  await set(ref(db,"users/"+name),{name,password:hashedPassword,chipUid});
   nameInput.value=""; passInput.value=""; chipUidInput.value="";
   alert("Používateľ pridaný/aktualizovaný!");
 });
 
 // Pridanie záznamu dochádzky
 addAttendanceBtn.addEventListener("click", async()=>{
-  const chipUid = chipUidAttendance.value.trim();
-  const type = attendanceTypeSelect.value;
-  if(!chipUid || !type){ alert("Vyplň čip a typ!"); return; }
-  const user = Object.values(allUsers).find(u=>u.chipUid===chipUid);
+  const chipUid=chipUidAttendance.value.trim();
+  const type=attendanceTypeSelect.value;
+  if(!chipUid||!type){ alert("Vyplň čip a typ!"); return; }
+  const user=Object.values(allUsers).find(u=>u.chipUid===chipUid);
   if(!user){ alert("Čip nie je priradený!"); return; }
-  const timeStr = new Date().toISOString().replace("T"," ").split(".")[0];
-  const recordRef = push(ref(db,"dochadzka/"+user.name));
+  const timeStr=new Date().toISOString().replace("T"," ").split(".")[0];
+  const recordRef=push(ref(db,"dochadzka/"+user.name));
   await set(recordRef,{cas:timeStr,stav:type});
   chipUidAttendance.value="";
 });
@@ -270,7 +271,7 @@ document.getElementById("viewAttendanceTab").addEventListener("click",()=>{
   document.getElementById("manageUsersTab").classList.remove("active");
 });
 
-// Event listenery pre filtre
+// Filtre
 filterDate.addEventListener("change", renderTables);
 filterName.addEventListener("change", renderTables);
 
@@ -278,37 +279,43 @@ filterName.addEventListener("change", renderTables);
 loadUsers(); loadAttendance();
 
 // Export PDF
-document.getElementById("exportUsersPdf").addEventListener("click", ()=>{
+document.getElementById("exportUsersPdf").addEventListener("click",()=>{
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   doc.text("Zamestnanci",14,20);
-  const rows = [];
-  for(const uid in allUsers) rows.push([uid,allUsers[uid].name,"***",allUsers[uid].chipUid||""]);
+  const rows=[]; for(const uid in allUsers) rows.push([uid,allUsers[uid].name,"***",allUsers[uid].chipUid||""]);
   doc.autoTable({head:[["UID","Meno","Heslo","Chip UID"]], body:rows, startY:30});
   doc.save("zamestnanci.pdf");
 });
 
-document.getElementById("exportAttendancePdf").addEventListener("click", ()=>{
+document.getElementById("exportAttendancePdf").addEventListener("click",()=>{
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
-
-  const filteredAttendance = Array.from(attendanceBody.querySelectorAll("tr")).map(tr=>Array.from(tr.children).map(td=>td.textContent));
-  const filteredBreaks = Array.from(breakBody.querySelectorAll("tr")).map(tr=>Array.from(tr.children).map(td=>td.textContent));
-  const filteredPN = Array.from(pnBody.querySelectorAll("tr")).map(tr=>Array.from(tr.children).map(td=>td.textContent));
-
-  doc.text("Dochádzka (Príchod/Odchod)",14,20);
-  doc.autoTable({head:[["Zamestnanec","Dátum","Čas","Typ"]], body:filteredAttendance.filter(r=>r.length===4), startY:30});
+  
+  // Dochádzka
+  doc.text("Dochádzka",14,20);
+  const attRows = allAttendance.map(r=>[r.name,r.date,r.time,r.stav]);
+  doc.autoTable({head:[["Zamestnanec","Dátum","Čas","Typ"]], body:attRows, startY:30});
+  
+  // Prestávky
   doc.addPage();
   doc.text("Prestávky",14,20);
-  doc.autoTable({head:[["Zamestnanec","Dátum","Čas"]], body:filteredBreaks.filter(r=>r.length===3), startY:30});
+  const breakRows = allBreaks.map(r=>[r.name,r.date,r.time]);
+  doc.autoTable({head:[["Zamestnanec","Dátum","Čas"]], body:breakRows, startY:30});
+  
+  // PN
   doc.addPage();
   doc.text("PN",14,20);
-  doc.autoTable({head:[["Zamestnanec","Dátum","Čas"]], body:filteredPN.filter(r=>r.length===3), startY:30});
+  const pnRows = allPN.map(r=>[r.name,r.date,r.time]);
+  doc.autoTable({head:[["Zamestnanec","Dátum","Čas"]], body:pnRows, startY:30});
+  
   doc.save("dochadzka.pdf");
 });
 </script>
 </body>
 </html>
+
+
 
 
 
