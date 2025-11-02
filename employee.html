@@ -11,6 +11,10 @@
   --card: #fff;
   --accent: #007bff;
   --border: #ddd;
+  --prichod: green;
+  --odchod: #dc3545;
+  --prestavka: orange;
+  --pn: #6c757d;
 }
 [data-theme="dark"] {
   --bg: #1e1f22;
@@ -18,6 +22,10 @@
   --card: #2a2b31;
   --accent: #3399ff;
   --border: #444;
+  --prichod: #39e639;
+  --odchod: #ff6b6b;
+  --prestavka: #ffa500;
+  --pn: #adb5bd;
 }
 body {
   font-family:'Poppins',sans-serif;
@@ -102,8 +110,10 @@ th {
 tr:nth-child(even) {
   background:rgba(0,0,0,0.03);
 }
-.status-prichod { color:green; font-weight:600; }
-.status-odchod { color:#dc3545; font-weight:600; }
+.status-prichod { color:var(--prichod); font-weight:600; }
+.status-odchod { color:var(--odchod); font-weight:600; }
+.status-prestavka { color:var(--prestavka); font-weight:600; }
+.status-pn { color:var(--pn); font-weight:600; }
 
 .dark-toggle {
   background:none;
@@ -135,6 +145,7 @@ tr:nth-child(even) {
     <input type="date" id="filterDate">
   </div>
 
+  <h3>Dochádzka (Príchod / Odchod)</h3>
   <table>
     <thead>
       <tr><th>Čas</th><th>Stav</th></tr>
@@ -143,11 +154,31 @@ tr:nth-child(even) {
       <tr><td colspan="2">Načítavam údaje...</td></tr>
     </tbody>
   </table>
+
+  <h3>Prestávky</h3>
+  <table>
+    <thead>
+      <tr><th>Čas</th></tr>
+    </thead>
+    <tbody id="myBreaksBody">
+      <tr><td>Žiadne prestávky</td></tr>
+    </tbody>
+  </table>
+
+  <h3>PN</h3>
+  <table>
+    <thead>
+      <tr><th>Čas</th></tr>
+    </thead>
+    <tbody id="myPNBody">
+      <tr><td>Žiadne PN</td></tr>
+    </tbody>
+  </table>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getDatabase, ref, get, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
 const firebaseConfig = {
   apiKey:"AIzaSyB5ovJ-_GAnfIExgBsNuQtc4tb6mqhsdj8",
@@ -156,8 +187,7 @@ const firebaseConfig = {
   projectId:"dochadzkaesp32",
   storageBucket:"dochadzkaesp32.firebasestorage.app",
   messagingSenderId:"417668021105",
-  appId:"1:417668021105:web:7fa3e144892d8b304854d0",
-  measurementId:"G-ZKQNMZEPHD"
+  appId:"1:417668021105:web:7fa3e144892d8b304854d0"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -170,6 +200,8 @@ if(!userId){
 }
 
 const myAttendanceBody = document.getElementById("myAttendanceBody");
+const myBreaksBody = document.getElementById("myBreaksBody");
+const myPNBody = document.getElementById("myPNBody");
 const userNameEl = document.getElementById("userName");
 const filterDate = document.getElementById("filterDate");
 
@@ -181,16 +213,19 @@ get(ref(db, "users/" + userId)).then(snapshot => {
     window.location.href = "index.html";
     return;
   }
-
   const userData = snapshot.val();
   userNameEl.textContent = userData.name;
   const chipUid = userData.chipUid;
 
   onValue(ref(db, "dochadzka/" + chipUid), snap => {
     myAttendanceBody.innerHTML = "";
+    myBreaksBody.innerHTML = "";
+    myPNBody.innerHTML = "";
     allRecords = [];
     if (!snap.exists()) {
       myAttendanceBody.innerHTML = "<tr><td colspan='2'>Žiadne záznamy</td></tr>";
+      myBreaksBody.innerHTML = "<tr><td>Žiadne prestávky</td></tr>";
+      myPNBody.innerHTML = "<tr><td>Žiadne PN</td></tr>";
       return;
     }
     snap.forEach(childSnap => {
@@ -198,30 +233,50 @@ get(ref(db, "users/" + userId)).then(snapshot => {
       const z = childSnap.val();
       allRecords.push(z);
     });
-    renderTable();
+    renderTables();
   });
 });
 
-function renderTable() {
+function renderTables() {
   myAttendanceBody.innerHTML = "";
+  myBreaksBody.innerHTML = "";
+  myPNBody.innerHTML = "";
+
   let filtered = allRecords;
   const selectedDate = filterDate.value;
-  if (selectedDate) {
-    filtered = filtered.filter(r => r.cas.startsWith(selectedDate));
-  }
-  if (filtered.length === 0) {
-    myAttendanceBody.innerHTML = "<tr><td colspan='2'>Žiadne záznamy</td></tr>";
-    return;
-  }
-  filtered.reverse().forEach(z => {
-    const row = document.createElement("tr");
+  if (selectedDate) filtered = filtered.filter(r => r.cas.startsWith(selectedDate));
+
+  const attendance = filtered.filter(r => r.stav === "PRICHOD" || r.stav === "ODCHOD");
+  const breaks = filtered.filter(r => r.stav === "PRESTAVKA");
+  const pn = filtered.filter(r => r.stav === "PN");
+
+  // Dochádzka
+  if (!attendance.length) myAttendanceBody.innerHTML = "<tr><td colspan='2'>Žiadne záznamy</td></tr>";
+  else attendance.reverse().forEach(z => {
     const statusClass = z.stav.toLowerCase() === "prichod" ? "status-prichod" : "status-odchod";
+    const row = document.createElement("tr");
     row.innerHTML = `<td>${z.cas}</td><td class="${statusClass}">${z.stav}</td>`;
     myAttendanceBody.appendChild(row);
   });
+
+  // Prestávky
+  if (!breaks.length) myBreaksBody.innerHTML = "<tr><td>Žiadne prestávky</td></tr>";
+  else breaks.reverse().forEach(z => {
+    const row = document.createElement("tr");
+    row.innerHTML = `<td class="status-prestavka">${z.cas}</td>`;
+    myBreaksBody.appendChild(row);
+  });
+
+  // PN
+  if (!pn.length) myPNBody.innerHTML = "<tr><td>Žiadne PN</td></tr>";
+  else pn.reverse().forEach(z => {
+    const row = document.createElement("tr");
+    row.innerHTML = `<td class="status-pn">${z.cas}</td>`;
+    myPNBody.appendChild(row);
+  });
 }
 
-filterDate.addEventListener("change", renderTable);
+filterDate.addEventListener("change", renderTables);
 
 document.getElementById("logoutBtn").addEventListener("click", () => {
   localStorage.removeItem("uid");
