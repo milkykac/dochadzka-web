@@ -115,10 +115,10 @@
 <aside class="sidebar">
   <h2>👑 Admin Panel</h2>
   <ul>
-    <li id="viewAttendanceTab" class="active">📅 Dochádzka</li>
-    <li id="viewBreaksTab">☕ Prestávky</li>
-    <li id="viewPnTab">🏥 PN</li>
-    <li id="manageUsersTab">👤 Správa zamestnancov</li>
+    <li id="viewAttendanceTab" data-target="view-attendance" class="active">📅 Dochádzka</li>
+    <li id="viewBreaksTab" data-target="view-breaks">☕ Prestávky</li>
+    <li id="viewPnTab" data-target="view-pn">🏥 PN</li>
+    <li id="manageUsersTab" data-target="manage-users">👤 Správa zamestnancov</li>
   </ul>
 </aside>
 
@@ -221,12 +221,10 @@
     ref.on("value", (snapshot) => {
       const tbody = document.querySelector("#dochadzkaTable tbody");
       tbody.innerHTML = "";
-      snapshot.forEach(userSnap => {
-        userSnap.forEach(rec => {
-          const d = rec.val();
-          const row = `<tr><td>${d.zamestnanec}</td><td>${d.uid || ""}</td><td>${d.datum}</td><td>${d.cas}</td><td>${d.typ}</td></tr>`;
-          tbody.innerHTML += row;
-        });
+      snapshot.forEach(rec => {
+        const d = rec.val();
+        const row = `<tr><td>${d.zamestnanec}</td><td>${d.uid || ""}</td><td>${d.datum}</td><td>${d.cas}</td><td>${d.typ}</td></tr>`;
+        tbody.innerHTML += row;
       });
     });
   }
@@ -237,12 +235,10 @@
     ref.on("value", (snapshot) => {
       const tbody = document.querySelector("#prestávkyTable tbody");
       tbody.innerHTML = "";
-      snapshot.forEach(userSnap => {
-        userSnap.forEach(rec => {
-          const d = rec.val();
-          const row = `<tr><td>${d.zamestnanec}</td><td>${d.datum}</td><td>${d.zaciatok}</td><td>${d.koniec}</td></tr>`;
-          tbody.innerHTML += row;
-        });
+      snapshot.forEach(rec => {
+        const d = rec.val();
+        const row = `<tr><td>${d.zamestnanec}</td><td>${d.datum}</td><td>${d.zaciatok}</td><td>${d.koniec}</td></tr>`;
+        tbody.innerHTML += row;
       });
     });
   }
@@ -253,12 +249,10 @@
     ref.on("value", (snapshot) => {
       const tbody = document.querySelector("#pnTable tbody");
       tbody.innerHTML = "";
-      snapshot.forEach(userSnap => {
-        userSnap.forEach(rec => {
-          const d = rec.val();
-          const row = `<tr><td>${d.zamestnanec}</td><td>${d.od}</td><td>${d.do}</td><td>${d.poznamka || ""}</td></tr>`;
-          tbody.innerHTML += row;
-        });
+      snapshot.forEach(rec => {
+        const d = rec.val();
+        const row = `<tr><td>${d.zamestnanec}</td><td>${d.od}</td><td>${d.do}</td><td>${d.poznamka || ""}</td></tr>`;
+        tbody.innerHTML += row;
       });
     });
   }
@@ -276,11 +270,10 @@
       tabs.forEach(t => t.classList.remove("active"));
       sections.forEach(s => s.classList.remove("active"));
       tab.classList.add("active");
-
-      if (tab.id === "manageUsersTab") document.getElementById("manage-users").classList.add("active");
-      if (tab.id === "viewAttendanceTab") document.getElementById("view-attendance").classList.add("active");
-      if (tab.id === "viewBreaksTab") document.getElementById("view-breaks").classList.add("active");
-      if (tab.id === "viewPnTab") document.getElementById("view-pn").classList.add("active");
+      const target = tab.dataset.target;
+      if (target) {
+        document.getElementById(target).classList.add("active");
+      }
     });
   });
 
@@ -297,9 +290,6 @@
         const nameTd = document.createElement('td');
         nameTd.textContent = user.name;
         nameTd.onclick = () => editCell(nameTd, childSnap.key, 'name');
-        const emailTd = document.createElement('td');
-        emailTd.textContent = user.email || "";
-        emailTd.onclick = () => editCell(emailTd, childSnap.key, 'email');
         const uidTd = document.createElement('td');
         uidTd.textContent = user.chipUid || "";
         uidTd.onclick = () => editCell(uidTd, childSnap.key, 'chipUid');
@@ -309,7 +299,6 @@
         deleteBtn.onclick = () => deleteUser(childSnap.key);
         actionsTd.appendChild(deleteBtn);
         row.appendChild(nameTd);
-        row.appendChild(emailTd);
         row.appendChild(uidTd);
         row.appendChild(actionsTd);
         tbody.appendChild(row);
@@ -321,7 +310,7 @@
     if (!db) return;
     const originalText = td.textContent;
     const input = document.createElement('input');
-    input.type = field === 'email' ? 'email' : 'text';
+    input.type = 'text';
     input.value = originalText;
     input.onblur = () => {
       const newValue = input.value.trim();
@@ -380,7 +369,6 @@
   function hideAddUserForm() {
     document.getElementById("addUserForm").style.display = "none";
     document.getElementById("newUserName").value = "";
-    document.getElementById("newUserEmail").value = "";
     document.getElementById("newUserPassword").value = "";
     document.getElementById("newUserUid").value = "";
     document.getElementById("addUserMsg").textContent = "";
@@ -389,7 +377,6 @@
   function addUser() {
     if (!db) return;
     const name = document.getElementById("newUserName").value.trim();
-    const email = document.getElementById("newUserEmail").value.trim();
     const password = document.getElementById("newUserPassword").value;
     const msg = document.getElementById("addUserMsg");
     if (!name || !password) {
@@ -404,17 +391,17 @@
           msg.textContent = "UID čipu už existuje!";
           return;
         }
-        proceedAddUser(name, email, password, uid, msg);
+        proceedAddUser(name, password, uid, msg);
       });
     } else {
-      proceedAddUser(name, email, password, "", msg);
+      proceedAddUser(name, password, "", msg);
     }
   }
 
-  function proceedAddUser(name, email, password, uid, msg) {
+  function proceedAddUser(name, password, uid, msg) {
     msg.textContent = "Pridávanie...";
     const ref = db.ref("users").push();
-    const userData = { name, email: email || "", password, chipUid: uid || "" };
+    const userData = { name, password, chipUid: uid || "" };
     ref.set(userData).then(() => {
       msg.textContent = "Zamestnanec pridaný!";
       hideAddUserForm();
@@ -468,18 +455,21 @@
     const ref = db.ref("dochadzka");
     ref.on("value", (snapshot) => {
       snapshot.forEach(userSnap => {
-        const uid = userSnap.key;
-        if (!knownUids.has(uid)) {
-          knownUids.add(uid);
-          // Skontroluj, či už existuje v users
-          db.ref("users").orderByChild("chipUid").equalTo(uid).once("value", userSnap => {
-            if (!userSnap.exists()) {
-              // Nový čip, zobraz modal
-              document.getElementById("newChipUid").textContent = uid;
-              document.getElementById("newEmployeeModal").style.display = "flex";
-            }
-          });
-        }
+        userSnap.forEach(rec => {
+          const d = rec.val();
+          const uid = d.uid;
+          if (uid && !knownUids.has(uid)) {
+            knownUids.add(uid);
+            // Skontroluj, či už existuje v users
+            db.ref("users").orderByChild("chipUid").equalTo(uid).once("value", userSnap => {
+              if (!userSnap.exists()) {
+                // Nový čip, zobraz modal
+                document.getElementById("newChipUid").textContent = uid;
+                document.getElementById("newEmployeeModal").style.display = "flex";
+              }
+            });
+          }
+        });
       });
     });
   }
