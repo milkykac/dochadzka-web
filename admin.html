@@ -3,275 +3,222 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Panel - Dochádzka</title>
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;600&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js"></script>
-<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js"></script>
+<title>Admin – Dochádzka ESP32</title>
 <style>
-  body {
-    font-family: 'Roboto', sans-serif;
-    margin: 0;
-    background: #f4f5f7;
-    color: #333;
-    display: flex;
-  }
-
-  .sidebar {
-    width: 240px;
-    background: #2b3a67;
-    color: white;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    padding-top: 20px;
-  }
-
-  .sidebar h2 {
-    text-align: center;
-    font-weight: 600;
-    margin-bottom: 20px;
-  }
-
-  .sidebar ul {
-    list-style: none;
-    padding: 0;
-  }
-
-  .sidebar li {
-    padding: 14px 20px;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-
-  .sidebar li:hover, .sidebar li.active {
-    background: #3e4e88;
-  }
-
-  main {
-    flex: 1;
-    padding: 20px;
-  }
-
-  section {
-    display: none;
-    animation: fadeIn 0.3s ease;
-  }
-
-  section.active {
-    display: block;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-  }
-
-  th, td {
-    border: 1px solid #ccc;
-    padding: 10px;
-    text-align: center;
-  }
-
-  th {
-    background: #dfe3ee;
-  }
-
-  .dochadzka { background: #e8f5e9; }
-  .prestávky { background: #fff3e0; }
-  .pn { background: #fce4ec; }
-
-  button {
-    background: #3e4e88;
-    color: white;
-    border: none;
-    padding: 10px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    margin-top: 10px;
-  }
-
-  button:hover {
-    background: #2b3a67;
-  }
-
-  input {
-    padding: 8px;
-    margin-top: 5px;
-    width: 200px;
-  }
+body {
+  font-family:'Poppins',sans-serif;
+  background:#eef2f6;
+  margin:0;
+  padding:0;
+  display:flex;
+}
+.sidebar {
+  width:230px;
+  height:100vh;
+  background:linear-gradient(180deg,#007bff 0%,#0056b3 100%);
+  color:white;
+  position:fixed;
+  left:0;
+  top:0;
+  padding-top:30px;
+  display:flex;
+  flex-direction:column;
+}
+.sidebar h2 {
+  margin-bottom:40px;
+  font-size:20px;
+  font-weight:600;
+  text-align:center;
+}
+.sidebar ul {
+  list-style:none;
+  padding:0;
+  width:100%;
+}
+.sidebar li {
+  padding:15px 30px;
+  cursor:pointer;
+  transition:0.3s;
+  text-align:left;
+}
+.sidebar li:hover, .sidebar li.active {
+  background:rgba(255,255,255,0.2);
+}
+header {
+  background:#fff;
+  box-shadow:0 2px 10px rgba(0,0,0,0.05);
+  color:#333;
+  text-align:center;
+  padding:20px;
+  font-size:22px;
+  font-weight:600;
+  position:fixed;
+  top:0;
+  left:230px;
+  right:0;
+  z-index:100;
+}
+#logoutBtn {
+  position:absolute;
+  top:15px;
+  right:30px;
+  background:#dc3545;
+  color:white;
+  border:none;
+  border-radius:8px;
+  padding:8px 14px;
+  cursor:pointer;
+  transition:0.3s;
+}
+#logoutBtn:hover {
+  background:#b52a3a;
+}
+main {
+  flex:1;
+  margin-left:250px;
+  margin-top:90px;
+  padding:30px;
+}
+section {
+  display:none;
+  opacity:0;
+  transform:translateY(10px);
+  transition:opacity 0.3s ease, transform 0.3s ease;
+}
+section.active {
+  display:block;
+  opacity:1;
+  transform:translateY(0);
+  background:#fff;
+  padding:25px;
+  border-radius:16px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.05);
+  margin-bottom:30px;
+}
+h2 {
+  color:#007bff;
+  border-bottom:2px solid #007bff;
+  padding-bottom:8px;
+  margin-bottom:20px;
+}
+input, select {
+  padding:8px 12px;
+  border-radius:8px;
+  border:1px solid #ccc;
+  margin:6px 4px;
+  outline:none;
+}
+button {
+  background:#007bff;
+  color:white;
+  padding:8px 14px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  transition:0.3s;
+}
+button:hover {
+  background:#0056b3;
+}
+table {
+  border-collapse:collapse;
+  width:100%;
+  margin-top:20px;
+  font-size:14px;
+}
+th, td {
+  border:1px solid #ddd;
+  padding:10px;
+  text-align:center;
+}
+th {
+  background:#007bff;
+  color:white;
+}
+tr:nth-child(even) {
+  background:#f9f9f9;
+}
+.action-btn {
+  background:#dc3545;
+  border:none;
+  color:white;
+  padding:6px 10px;
+  border-radius:6px;
+  cursor:pointer;
+  transition:0.3s;
+}
+.action-btn:hover {
+  background:#b52a3a;
+}
 </style>
 </head>
 <body>
 
-<!-- Sidebar -->
-<aside class="sidebar">
-  <h2>👑 Admin Panel</h2>
+<div class="sidebar">
+  <h2>Admin Panel</h2>
   <ul>
-    <li id="viewAttendanceTab" class="active">📅 Dochádzka</li>
+    <li id="manageUsersTab" class="active">👤 Správa zamestnancov</li>
+    <li id="viewAttendanceTab">📅 Dochádzka</li>
     <li id="viewBreaksTab">☕ Prestávky</li>
     <li id="viewPnTab">🏥 PN</li>
-    <li id="manageUsersTab">👤 Správa zamestnancov</li>
     <li id="changePasswordTab">🔑 Zmena hesla</li>
   </ul>
-</aside>
+</div>
 
-<!-- Hlavný obsah -->
+<header>
+  🛠️ Administrácia dochádzky
+  <button id="logoutBtn">Odhlásiť sa</button>
+</header>
+
 <main>
-  <section id="view-attendance" class="active">
+  <section id="manage-users" class="active">
+    <h2>👤 Správa zamestnancov</h2>
+    <p>Tu bude správa používateľov (Firebase načítanie...)</p>
+  </section>
+
+  <section id="view-attendance">
     <h2>📅 Dochádzka</h2>
-    <table id="dochadzkaTable">
-      <thead>
-        <tr><th>Zamestnanec</th><th>Dátum</th><th>Čas</th><th>Typ</th></tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <p>Tu sa zobrazí tabuľka dochádzky.</p>
   </section>
 
   <section id="view-breaks">
     <h2>☕ Prestávky</h2>
-    <table id="prestávkyTable">
-      <thead>
-        <tr><th>Zamestnanec</th><th>Dátum</th><th>Začiatok</th><th>Koniec</th></tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <p>Tu sa zobrazí tabuľka prestávok.</p>
   </section>
 
   <section id="view-pn">
     <h2>🏥 PN</h2>
-    <table id="pnTable">
-      <thead>
-        <tr><th>Zamestnanec</th><th>Od</th><th>Do</th><th>Poznámka</th></tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </section>
-
-  <section id="manage-users">
-    <h2>👤 Správa zamestnancov</h2>
-    <div id="usersList"></div>
+    <p>Tu sa zobrazí tabuľka PN.</p>
   </section>
 
   <section id="change-password">
     <h2>🔑 Zmena hesla</h2>
-    <p>Zadaj nový e-mail a heslo pre zmenu:</p>
-    <input type="email" id="newEmail" placeholder="Nový e-mail"><br>
-    <input type="password" id="newPassword" placeholder="Nové heslo"><br>
-    <button onclick="changePassword()">Zmeniť</button>
-    <p id="changePassMsg"></p>
+    <p>Tu sa spracuje zmena hesla.</p>
   </section>
 </main>
 
 <script>
-  // 🔥 Firebase konfigurácia
-  const firebaseConfig = {
-    apiKey: "TU_DAJ_SVOJ_API_KEY",
-    authDomain: "TU_DAJ_SVOJ_PROJEKT.firebaseapp.com",
-    databaseURL: "https://TU_DAJ_SVOJ_PROJEKT.firebaseio.com",
-    projectId: "TU_DAJ_SVOJ_PROJEKT",
-    storageBucket: "TU_DAJ_SVOJ_PROJEKT.appspot.com",
-    messagingSenderId: "000000000000",
-    appId: "1:000000000000:web:abc123"
-  };
+// 🔁 Prepínanie sekcií
+const tabs = document.querySelectorAll(".sidebar li");
+const sections = document.querySelectorAll("main section");
 
-  const app = firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-
-  // 📋 Načítanie dát z databázy
-  function loadAttendance() {
-    const ref = db.ref("dochadzka");
-    ref.on("value", (snapshot) => {
-      const tbody = document.querySelector("#dochadzkaTable tbody");
-      tbody.innerHTML = "";
-      snapshot.forEach(userSnap => {
-        userSnap.forEach(rec => {
-          const d = rec.val();
-          const row = `<tr><td>${d.zamestnanec}</td><td>${d.datum}</td><td>${d.cas}</td><td>${d.typ}</td></tr>`;
-          tbody.innerHTML += row;
-        });
-      });
-    });
-  }
-
-  function loadBreaks() {
-    const ref = db.ref("prestávky");
-    ref.on("value", (snapshot) => {
-      const tbody = document.querySelector("#prestávkyTable tbody");
-      tbody.innerHTML = "";
-      snapshot.forEach(userSnap => {
-        userSnap.forEach(rec => {
-          const d = rec.val();
-          const row = `<tr><td>${d.zamestnanec}</td><td>${d.datum}</td><td>${d.zaciatok}</td><td>${d.koniec}</td></tr>`;
-          tbody.innerHTML += row;
-        });
-      });
-    });
-  }
-
-  function loadPN() {
-    const ref = db.ref("pn");
-    ref.on("value", (snapshot) => {
-      const tbody = document.querySelector("#pnTable tbody");
-      tbody.innerHTML = "";
-      snapshot.forEach(userSnap => {
-        userSnap.forEach(rec => {
-          const d = rec.val();
-          const row = `<tr><td>${d.zamestnanec}</td><td>${d.od}</td><td>${d.do}</td><td>${d.poznamka || ""}</td></tr>`;
-          tbody.innerHTML += row;
-        });
-      });
-    });
-  }
-
-  loadAttendance();
-  loadBreaks();
-  loadPN();
-
-  // 🪄 Prepínanie sekcií
-  const tabs = document.querySelectorAll(".sidebar li");
-  const sections = document.querySelectorAll("main section");
-  tabs.forEach(tab => {
-    tab.addEventListener("click", () => {
-      tabs.forEach(t => t.classList.remove("active"));
-      sections.forEach(s => s.classList.remove("active"));
-      tab.classList.add("active");
-
-      if (tab.id === "manageUsersTab") document.getElementById("manage-users").classList.add("active");
-      if (tab.id === "viewAttendanceTab") document.getElementById("view-attendance").classList.add("active");
-      if (tab.id === "viewBreaksTab") document.getElementById("view-breaks").classList.add("active");
-      if (tab.id === "viewPnTab") document.getElementById("view-pn").classList.add("active");
-      if (tab.id === "changePasswordTab") document.getElementById("change-password").classList.add("active");
-    });
+tabs.forEach(tab => {
+  tab.addEventListener("click", () => {
+    tabs.forEach(t => t.classList.remove("active"));
+    tab.classList.add("active");
+    sections.forEach(s => s.classList.remove("active"));
+    if (tab.id === "manageUsersTab") document.getElementById("manage-users").classList.add("active");
+    if (tab.id === "viewAttendanceTab") document.getElementById("view-attendance").classList.add("active");
+    if (tab.id === "viewBreaksTab") document.getElementById("view-breaks").classList.add("active");
+    if (tab.id === "viewPnTab") document.getElementById("view-pn").classList.add("active");
+    if (tab.id === "changePasswordTab") document.getElementById("change-password").classList.add("active");
   });
-
-  // 🔑 Zmena hesla
-  function changePassword() {
-    const newEmail = document.getElementById("newEmail").value;
-    const newPass = document.getElementById("newPassword").value;
-    const msg = document.getElementById("changePassMsg");
-    msg.textContent = "Zmena prebieha...";
-    firebase.auth().onAuthStateChanged(user => {
-      if (user) {
-        user.updateEmail(newEmail).then(() => {
-          return user.updatePassword(newPass);
-        }).then(() => {
-          msg.textContent = "Úspešne zmenené!";
-        }).catch(err => {
-          msg.textContent = "Chyba: " + err.message;
-        });
-      } else msg.textContent = "Nie si prihlásený!";
-    });
-  }
+});
 </script>
+
 </body>
 </html>
+
 
 
 
