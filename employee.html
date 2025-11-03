@@ -4,129 +4,141 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dochádzka – Zamestnanec</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #f4f6f9;
-  --text: #222;
+  --bg: #f4f5f7;
+  --text: #333;
   --card: #fff;
-  --accent: #007bff;
-  --border: #ddd;
-  --prichod: green;
+  --accent: #3e4e88;
+  --border: #ccc;
+  --prichod: #4caf50;
   --odchod: #dc3545;
-  --prestavka: orange;
-  --pn: #6c757d;
+  --prestavka: #ff9800;
+  --pn: #9c27b0;
 }
 [data-theme="dark"] {
-  --bg: #1e1f22;
-  --text: #f4f4f4;
-  --card: #2a2b31;
-  --accent: #3399ff;
+  --bg: #1f1f2e;
+  --text: #eee;
+  --card: #2a2b3d;
+  --accent: #6699ff;
   --border: #444;
   --prichod: #39e639;
   --odchod: #ff6b6b;
   --prestavka: #ffa500;
-  --pn: #adb5bd;
+  --pn: #ad8ee0;
 }
+
 body {
-  font-family:'Poppins',sans-serif;
-  background:var(--bg);
-  color:var(--text);
-  margin:0;
-  padding:0;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  transition:background 0.3s,color 0.3s;
+  font-family: 'Roboto', sans-serif;
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: background 0.3s, color 0.3s;
 }
+
 header {
-  width:100%;
-  background:var(--card);
-  box-shadow:0 2px 10px rgba(0,0,0,0.1);
-  padding:15px 20px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  position:sticky;
-  top:0;
-  z-index:100;
+  width: 100%;
+  background: var(--card);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
-header h1 { color:var(--accent); font-size:20px; margin:0; }
-button {
-  background:var(--accent);
-  color:white;
-  border:none;
-  border-radius:8px;
-  padding:8px 12px;
-  cursor:pointer;
-  transition:0.3s;
+
+header h1 { 
+  color: var(--accent);
+  font-weight: 500;
+  font-size: 22px;
+  margin: 0;
 }
-button:hover { background:#0056b3; }
+
+header button {
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-left: 10px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+header button:hover { background: #2b3a67; }
 
 .container {
-  max-width:700px;
-  width:90%;
-  background:var(--card);
-  margin:40px auto;
-  padding:30px;
-  border-radius:16px;
-  box-shadow:0 4px 20px rgba(0,0,0,0.1);
-  text-align:center;
-  transition:background 0.3s,color 0.3s;
+  max-width: 800px;
+  width: 90%;
+  background: var(--card);
+  margin: 30px auto;
+  padding: 25px 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  transition: background 0.3s, color 0.3s;
 }
 
 h2 {
-  color:var(--accent);
-  border-bottom:2px solid var(--accent);
-  padding-bottom:6px;
-  margin-top:0;
+  color: var(--accent);
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 6px;
+  margin-top: 0;
 }
 
 .filter {
-  margin:15px 0;
+  margin: 15px 0;
+  text-align: left;
 }
 .filter input {
-  padding:6px 10px;
-  border-radius:6px;
-  border:1px solid var(--border);
-  background:var(--card);
-  color:var(--text);
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  width: 150px;
 }
 
 table {
-  width:100%;
-  border-collapse:collapse;
-  margin-top:20px;
-  font-size:15px;
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  font-size: 15px;
 }
-th,td {
-  border:1px solid var(--border);
-  padding:10px;
-  text-align:center;
+th, td {
+  border: 1px solid var(--border);
+  padding: 10px;
+  text-align: center;
 }
 th {
-  background:var(--accent);
-  color:white;
+  background: var(--accent);
+  color: white;
+  font-weight: 500;
 }
-tr:nth-child(even) {
-  background:rgba(0,0,0,0.03);
-}
-.status-prichod { color:var(--prichod); font-weight:600; }
-.status-odchod { color:var(--odchod); font-weight:600; }
-.status-prestavka { color:var(--prestavka); font-weight:600; }
-.status-pn { color:var(--pn); font-weight:600; }
+tr:nth-child(even) { background: rgba(0,0,0,0.03); }
+
+.status-prichod { color: var(--prichod); font-weight: 600; }
+.status-odchod { color: var(--odchod); font-weight: 600; }
+.status-prestavka { color: var(--prestavka); font-weight: 600; }
+.status-pn { color: var(--pn); font-weight: 600; }
 
 .dark-toggle {
-  background:none;
-  color:var(--accent);
-  border:1px solid var(--accent);
-  padding:6px 10px;
-  border-radius:8px;
+  background: none;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  padding: 6px 10px;
+  border-radius: 8px;
+  margin-right: 5px;
 }
-.dark-toggle:hover {
-  background:var(--accent);
-  color:white;
-}
+  .dark-toggle:hover {
+    background: var(--accent);
+    color: white;
+  }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -140,6 +152,7 @@ tr:nth-child(even) {
 
 <div class="container">
   <h2>📅 Moja dochádzka</h2>
+  <button onclick="exportMyData()">Export do Excel</button>
   <div class="filter">
     <label for="filterDate">Filtrovať podľa dátumu:</label>
     <input type="date" id="filterDate">
@@ -250,7 +263,6 @@ function renderTables() {
   const breaks = filtered.filter(r => r.stav === "PRESTAVKA");
   const pn = filtered.filter(r => r.stav === "PN");
 
-  // Dochádzka
   if (!attendance.length) myAttendanceBody.innerHTML = "<tr><td colspan='2'>Žiadne záznamy</td></tr>";
   else attendance.reverse().forEach(z => {
     const statusClass = z.stav.toLowerCase() === "prichod" ? "status-prichod" : "status-odchod";
@@ -259,7 +271,6 @@ function renderTables() {
     myAttendanceBody.appendChild(row);
   });
 
-  // Prestávky
   if (!breaks.length) myBreaksBody.innerHTML = "<tr><td>Žiadne prestávky</td></tr>";
   else breaks.reverse().forEach(z => {
     const row = document.createElement("tr");
@@ -267,7 +278,6 @@ function renderTables() {
     myBreaksBody.appendChild(row);
   });
 
-  // PN
   if (!pn.length) myPNBody.innerHTML = "<tr><td>Žiadne PN</td></tr>";
   else pn.reverse().forEach(z => {
     const row = document.createElement("tr");
@@ -283,14 +293,47 @@ document.getElementById("logoutBtn").addEventListener("click", () => {
   window.location.href = "index.html";
 });
 
-/* --- Dark Mode toggle --- */
 const darkBtn = document.getElementById("darkModeBtn");
 darkBtn.addEventListener("click", () => {
   const isDark = document.body.getAttribute("data-theme") === "dark";
   document.body.setAttribute("data-theme", isDark ? "" : "dark");
   darkBtn.textContent = isDark ? "🌙 Dark mode" : "☀️ Light mode";
 });
+
+// 📊 Export do Excel pre zamestnanca
+function exportMyData() {
+  const userName = document.getElementById("userName").textContent;
+  const data = [
+    ["Zamestnanec", userName],
+    [],
+    ["Dochádzka (Príchod / Odchod)"],
+    ["Čas", "Stav"],
+    ...Array.from(document.querySelectorAll("#myAttendanceBody tr")).map(tr => {
+      const tds = tr.querySelectorAll("td");
+      return tds.length ? [tds[0].textContent, tds[1].textContent] : [];
+    }),
+    [],
+    ["Prestávky"],
+    ["Čas"],
+    ...Array.from(document.querySelectorAll("#myBreaksBody tr")).map(tr => {
+      const tds = tr.querySelectorAll("td");
+      return tds.length ? [tds[0].textContent] : [];
+    }),
+    [],
+    ["PN"],
+    ["Čas"],
+    ...Array.from(document.querySelectorAll("#myPNBody tr")).map(tr => {
+      const tds = tr.querySelectorAll("td");
+      return tds.length ? [tds[0].textContent] : [];
+    })
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Moja Dochádzka");
+  XLSX.writeFile(wb, `Dochadzka_${userName}.xlsx`);
+}
 </script>
 </body>
 </html>
+
 
