@@ -3,223 +3,398 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin – Dochádzka ESP32</title>
+<title>Admin Panel - Dochádzka</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js"></script>
 <style>
-body {
-  font-family:'Poppins',sans-serif;
-  background:#eef2f6;
-  margin:0;
-  padding:0;
-  display:flex;
-}
-.sidebar {
-  width:230px;
-  height:100vh;
-  background:linear-gradient(180deg,#007bff 0%,#0056b3 100%);
-  color:white;
-  position:fixed;
-  left:0;
-  top:0;
-  padding-top:30px;
-  display:flex;
-  flex-direction:column;
-}
-.sidebar h2 {
-  margin-bottom:40px;
-  font-size:20px;
-  font-weight:600;
-  text-align:center;
-}
-.sidebar ul {
-  list-style:none;
-  padding:0;
-  width:100%;
-}
-.sidebar li {
-  padding:15px 30px;
-  cursor:pointer;
-  transition:0.3s;
-  text-align:left;
-}
-.sidebar li:hover, .sidebar li.active {
-  background:rgba(255,255,255,0.2);
-}
-header {
-  background:#fff;
-  box-shadow:0 2px 10px rgba(0,0,0,0.05);
-  color:#333;
-  text-align:center;
-  padding:20px;
-  font-size:22px;
-  font-weight:600;
-  position:fixed;
-  top:0;
-  left:230px;
-  right:0;
-  z-index:100;
-}
-#logoutBtn {
-  position:absolute;
-  top:15px;
-  right:30px;
-  background:#dc3545;
-  color:white;
-  border:none;
-  border-radius:8px;
-  padding:8px 14px;
-  cursor:pointer;
-  transition:0.3s;
-}
-#logoutBtn:hover {
-  background:#b52a3a;
-}
-main {
-  flex:1;
-  margin-left:250px;
-  margin-top:90px;
-  padding:30px;
-}
-section {
-  display:none;
-  opacity:0;
-  transform:translateY(10px);
-  transition:opacity 0.3s ease, transform 0.3s ease;
-}
-section.active {
-  display:block;
-  opacity:1;
-  transform:translateY(0);
-  background:#fff;
-  padding:25px;
-  border-radius:16px;
-  box-shadow:0 4px 20px rgba(0,0,0,0.05);
-  margin-bottom:30px;
-}
-h2 {
-  color:#007bff;
-  border-bottom:2px solid #007bff;
-  padding-bottom:8px;
-  margin-bottom:20px;
-}
-input, select {
-  padding:8px 12px;
-  border-radius:8px;
-  border:1px solid #ccc;
-  margin:6px 4px;
-  outline:none;
-}
-button {
-  background:#007bff;
-  color:white;
-  padding:8px 14px;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-  transition:0.3s;
-}
-button:hover {
-  background:#0056b3;
-}
-table {
-  border-collapse:collapse;
-  width:100%;
-  margin-top:20px;
-  font-size:14px;
-}
-th, td {
-  border:1px solid #ddd;
-  padding:10px;
-  text-align:center;
-}
-th {
-  background:#007bff;
-  color:white;
-}
-tr:nth-child(even) {
-  background:#f9f9f9;
-}
-.action-btn {
-  background:#dc3545;
-  border:none;
-  color:white;
-  padding:6px 10px;
-  border-radius:6px;
-  cursor:pointer;
-  transition:0.3s;
-}
-.action-btn:hover {
-  background:#b52a3a;
-}
+  body {
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    background: #f4f5f7;
+    color: #333;
+    display: flex;
+  }
+
+  .sidebar {
+    width: 240px;
+    background: #2b3a67;
+    color: white;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding-top: 20px;
+  }
+
+  .sidebar h2 {
+    text-align: center;
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+
+  .sidebar ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .sidebar li {
+    padding: 14px 20px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .sidebar li:hover, .sidebar li.active {
+    background: #3e4e88;
+  }
+
+  main {
+    flex: 1;
+    padding: 20px;
+  }
+
+  section {
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+
+  section.active {
+    display: block;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+  }
+
+  th, td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: center;
+  }
+
+  th {
+    background: #dfe3ee;
+  }
+
+  .dochadzka { background: #e8f5e9; }
+  .prestávky { background: #fff3e0; }
+  .pn { background: #fce4ec; }
+
+  button {
+    background: #3e4e88;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+
+  button:hover {
+    background: #2b3a67;
+  }
+
+  input {
+    padding: 8px;
+    margin-top: 5px;
+    width: 200px;
+  }
 </style>
 </head>
 <body>
 
-<div class="sidebar">
-  <h2>Admin Panel</h2>
+<!-- Sidebar -->
+<aside class="sidebar">
+  <h2>👑 Admin Panel</h2>
   <ul>
-    <li id="manageUsersTab" class="active">👤 Správa zamestnancov</li>
-    <li id="viewAttendanceTab">📅 Dochádzka</li>
+    <li id="viewAttendanceTab" class="active">📅 Dochádzka</li>
     <li id="viewBreaksTab">☕ Prestávky</li>
     <li id="viewPnTab">🏥 PN</li>
+    <li id="manageUsersTab">👤 Správa zamestnancov</li>
     <li id="changePasswordTab">🔑 Zmena hesla</li>
   </ul>
-</div>
+</aside>
 
-<header>
-  🛠️ Administrácia dochádzky
-  <button id="logoutBtn">Odhlásiť sa</button>
-</header>
-
+<!-- Hlavný obsah -->
 <main>
-  <section id="manage-users" class="active">
-    <h2>👤 Správa zamestnancov</h2>
-    <p>Tu bude správa používateľov (Firebase načítanie...)</p>
-  </section>
-
-  <section id="view-attendance">
+  <section id="view-attendance" class="active">
     <h2>📅 Dochádzka</h2>
-    <p>Tu sa zobrazí tabuľka dochádzky.</p>
+    <table id="dochadzkaTable">
+      <thead>
+        <tr><th>Zamestnanec</th><th>Dátum</th><th>Čas</th><th>Typ</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
   </section>
 
   <section id="view-breaks">
     <h2>☕ Prestávky</h2>
-    <p>Tu sa zobrazí tabuľka prestávok.</p>
+    <table id="prestávkyTable">
+      <thead>
+        <tr><th>Zamestnanec</th><th>Dátum</th><th>Začiatok</th><th>Koniec</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
   </section>
 
   <section id="view-pn">
     <h2>🏥 PN</h2>
-    <p>Tu sa zobrazí tabuľka PN.</p>
+    <table id="pnTable">
+      <thead>
+        <tr><th>Zamestnanec</th><th>Od</th><th>Do</th><th>Poznámka</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <section id="manage-users">
+    <h2>👤 Správa zamestnancov</h2>
+    <button onclick="showAddUserForm()">Pridať zamestnanca</button>
+    <table id="usersTable">
+      <thead>
+        <tr><th>Meno</th><th>E-mail</th><th>Akcie</th></tr>
+      </thead>
+      <tbody id="usersList"></tbody>
+    </table>
+    <div id="addUserForm" style="display: none; margin-top: 20px;">
+      <h3>Pridať nového zamestnanca</h3>
+      <input type="text" id="newUserName" placeholder="Meno"><br>
+      <input type="email" id="newUserEmail" placeholder="E-mail"><br>
+      <button onclick="addUser()">Pridať</button>
+      <button onclick="hideAddUserForm()">Zrušiť</button>
+      <p id="addUserMsg"></p>
+    </div>
   </section>
 
   <section id="change-password">
     <h2>🔑 Zmena hesla</h2>
-    <p>Tu sa spracuje zmena hesla.</p>
+    <p>Zadaj nový e-mail a heslo pre zmenu:</p>
+    <input type="email" id="newEmail" placeholder="Nový e-mail"><br>
+    <input type="password" id="newPassword" placeholder="Nové heslo"><br>
+    <button onclick="changePassword()">Zmeniť</button>
+    <p id="changePassMsg"></p>
   </section>
 </main>
 
 <script>
-// 🔁 Prepínanie sekcií
-const tabs = document.querySelectorAll(".sidebar li");
-const sections = document.querySelectorAll("main section");
+  // 🔥 Firebase konfigurácia
+  const firebaseConfig = {
+    apiKey: "TU_DAJ_SVOJ_API_KEY",
+    authDomain: "TU_DAJ_SVOJ_PROJEKT.firebaseapp.com",
+    databaseURL: "https://TU_DAJ_SVOJ_PROJEKT.firebaseio.com",
+    projectId: "TU_DAJ_SVOJ_PROJEKT",
+    storageBucket: "TU_DAJ_SVOJ_PROJEKT.appspot.com",
+    messagingSenderId: "000000000000",
+    appId: "1:000000000000:web:abc123"
+  };
 
-tabs.forEach(tab => {
-  tab.addEventListener("click", () => {
-    tabs.forEach(t => t.classList.remove("active"));
-    tab.classList.add("active");
-    sections.forEach(s => s.classList.remove("active"));
-    if (tab.id === "manageUsersTab") document.getElementById("manage-users").classList.add("active");
-    if (tab.id === "viewAttendanceTab") document.getElementById("view-attendance").classList.add("active");
-    if (tab.id === "viewBreaksTab") document.getElementById("view-breaks").classList.add("active");
-    if (tab.id === "viewPnTab") document.getElementById("view-pn").classList.add("active");
-    if (tab.id === "changePasswordTab") document.getElementById("change-password").classList.add("active");
+  let db = null;
+  try {
+    const app = firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+  } catch (error) {
+    console.error("Firebase inicializácia zlyhala:", error);
+  }
+
+  // 📋 Načítanie dát z databázy
+  function loadAttendance() {
+    if (!db) return;
+    const ref = db.ref("dochadzka");
+    ref.on("value", (snapshot) => {
+      const tbody = document.querySelector("#dochadzkaTable tbody");
+      tbody.innerHTML = "";
+      snapshot.forEach(userSnap => {
+        userSnap.forEach(rec => {
+          const d = rec.val();
+          const row = `<tr><td>${d.zamestnanec}</td><td>${d.datum}</td><td>${d.cas}</td><td>${d.typ}</td></tr>`;
+          tbody.innerHTML += row;
+        });
+      });
+    });
+  }
+
+  function loadBreaks() {
+    if (!db) return;
+    const ref = db.ref("prestávky");
+    ref.on("value", (snapshot) => {
+      const tbody = document.querySelector("#prestávkyTable tbody");
+      tbody.innerHTML = "";
+      snapshot.forEach(userSnap => {
+        userSnap.forEach(rec => {
+          const d = rec.val();
+          const row = `<tr><td>${d.zamestnanec}</td><td>${d.datum}</td><td>${d.zaciatok}</td><td>${d.koniec}</td></tr>`;
+          tbody.innerHTML += row;
+        });
+      });
+    });
+  }
+
+  function loadPN() {
+    if (!db) return;
+    const ref = db.ref("pn");
+    ref.on("value", (snapshot) => {
+      const tbody = document.querySelector("#pnTable tbody");
+      tbody.innerHTML = "";
+      snapshot.forEach(userSnap => {
+        userSnap.forEach(rec => {
+          const d = rec.val();
+          const row = `<tr><td>${d.zamestnanec}</td><td>${d.od}</td><td>${d.do}</td><td>${d.poznamka || ""}</td></tr>`;
+          tbody.innerHTML += row;
+        });
+      });
+    });
+  }
+
+  loadAttendance();
+  loadBreaks();
+  loadPN();
+  loadUsers();
+
+  // 🪄 Prepínanie sekcií
+  const tabs = document.querySelectorAll(".sidebar li");
+  const sections = document.querySelectorAll("main section");
+  tabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      tabs.forEach(t => t.classList.remove("active"));
+      sections.forEach(s => s.classList.remove("active"));
+      tab.classList.add("active");
+
+      if (tab.id === "manageUsersTab") document.getElementById("manage-users").classList.add("active");
+      if (tab.id === "viewAttendanceTab") document.getElementById("view-attendance").classList.add("active");
+      if (tab.id === "viewBreaksTab") document.getElementById("view-breaks").classList.add("active");
+      if (tab.id === "viewPnTab") document.getElementById("view-pn").classList.add("active");
+      if (tab.id === "changePasswordTab") document.getElementById("change-password").classList.add("active");
+    });
   });
-});
-</script>
 
+  // 👤 Správa zamestnancov
+  function loadUsers() {
+    if (!db) return;
+    const ref = db.ref("users");
+    ref.on("value", (snapshot) => {
+      const tbody = document.getElementById("usersList");
+      tbody.innerHTML = "";
+      snapshot.forEach(childSnap => {
+        const user = childSnap.val();
+        const row = document.createElement('tr');
+        const nameTd = document.createElement('td');
+        nameTd.textContent = user.name;
+        nameTd.onclick = () => editCell(nameTd, childSnap.key, 'name');
+        const emailTd = document.createElement('td');
+        emailTd.textContent = user.email;
+        emailTd.onclick = () => editCell(emailTd, childSnap.key, 'email');
+        const actionsTd = document.createElement('td');
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = 'Vymazať';
+        deleteBtn.onclick = () => deleteUser(childSnap.key);
+        actionsTd.appendChild(deleteBtn);
+        row.appendChild(nameTd);
+        row.appendChild(emailTd);
+        row.appendChild(actionsTd);
+        tbody.appendChild(row);
+      });
+    });
+  }
+
+  function editCell(td, key, field) {
+    if (!db) return;
+    const originalText = td.textContent;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = originalText;
+    input.onblur = () => {
+      const newValue = input.value.trim();
+      if (newValue && newValue !== originalText) {
+        td.textContent = newValue;
+        db.ref("users/" + key).update({ [field]: newValue }).catch(err => {
+          alert("Chyba pri aktualizácii: " + err.message);
+          td.textContent = originalText;
+        });
+      } else {
+        td.textContent = originalText;
+      }
+    };
+    input.onkeydown = (e) => {
+      if (e.key === 'Enter') input.blur();
+      if (e.key === 'Escape') {
+        td.textContent = originalText;
+      }
+    };
+    td.innerHTML = '';
+    td.appendChild(input);
+    input.focus();
+    input.select();
+  }
+
+  function showAddUserForm() {
+    document.getElementById("addUserForm").style.display = "block";
+  }
+
+  function hideAddUserForm() {
+    document.getElementById("addUserForm").style.display = "none";
+    document.getElementById("newUserName").value = "";
+    document.getElementById("newUserEmail").value = "";
+    document.getElementById("addUserMsg").textContent = "";
+  }
+
+  function addUser() {
+    if (!db) return;
+    const name = document.getElementById("newUserName").value;
+    const email = document.getElementById("newUserEmail").value;
+    const msg = document.getElementById("addUserMsg");
+    if (!name || !email) {
+      msg.textContent = "Vyplňte všetky polia!";
+      return;
+    }
+    msg.textContent = "Pridávanie...";
+    const ref = db.ref("users").push();
+    ref.set({ name, email }).then(() => {
+      msg.textContent = "Zamestnanec pridaný!";
+      hideAddUserForm();
+    }).catch(err => {
+      msg.textContent = "Chyba: " + err.message;
+    });
+  }
+
+  function deleteUser(key) {
+    if (!db) return;
+    if (confirm("Naozaj chcete vymazať tohto zamestnanca?")) {
+      db.ref("users/" + key).remove().then(() => {
+        alert("Zamestnanec vymazaný!");
+      }).catch(err => {
+        alert("Chyba: " + err.message);
+      });
+    }
+  }
+
+  // 🔑 Zmena hesla
+  function changePassword() {
+    const newEmail = document.getElementById("newEmail").value;
+    const newPass = document.getElementById("newPassword").value;
+    const msg = document.getElementById("changePassMsg");
+    msg.textContent = "Zmena prebieha...";
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        user.updateEmail(newEmail).then(() => {
+          return user.updatePassword(newPass);
+        }).then(() => {
+          msg.textContent = "Úspešne zmenené!";
+        }).catch(err => {
+          msg.textContent = "Chyba: " + err.message;
+        });
+      } else msg.textContent = "Nie si prihlásený!";
+    });
+  }
+</script>
 </body>
 </html>
-
-
 
 
 
