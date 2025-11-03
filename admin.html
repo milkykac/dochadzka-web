@@ -119,6 +119,7 @@
     <li id="viewBreaksTab" data-target="view-breaks">☕ Prestávky</li>
     <li id="viewPnTab" data-target="view-pn">🏥 PN</li>
     <li id="manageUsersTab" data-target="manage-users">👤 Správa zamestnancov</li>
+    <li id="logoutBtn">🚪 Odhlásiť</li>
   </ul>
 </aside>
 
@@ -221,10 +222,12 @@
     ref.on("value", (snapshot) => {
       const tbody = document.querySelector("#dochadzkaTable tbody");
       tbody.innerHTML = "";
-      snapshot.forEach(rec => {
-        const d = rec.val();
-        const row = `<tr><td>${d.zamestnanec}</td><td>${d.uid || ""}</td><td>${d.datum}</td><td>${d.cas}</td><td>${d.typ}</td></tr>`;
-        tbody.innerHTML += row;
+      snapshot.forEach(userSnap => {
+        userSnap.forEach(rec => {
+          const d = rec.val();
+          const row = `<tr><td>${d.zamestnanec}</td><td>${d.uid || ""}</td><td>${d.datum}</td><td>${d.cas}</td><td>${d.typ}</td></tr>`;
+          tbody.innerHTML += row;
+        });
       });
     });
   }
@@ -235,10 +238,12 @@
     ref.on("value", (snapshot) => {
       const tbody = document.querySelector("#prestávkyTable tbody");
       tbody.innerHTML = "";
-      snapshot.forEach(rec => {
-        const d = rec.val();
-        const row = `<tr><td>${d.zamestnanec}</td><td>${d.datum}</td><td>${d.zaciatok}</td><td>${d.koniec}</td></tr>`;
-        tbody.innerHTML += row;
+      snapshot.forEach(userSnap => {
+        userSnap.forEach(rec => {
+          const d = rec.val();
+          const row = `<tr><td>${d.zamestnanec}</td><td>${d.datum}</td><td>${d.zaciatok}</td><td>${d.koniec}</td></tr>`;
+          tbody.innerHTML += row;
+        });
       });
     });
   }
@@ -249,10 +254,12 @@
     ref.on("value", (snapshot) => {
       const tbody = document.querySelector("#pnTable tbody");
       tbody.innerHTML = "";
-      snapshot.forEach(rec => {
-        const d = rec.val();
-        const row = `<tr><td>${d.zamestnanec}</td><td>${d.od}</td><td>${d.do}</td><td>${d.poznamka || ""}</td></tr>`;
-        tbody.innerHTML += row;
+      snapshot.forEach(userSnap => {
+        userSnap.forEach(rec => {
+          const d = rec.val();
+          const row = `<tr><td>${d.zamestnanec}</td><td>${d.od}</td><td>${d.do}</td><td>${d.poznamka || ""}</td></tr>`;
+          tbody.innerHTML += row;
+        });
       });
     });
   }
@@ -274,6 +281,16 @@
       if (target) {
         document.getElementById(target).classList.add("active");
       }
+    });
+  });
+
+  // 🚪 Odhlásenie
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+    firebase.auth().signOut().then(() => {
+      alert("Odhlásený!");
+      window.location.reload();
+    }).catch(err => {
+      alert("Chyba pri odhlasovaní: " + err.message);
     });
   });
 
