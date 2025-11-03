@@ -164,14 +164,15 @@
     <button onclick="exportToExcel('usersTable', 'Zamestnanci')">Export do Excel</button>
     <table id="usersTable">
       <thead>
-        <tr><th>Meno</th><th>E-mail</th><th>Akcie</th></tr>
+        <tr><th>Meno</th><th>E-mail</th><th>UID čipu</th><th>Akcie</th></tr>
       </thead>
       <tbody id="usersList"></tbody>
     </table>
     <div id="addUserForm" style="display: none; margin-top: 20px;">
       <h3>Pridať nového zamestnanca</h3>
       <input type="text" id="newUserName" placeholder="Meno"><br>
-      <input type="email" id="newUserEmail" placeholder="E-mail"><br>
+      <input type="text" id="newUserEmail" placeholder="E-mail (voliteľné)"><br>
+      <input type="text" id="newUserUid" placeholder="UID čipu (voliteľné)"><br>
       <button onclick="addUser()">Pridať</button>
       <button onclick="hideAddUserForm()">Zrušiť</button>
       <p id="addUserMsg"></p>
@@ -181,11 +182,24 @@
   <section id="change-password">
     <h2>🔑 Zmena hesla</h2>
     <p>Zadaj nový e-mail a heslo pre zmenu:</p>
-    <input type="email" id="newEmail" placeholder="Nový e-mail"><br>
+    <input type="text" id="newEmail" placeholder="Nový e-mail"><br>
     <input type="password" id="newPassword" placeholder="Nové heslo"><br>
     <button onclick="changePassword()">Zmeniť</button>
     <p id="changePassMsg"></p>
   </section>
+
+  <!-- Modal pre pridanie nového zamestnanca -->
+  <div id="newEmployeeModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+    <div style="background: white; padding: 20px; border-radius: 8px; max-width: 400px; width: 90%;">
+      <h3>Nový zamestnanec detekovaný</h3>
+      <p>Nový čip UID: <span id="newChipUid"></span></p>
+      <input type="text" id="newEmpName" placeholder="Meno zamestnanca"><br>
+      <input type="text" id="newEmpEmail" placeholder="E-mail zamestnanca"><br>
+      <button onclick="addNewEmployee()">Pridať zamestnanca</button>
+      <button onclick="closeNewEmployeeModal()">Zrušiť</button>
+      <p id="newEmpMsg"></p>
+    </div>
+  </div>
 </main>
 
 <script>
@@ -294,8 +308,11 @@
         nameTd.textContent = user.name;
         nameTd.onclick = () => editCell(nameTd, childSnap.key, 'name');
         const emailTd = document.createElement('td');
-        emailTd.textContent = user.email;
+        emailTd.textContent = user.email || "";
         emailTd.onclick = () => editCell(emailTd, childSnap.key, 'email');
+        const uidTd = document.createElement('td');
+        uidTd.textContent = user.chipUid || "";
+        uidTd.onclick = () => editCell(uidTd, childSnap.key, 'chipUid');
         const actionsTd = document.createElement('td');
         const deleteBtn = document.createElement('button');
         deleteBtn.textContent = 'Vymazať';
@@ -303,6 +320,7 @@
         actionsTd.appendChild(deleteBtn);
         row.appendChild(nameTd);
         row.appendChild(emailTd);
+        row.appendChild(uidTd);
         row.appendChild(actionsTd);
         tbody.appendChild(row);
       });
@@ -317,12 +335,30 @@
     input.value = originalText;
     input.onblur = () => {
       const newValue = input.value.trim();
-      if (newValue && newValue !== originalText) {
-        td.textContent = newValue;
-        db.ref("users/" + key).update({ [field]: newValue }).catch(err => {
-          alert("Chyba pri aktualizácii: " + err.message);
+      if (newValue !== originalText) {
+        if (field === 'name' && !newValue) {
           td.textContent = originalText;
-        });
+          return;
+        }
+        if (field === 'chipUid' && newValue) {
+          // Kontrola duplicitného UID
+          db.ref("users").orderByChild("chipUid").equalTo(newValue).once("value", snapshot => {
+            let duplicate = false;
+            snapshot.forEach(childSnap => {
+              if (childSnap.key !== key) {
+                duplicate = true;
+              }
+            });
+            if (duplicate) {
+              alert("UID čipu už existuje!");
+              td.textContent = originalText;
+              return;
+            }
+            updateField(td, key, field, newValue, originalText);
+          });
+        } else {
+          updateField(td, key, field, newValue, originalText);
+        }
       } else {
         td.textContent = originalText;
       }
@@ -339,6 +375,14 @@
     input.select();
   }
 
+  function updateField(td, key, field, newValue, originalText) {
+    td.textContent = newValue;
+    db.ref("users/" + key).update({ [field]: newValue }).catch(err => {
+      alert("Chyba pri aktualizácii: " + err.message);
+      td.textContent = originalText;
+    });
+  }
+
   function showAddUserForm() {
     document.getElementById("addUserForm").style.display = "block";
   }
@@ -347,6 +391,7 @@
     document.getElementById("addUserForm").style.display = "none";
     document.getElementById("newUserName").value = "";
     document.getElementById("newUserEmail").value = "";
+    document.getElementById("newUserUid").value = "";
     document.getElementById("addUserMsg").textContent = "";
   }
 
@@ -355,15 +400,33 @@
     const name = document.getElementById("newUserName").value;
     const email = document.getElementById("newUserEmail").value;
     const msg = document.getElementById("addUserMsg");
-    if (!name || !email) {
-      msg.textContent = "Vyplňte všetky polia!";
+    if (!name) {
+      msg.textContent = "Vyplňte meno!";
       return;
     }
+    // Kontrola duplicitného UID
+    const uid = document.getElementById("newUserUid").value.trim();
+    if (uid) {
+      db.ref("users").orderByChild("chipUid").equalTo(uid).once("value", snapshot => {
+        if (snapshot.exists()) {
+          msg.textContent = "UID čipu už existuje!";
+          return;
+        }
+        proceedAddUser(name, email, uid, msg);
+      });
+    } else {
+      proceedAddUser(name, email, "", msg);
+    }
+  }
+
+  function proceedAddUser(name, email, uid, msg) {
     msg.textContent = "Pridávanie...";
     const ref = db.ref("users").push();
-    ref.set({ name, email }).then(() => {
+    const userData = { name, email: email || "", chipUid: uid || "" };
+    ref.set(userData).then(() => {
       msg.textContent = "Zamestnanec pridaný!";
       hideAddUserForm();
+      loadUsers(); // Reload the users table
     }).catch(err => {
       msg.textContent = "Chyba: " + err.message;
     });
@@ -405,7 +468,62 @@
     const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
     XLSX.writeFile(wb, fileName + ".xlsx");
   }
+
+  // 👤 Detekcia nového čipu a pridanie zamestnanca
+  let knownUids = new Set();
+  function checkForNewChips() {
+    if (!db) return;
+    const ref = db.ref("dochadzka");
+    ref.on("value", (snapshot) => {
+      snapshot.forEach(userSnap => {
+        const uid = userSnap.key;
+        if (!knownUids.has(uid)) {
+          knownUids.add(uid);
+          // Skontroluj, či už existuje v users
+          db.ref("users").orderByChild("chipUid").equalTo(uid).once("value", userSnap => {
+            if (!userSnap.exists()) {
+              // Nový čip, zobraz modal
+              document.getElementById("newChipUid").textContent = uid;
+              document.getElementById("newEmployeeModal").style.display = "flex";
+            }
+          });
+        }
+      });
+    });
+  }
+
+  function addNewEmployee() {
+    if (!db) return;
+    const name = document.getElementById("newEmpName").value;
+    const email = document.getElementById("newEmpEmail").value;
+    const uid = document.getElementById("newChipUid").textContent;
+    const msg = document.getElementById("newEmpMsg");
+    if (!name) {
+      msg.textContent = "Vyplňte meno!";
+      return;
+    }
+    msg.textContent = "Pridávanie...";
+    const ref = db.ref("users").push();
+    const userData = { name, chipUid: uid };
+    if (email) userData.email = email;
+    ref.set(userData).then(() => {
+      msg.textContent = "Zamestnanec pridaný!";
+      closeNewEmployeeModal();
+      loadUsers(); // Reload the users table
+    }).catch(err => {
+      msg.textContent = "Chyba: " + err.message;
+    });
+  }
+
+  function closeNewEmployeeModal() {
+    document.getElementById("newEmployeeModal").style.display = "none";
+    document.getElementById("newEmpName").value = "";
+    document.getElementById("newEmpEmail").value = "";
+    document.getElementById("newEmpMsg").textContent = "";
+  }
+
+  // Spusti kontrolu nových čipov
+  checkForNewChips();
 </script>
 </body>
 </html>
-
