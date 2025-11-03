@@ -8,6 +8,7 @@
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   body {
     font-family: 'Roboto', sans-serif;
@@ -126,9 +127,10 @@
 <main>
   <section id="view-attendance" class="active">
     <h2>📅 Dochádzka</h2>
+    <button onclick="exportToExcel('dochadzkaTable', 'Dochadzka')">Export do Excel</button>
     <table id="dochadzkaTable">
       <thead>
-        <tr><th>Zamestnanec</th><th>Dátum</th><th>Čas</th><th>Typ</th></tr>
+        <tr><th>Zamestnanec</th><th>UID</th><th>Dátum</th><th>Čas</th><th>Typ</th></tr>
       </thead>
       <tbody></tbody>
     </table>
@@ -136,6 +138,7 @@
 
   <section id="view-breaks">
     <h2>☕ Prestávky</h2>
+    <button onclick="exportToExcel('prestávkyTable', 'Prestávky')">Export do Excel</button>
     <table id="prestávkyTable">
       <thead>
         <tr><th>Zamestnanec</th><th>Dátum</th><th>Začiatok</th><th>Koniec</th></tr>
@@ -146,6 +149,7 @@
 
   <section id="view-pn">
     <h2>🏥 PN</h2>
+    <button onclick="exportToExcel('pnTable', 'PN')">Export do Excel</button>
     <table id="pnTable">
       <thead>
         <tr><th>Zamestnanec</th><th>Od</th><th>Do</th><th>Poznámka</th></tr>
@@ -157,6 +161,7 @@
   <section id="manage-users">
     <h2>👤 Správa zamestnancov</h2>
     <button onclick="showAddUserForm()">Pridať zamestnanca</button>
+    <button onclick="exportToExcel('usersTable', 'Zamestnanci')">Export do Excel</button>
     <table id="usersTable">
       <thead>
         <tr><th>Meno</th><th>E-mail</th><th>Akcie</th></tr>
@@ -214,7 +219,7 @@
       snapshot.forEach(userSnap => {
         userSnap.forEach(rec => {
           const d = rec.val();
-          const row = `<tr><td>${d.zamestnanec}</td><td>${d.datum}</td><td>${d.cas}</td><td>${d.typ}</td></tr>`;
+          const row = `<tr><td>${d.zamestnanec}</td><td>${d.uid || ""}</td><td>${d.datum}</td><td>${d.cas}</td><td>${d.typ}</td></tr>`;
           tbody.innerHTML += row;
         });
       });
@@ -393,14 +398,14 @@
       } else msg.textContent = "Nie si prihlásený!";
     });
   }
+
+  // 📊 Export do Excel
+  function exportToExcel(tableId, fileName) {
+    const table = document.getElementById(tableId);
+    const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
+    XLSX.writeFile(wb, fileName + ".xlsx");
+  }
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
 
