@@ -119,7 +119,6 @@
     <li id="viewBreaksTab">☕ Prestávky</li>
     <li id="viewPnTab">🏥 PN</li>
     <li id="manageUsersTab">👤 Správa zamestnancov</li>
-    <li id="changePasswordTab">🔑 Zmena hesla</li>
   </ul>
 </aside>
 
@@ -164,14 +163,14 @@
     <button onclick="exportToExcel('usersTable', 'Zamestnanci')">Export do Excel</button>
     <table id="usersTable">
       <thead>
-        <tr><th>Meno</th><th>E-mail</th><th>UID čipu</th><th>Akcie</th></tr>
+        <tr><th>Meno</th><th>UID čipu</th><th>Akcie</th></tr>
       </thead>
       <tbody id="usersList"></tbody>
     </table>
     <div id="addUserForm" style="display: none; margin-top: 20px;">
       <h3>Pridať nového zamestnanca</h3>
       <input type="text" id="newUserName" placeholder="Meno"><br>
-      <input type="text" id="newUserEmail" placeholder="E-mail (voliteľné)"><br>
+      <input type="password" id="newUserPassword" placeholder="Heslo"><br>
       <input type="text" id="newUserUid" placeholder="UID čipu (voliteľné)"><br>
       <button onclick="addUser()">Pridať</button>
       <button onclick="hideAddUserForm()">Zrušiť</button>
@@ -179,14 +178,7 @@
     </div>
   </section>
 
-  <section id="change-password">
-    <h2>🔑 Zmena hesla</h2>
-    <p>Zadaj nový e-mail a heslo pre zmenu:</p>
-    <input type="text" id="newEmail" placeholder="Nový e-mail"><br>
-    <input type="password" id="newPassword" placeholder="Nové heslo"><br>
-    <button onclick="changePassword()">Zmeniť</button>
-    <p id="changePassMsg"></p>
-  </section>
+
 
   <!-- Modal pre pridanie nového zamestnanca -->
   <div id="newEmployeeModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
@@ -194,7 +186,6 @@
       <h3>Nový zamestnanec detekovaný</h3>
       <p>Nový čip UID: <span id="newChipUid"></span></p>
       <input type="text" id="newEmpName" placeholder="Meno zamestnanca"><br>
-      <input type="text" id="newEmpEmail" placeholder="E-mail zamestnanca"><br>
       <button onclick="addNewEmployee()">Pridať zamestnanca</button>
       <button onclick="closeNewEmployeeModal()">Zrušiť</button>
       <p id="newEmpMsg"></p>
@@ -290,7 +281,6 @@
       if (tab.id === "viewAttendanceTab") document.getElementById("view-attendance").classList.add("active");
       if (tab.id === "viewBreaksTab") document.getElementById("view-breaks").classList.add("active");
       if (tab.id === "viewPnTab") document.getElementById("view-pn").classList.add("active");
-      if (tab.id === "changePasswordTab") document.getElementById("change-password").classList.add("active");
     });
   });
 
@@ -331,7 +321,7 @@
     if (!db) return;
     const originalText = td.textContent;
     const input = document.createElement('input');
-    input.type = 'text';
+    input.type = field === 'email' ? 'email' : 'text';
     input.value = originalText;
     input.onblur = () => {
       const newValue = input.value.trim();
@@ -391,17 +381,19 @@
     document.getElementById("addUserForm").style.display = "none";
     document.getElementById("newUserName").value = "";
     document.getElementById("newUserEmail").value = "";
+    document.getElementById("newUserPassword").value = "";
     document.getElementById("newUserUid").value = "";
     document.getElementById("addUserMsg").textContent = "";
   }
 
   function addUser() {
     if (!db) return;
-    const name = document.getElementById("newUserName").value;
-    const email = document.getElementById("newUserEmail").value;
+    const name = document.getElementById("newUserName").value.trim();
+    const email = document.getElementById("newUserEmail").value.trim();
+    const password = document.getElementById("newUserPassword").value;
     const msg = document.getElementById("addUserMsg");
-    if (!name) {
-      msg.textContent = "Vyplňte meno!";
+    if (!name || !password) {
+      msg.textContent = "Vyplňte meno a heslo!";
       return;
     }
     // Kontrola duplicitného UID
@@ -412,17 +404,17 @@
           msg.textContent = "UID čipu už existuje!";
           return;
         }
-        proceedAddUser(name, email, uid, msg);
+        proceedAddUser(name, email, password, uid, msg);
       });
     } else {
-      proceedAddUser(name, email, "", msg);
+      proceedAddUser(name, email, password, "", msg);
     }
   }
 
-  function proceedAddUser(name, email, uid, msg) {
+  function proceedAddUser(name, email, password, uid, msg) {
     msg.textContent = "Pridávanie...";
     const ref = db.ref("users").push();
-    const userData = { name, email: email || "", chipUid: uid || "" };
+    const userData = { name, email: email || "", password, chipUid: uid || "" };
     ref.set(userData).then(() => {
       msg.textContent = "Zamestnanec pridaný!";
       hideAddUserForm();
@@ -494,8 +486,7 @@
 
   function addNewEmployee() {
     if (!db) return;
-    const name = document.getElementById("newEmpName").value;
-    const email = document.getElementById("newEmpEmail").value;
+    const name = document.getElementById("newEmpName").value.trim();
     const uid = document.getElementById("newChipUid").textContent;
     const msg = document.getElementById("newEmpMsg");
     if (!name) {
@@ -505,7 +496,6 @@
     msg.textContent = "Pridávanie...";
     const ref = db.ref("users").push();
     const userData = { name, chipUid: uid };
-    if (email) userData.email = email;
     ref.set(userData).then(() => {
       msg.textContent = "Zamestnanec pridaný!";
       closeNewEmployeeModal();
@@ -518,7 +508,6 @@
   function closeNewEmployeeModal() {
     document.getElementById("newEmployeeModal").style.display = "none";
     document.getElementById("newEmpName").value = "";
-    document.getElementById("newEmpEmail").value = "";
     document.getElementById("newEmpMsg").textContent = "";
   }
 
