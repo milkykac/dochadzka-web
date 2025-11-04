@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin panel – Dochádzka</title>
+<title>Admin panel – Dochádzkový systém</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
 <style>
 body {
   font-family: 'Poppins', sans-serif;
@@ -13,13 +14,15 @@ body {
   color: #333;
   min-height: 100vh;
 }
+
+/* HEADER */
 header {
   background: #fff;
   padding: 15px 25px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.15);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -34,18 +37,21 @@ button {
   background: #007bff;
   border: none;
   color: white;
-  padding: 8px 14px;
+  padding: 9px 16px;
   border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
-  transition: 0.3s;
+  font-weight: 500;
+  transition: 0.3s ease;
 }
 button:hover { background: #0056b3; }
+
+/* NAV */
 nav {
   background: #fff;
   display: flex;
   justify-content: center;
-  padding: 10px;
+  padding: 12px;
   gap: 10px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   position: sticky;
@@ -55,31 +61,35 @@ nav {
 nav button {
   background: #007bff;
   color: white;
-  padding: 8px 14px;
+  padding: 9px 16px;
   border-radius: 8px;
   font-weight: 500;
+  transition: all 0.2s ease;
 }
-nav button.active {
-  background: #6f42c1;
-}
+nav button:hover { background: #0056b3; transform: scale(1.03); }
+nav button.active { background: #6f42c1; }
+
+/* SEKCIE */
 section {
   display: none;
   padding: 25px;
   background: #fff;
   margin: 25px auto;
   border-radius: 12px;
-  max-width: 1000px;
+  max-width: 1100px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.1);
 }
-section.active {
-  display: block;
-}
+section.active { display: block; }
+
 h2 {
   color: #007bff;
   margin-top: 0;
   border-bottom: 2px solid #007bff;
   padding-bottom: 5px;
+  font-size: 20px;
 }
+
+/* TABUĽKY */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -89,7 +99,7 @@ table {
 }
 th, td {
   border: 1px solid #ddd;
-  padding: 10px;
+  padding: 12px;
   text-align: left;
   font-size: 14px;
 }
@@ -97,27 +107,63 @@ th {
   background: #007bff;
   color: white;
   font-weight: 500;
+  cursor: pointer;
 }
-tr:nth-child(even) {
-  background: #f8f9fa;
-}
+th:hover { background: #0056b3; }
+tr:nth-child(even) { background: #f8f9fa; }
+tr:hover { background: #e9ecef; }
+
 .loader {
   text-align: center;
   padding: 20px;
   color: #007bff;
   font-weight: bold;
 }
+
 td button {
   background: #dc3545;
   font-size: 13px;
+  padding: 6px 10px;
+  border-radius: 6px;
 }
 td button:hover {
   background: #a71d2a;
 }
+
+/* EXPORT */
+.export-btn {
+  margin-top: 15px;
+  background: #28a745;
+}
+.export-btn:hover {
+  background: #1e7e34;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  table, thead, tbody, th, td, tr { display: block; }
+  th { display: none; }
+  td {
+    border: none;
+    position: relative;
+    padding-left: 45%;
+    text-align: right;
+  }
+  td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 10px;
+    width: 40%;
+    padding-left: 10px;
+    font-weight: 600;
+    color: #007bff;
+    text-align: left;
+  }
+}
 </style>
 </head>
-<body>
 
+<body>
 <header>
   <h1>Admin panel – Dochádzkový systém</h1>
   <button id="logoutBtn">Odhlásiť sa</button>
@@ -132,16 +178,19 @@ td button:hover {
 
 <section id="dochadzka" class="active">
   <h2>Dochádzka</h2>
+  <button class="export-btn" onclick="exportTable('dochadzkaTable')">Exportovať do CSV</button>
   <div id="dochadzkaTable" class="loader">Načítavam dáta...</div>
 </section>
 
 <section id="prestávky">
   <h2>Prestávky</h2>
+  <button class="export-btn" onclick="exportTable('prestávkyTable')">Exportovať do CSV</button>
   <div id="prestávkyTable" class="loader">Načítavam dáta...</div>
 </section>
 
 <section id="pn">
   <h2>PN</h2>
+  <button class="export-btn" onclick="exportTable('pnTable')">Exportovať do CSV</button>
   <div id="pnTable" class="loader">Načítavam dáta...</div>
 </section>
 
@@ -189,7 +238,7 @@ document.querySelectorAll("nav button").forEach(btn => {
   });
 });
 
-// 📊 Načítanie dát z Firebase
+// 📊 Načítanie dát
 function loadTable(refName, tableId) {
   const container = document.getElementById(tableId);
   onValue(ref(db, refName), snapshot => {
@@ -197,27 +246,26 @@ function loadTable(refName, tableId) {
       container.innerHTML = "<p>Žiadne dáta.</p>";
       return;
     }
+    let data = [];
+    snapshot.forEach(child => data.push({ key: child.key, ...child.val() }));
 
-    let html = "<table><tr>";
-    const firstChild = Object.values(snapshot.val())[0];
-    for (const key in firstChild) html += `<th>${key}</th>`;
-    html += "</tr>";
+    let html = "<table><thead><tr>";
+    const keys = Object.keys(data[0]).filter(k => k !== 'key');
+    keys.forEach(k => html += `<th>${k}</th>`);
+    html += "</tr></thead><tbody>";
 
-    snapshot.forEach(child => {
-      const val = child.val();
+    data.forEach(item => {
       html += "<tr>";
-      for (const key in val) html += `<td>${val[key]}</td>`;
+      keys.forEach(k => html += `<td data-label="${k}">${item[k]}</td>`);
       html += "</tr>";
     });
-    html += "</table>";
+    html += "</tbody></table>";
     container.innerHTML = html;
   }, err => {
     console.error(err);
     container.innerHTML = "<p>Chyba načítania dát!</p>";
   });
 }
-
-// 🧾 Načítania sekcií
 loadTable("dochadzka", "dochadzkaTable");
 loadTable("prestávky", "prestávkyTable");
 loadTable("pn", "pnTable");
@@ -230,25 +278,18 @@ function loadUsers() {
       container.innerHTML = "<p>Žiadni používatelia.</p>";
       return;
     }
-
-    let html = `<table>
-      <tr><th>Meno</th><th>UID</th><th>Akcie</th></tr>`;
-
+    let html = `<table><thead><tr><th>Meno</th><th>UID</th><th>Akcie</th></tr></thead><tbody>`;
     snapshot.forEach(child => {
       const u = child.val();
       html += `
-        <tr>
-          <td>${u.name}</td>
-          <td>${u.chipUid || "-"}</td>
-          <td><button onclick="deleteUser('${child.key}')">Vymazať</button></td>
-        </tr>`;
+      <tr>
+        <td data-label="Meno">${u.name}</td>
+        <td data-label="UID">${u.chipUid || "-"}</td>
+        <td data-label="Akcie"><button onclick="deleteUser('${child.key}')">Vymazať</button></td>
+      </tr>`;
     });
-
-    html += "</table>";
+    html += "</tbody></table>";
     container.innerHTML = html;
-  }, err => {
-    console.error(err);
-    container.innerHTML = "<p>Chyba načítania používateľov.</p>";
   });
 }
 loadUsers();
@@ -269,9 +310,32 @@ window.deleteUser = async (key) => {
     alert("Chyba pri mazaní používateľa.");
   }
 };
+
+// 📤 Export do CSV
+window.exportTable = (tableId) => {
+  const table = document.querySelector(`#${tableId} table`);
+  if (!table) return;
+  let csv = [];
+  for (let row of table.rows) {
+    let rowData = [];
+    for (let cell of row.cells) {
+      rowData.push(cell.textContent);
+    }
+    csv.push(rowData.join(','));
+  }
+  const csvContent = csv.join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${tableId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
 </script>
 </body>
 </html>
+
 
 
 
