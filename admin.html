@@ -23,10 +23,9 @@
     button { background: #3e4e88; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; margin-top: 10px; }
     button:hover { background: #2b3a67; }
     input { padding: 8px; margin-top: 5px; width: 200px; }
-    #loading { display: none; text-align: center; margin-top: 20px; font-style: italic; color: #666; }
+    .loading { text-align: center; margin-top: 20px; font-style: italic; color: #666; display: none; }
   </style>
 </head>
-
 <body>
   <aside class="sidebar">
     <h2>👑 Admin Panel</h2>
@@ -43,32 +42,47 @@
     <section id="view-attendance" class="active">
       <h2>📅 Dochádzka</h2>
       <button onclick="exportToExcel('dochadzkaTable', 'Dochadzka')">Export do Excel</button>
-      <table id="dochadzkaTable"><thead><tr><th>Zamestnanec</th><th>UID</th><th>Dátum</th><th>Čas</th><th>Typ</th></tr></thead><tbody></tbody></table>
-      <div id="loading">Načítavam údaje...</div>
+      <div id="loading" class="loading">Načítavam údaje...</div>
+      <table id="dochadzkaTable">
+        <thead><tr><th>Zamestnanec</th><th>UID</th><th>Dátum</th><th>Čas</th><th>Typ</th></tr></thead>
+        <tbody></tbody>
+      </table>
     </section>
 
     <section id="view-breaks">
       <h2>☕ Prestávky</h2>
       <button onclick="exportToExcel('prestávkyTable', 'Prestávky')">Export do Excel</button>
-      <table id="prestávkyTable"><thead><tr><th>Zamestnanec</th><th>Dátum</th><th>Začiatok</th><th>Koniec</th></tr></thead><tbody></tbody></table>
+      <div id="loadingBreaks" class="loading">Načítavam údaje...</div>
+      <table id="prestávkyTable">
+        <thead><tr><th>Zamestnanec</th><th>Dátum</th><th>Začiatok</th><th>Koniec</th></tr></thead>
+        <tbody></tbody>
+      </table>
     </section>
 
     <section id="view-pn">
       <h2>🏥 PN</h2>
       <button onclick="exportToExcel('pnTable', 'PN')">Export do Excel</button>
-      <table id="pnTable"><thead><tr><th>Zamestnanec</th><th>Od</th><th>Do</th><th>Poznámka</th></tr></thead><tbody></tbody></table>
+      <div id="loadingPN" class="loading">Načítavam údaje...</div>
+      <table id="pnTable">
+        <thead><tr><th>Zamestnanec</th><th>Od</th><th>Do</th><th>Poznámka</th></tr></thead>
+        <tbody></tbody>
+      </table>
     </section>
 
     <section id="manage-users">
       <h2>👤 Správa zamestnancov</h2>
       <button onclick="showAddUserForm()">Pridať zamestnanca</button>
       <button onclick="exportToExcel('usersTable', 'Zamestnanci')">Export do Excel</button>
-      <table id="usersTable"><thead><tr><th>Meno</th><th>UID čipu</th><th>Akcie</th></tr></thead><tbody id="usersList"></tbody></table>
+      <div id="loadingUsers" class="loading">Načítavam údaje...</div>
+      <table id="usersTable">
+        <thead><tr><th>Meno</th><th>UID čipu</th><th>Akcie</th></tr></thead>
+        <tbody id="usersList"></tbody>
+      </table>
 
       <div id="addUserForm" style="display:none;margin-top:20px;">
         <h3>Pridať nového zamestnanca</h3>
         <input type="text" id="newUserName" placeholder="Meno"><br>
-        <input type="text" id="newUserUid" placeholder="UID čipu (voliteľné)"><br>
+        <input type="text" id="newUserUid" placeholder="UID čipu (povinné)"><br>
         <button id="confirmAddUserBtn">Pridať</button>
         <button onclick="hideAddUserForm()">Zrušiť</button>
         <p id="addUserMsg"></p>
@@ -76,8 +90,8 @@
     </section>
   </main>
 
-  <!-- Firebase modulový kód -->
-  <script type="module" defer>
+  <!-- Firebase -->
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { getDatabase, ref, onValue, push, remove, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
@@ -90,173 +104,161 @@
       projectId: "dochadzkaesp32",
       storageBucket: "dochadzkaesp32.appspot.com",
       messagingSenderId: "417668021105",
-      appId: "1:417668021105:web:99a456dd622bb4ac4854d0",
-      measurementId: "G-268ZE9WLV1"
+      appId: "1:417668021105:web:99a456dd622bb4ac4854d0"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     const auth = getAuth(app);
 
-    // 🔐 Bezpečná kontrola prihlásenia
-    const mainContent = document.querySelector("main");
-    const loaderText = document.createElement("div");
-    loaderText.textContent = "🔄 Overujem prihlásenie...";
-    loaderText.style.textAlign = "center";
-    loaderText.style.marginTop = "40px";
-    mainContent.before(loaderText);
-    mainContent.style.display = "none";
+    // 🔐 Overenie prihlásenia
+    const main = document.querySelector("main");
+    main.style.display = "none";
+    const info = document.createElement("p");
+    info.textContent = "🔐 Overujem prihlásenie...";
+    info.style.textAlign = "center";
+    info.style.margin = "40px auto";
+    document.body.appendChild(info);
 
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        console.log("✅ Prihlásený ako:", user.email);
-        loaderText.remove();
-        mainContent.style.display = "block";
-
-        // Načítaj dáta až po potvrdení prihlásenia
+        info.remove();
+        main.style.display = "block";
         loadAttendance();
         loadBreaks();
         loadPN();
         loadUsers();
       } else {
-        console.warn("❌ Používateľ nie je prihlásený");
-        loaderText.textContent = "⏳ Odhlasujem...";
-        setTimeout(() => {
-          window.location.href = "index.html";
-        }, 1500);
+        info.textContent = "⏳ Presmerovávam...";
+        setTimeout(() => window.location.href = "index.html", 1000);
       }
     });
 
     // 🚪 Odhlásenie
-    document.getElementById("logoutBtn").addEventListener("click", () => {
-      signOut(auth).then(() => {
-        alert("Boli ste úspešne odhlásený.");
-        window.location.href = "index.html";
-      }).catch(err => alert("Chyba pri odhlasovaní: " + err.message));
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await signOut(auth);
+      alert("Odhlásenie prebehlo úspešne.");
+      window.location.href = "index.html";
     });
 
-    // 📄 Načítanie dát
+    // 📊 Načítania s error handlingom
     function loadAttendance() {
-      const refPath = ref(db, "dochadzka");
+      const tbody = document.querySelector("#dochadzkaTable tbody");
       const loader = document.getElementById("loading");
       loader.style.display = "block";
-      onValue(refPath, (snapshot) => {
-        const tbody = document.querySelector("#dochadzkaTable tbody");
-        tbody.innerHTML = "";
-        snapshot.forEach(userSnap => {
-          userSnap.forEach(rec => {
-            const d = rec.val();
-            tbody.innerHTML += `<tr>
-              <td>${d.zamestnanec}</td>
-              <td>${d.uid || ""}</td>
-              <td>${d.datum}</td>
-              <td>${d.cas}</td>
-              <td>${d.typ}</td>
-            </tr>`;
-          });
+      onValue(ref(db, "dochadzka"), (snap) => {
+        const rows = [];
+        snap.forEach(c => {
+          const d = c.val();
+          rows.push(`<tr><td>${d.zamestnanec}</td><td>${d.uid || ""}</td><td>${d.datum}</td><td>${d.cas}</td><td>${d.typ}</td></tr>`);
         });
+        tbody.innerHTML = rows.join("");
         loader.style.display = "none";
+      }, (err) => {
+        console.error(err);
+        alert("Chyba pri načítaní dochádzky: " + err.message);
       });
     }
 
     function loadBreaks() {
-      const refPath = ref(db, "prestávky");
-      onValue(refPath, (snapshot) => {
-        const tbody = document.querySelector("#prestávkyTable tbody");
-        tbody.innerHTML = "";
-        snapshot.forEach(userSnap => {
-          userSnap.forEach(rec => {
-            const d = rec.val();
-            tbody.innerHTML += `<tr><td>${d.zamestnanec}</td><td>${d.datum}</td><td>${d.zaciatok}</td><td>${d.koniec}</td></tr>`;
-          });
+      const tbody = document.querySelector("#prestávkyTable tbody");
+      const loader = document.getElementById("loadingBreaks");
+      loader.style.display = "block";
+      onValue(ref(db, "prestávky"), (snap) => {
+        const rows = [];
+        snap.forEach(c => {
+          const d = c.val();
+          rows.push(`<tr><td>${d.zamestnanec}</td><td>${d.datum}</td><td>${d.zaciatok}</td><td>${d.koniec}</td></tr>`);
         });
+        tbody.innerHTML = rows.join("");
+        loader.style.display = "none";
+      }, (err) => {
+        console.error(err);
+        alert("Chyba pri načítaní prestávok: " + err.message);
       });
     }
 
     function loadPN() {
-      const refPath = ref(db, "pn");
-      onValue(refPath, (snapshot) => {
-        const tbody = document.querySelector("#pnTable tbody");
-        tbody.innerHTML = "";
-        snapshot.forEach(userSnap => {
-          userSnap.forEach(rec => {
-            const d = rec.val();
-            tbody.innerHTML += `<tr><td>${d.zamestnanec}</td><td>${d.od}</td><td>${d.do}</td><td>${d.poznamka || ""}</td></tr>`;
-          });
+      const tbody = document.querySelector("#pnTable tbody");
+      const loader = document.getElementById("loadingPN");
+      loader.style.display = "block";
+      onValue(ref(db, "pn"), (snap) => {
+        const rows = [];
+        snap.forEach(c => {
+          const d = c.val();
+          rows.push(`<tr><td>${d.zamestnanec}</td><td>${d.od}</td><td>${d.do}</td><td>${d.poznamka || ""}</td></tr>`);
         });
+        tbody.innerHTML = rows.join("");
+        loader.style.display = "none";
+      }, (err) => {
+        console.error(err);
+        alert("Chyba pri načítaní PN: " + err.message);
       });
     }
 
     function loadUsers() {
-      const refPath = ref(db, "users");
-      onValue(refPath, (snapshot) => {
-        const tbody = document.getElementById("usersList");
-        tbody.innerHTML = "";
-        snapshot.forEach(childSnap => {
-          const user = childSnap.val();
-          tbody.innerHTML += `<tr>
-            <td>${user.name}</td>
-            <td>${user.chipUid || ""}</td>
-            <td><button onclick="deleteUser('${childSnap.key}')">Vymazať</button></td>
-          </tr>`;
+      const tbody = document.getElementById("usersList");
+      const loader = document.getElementById("loadingUsers");
+      loader.style.display = "block";
+      onValue(ref(db, "users"), (snap) => {
+        const rows = [];
+        snap.forEach(child => {
+          const user = child.val();
+          rows.push(`<tr><td>${user.name}</td><td>${user.chipUid || ""}</td><td><button onclick="deleteUser('${child.key}')">Vymazať</button></td></tr>`);
         });
+        tbody.innerHTML = rows.join("");
+        loader.style.display = "none";
+      }, (err) => {
+        console.error(err);
+        alert("Chyba pri načítaní používateľov: " + err.message);
       });
     }
 
-    // ➕ Pridanie zamestnanca
+    // 🗑️ Mazanie používateľa + všetky jeho dáta
+    window.deleteUser = async (key) => {
+      if (!confirm("Naozaj chcete vymazať tohto používateľa a všetky jeho dáta?")) return;
+      try {
+        const paths = ["dochadzka", "prestávky", "pn"];
+        await Promise.all(paths.map(async (p) => {
+          const pathRef = ref(db, `${p}/${key}`);
+          const snap = await get(pathRef);
+          if (snap.exists()) await remove(pathRef);
+        }));
+        await remove(ref(db, "users/" + key));
+        alert("✅ Používateľ a všetky jeho dáta boli vymazané.");
+      } catch (err) {
+        console.error(err);
+        alert("❌ Chyba pri mazaní: " + err.message);
+      }
+    };
+
+    // ➕ Pridanie používateľa
     document.getElementById("confirmAddUserBtn").addEventListener("click", async () => {
       const name = document.getElementById("newUserName").value.trim();
       const uid = document.getElementById("newUserUid").value.trim();
       const msg = document.getElementById("addUserMsg");
 
-      if (!name) {
-        msg.textContent = "Zadajte meno zamestnanca!";
-        return;
-      }
+      if (!name) return msg.textContent = "Zadajte meno zamestnanca!";
+      if (!uid) return msg.textContent = "UID čipu je povinné!";
 
-      if (uid) {
-        const q = query(ref(db, "users"), orderByChild("chipUid"), equalTo(uid));
-        const snap = await get(q);
-        if (snap.exists()) {
-          msg.textContent = "Tento UID čipu už existuje!";
-          return;
-        }
-      }
+      const q = query(ref(db, "users"), orderByChild("chipUid"), equalTo(uid));
+      const snap = await get(q);
+      if (snap.exists()) return msg.textContent = "Tento UID čipu už existuje!";
 
-      push(ref(db, "users"), { name, chipUid: uid || "", createdAt: new Date().toISOString() })
-        .then(() => {
-          msg.textContent = "✅ Zamestnanec pridaný!";
-          hideAddUserForm();
-        })
+      push(ref(db, "users"), { name, chipUid: uid, createdAt: new Date().toISOString() })
+        .then(() => { msg.textContent = "✅ Zamestnanec pridaný!"; hideAddUserForm(); })
         .catch(err => msg.textContent = "Chyba: " + err.message);
     });
-
-    // 🗑️ Mazanie
-    window.deleteUser = (key) => {
-      if (confirm("Naozaj chcete vymazať tohto zamestnanca?")) {
-        remove(ref(db, "users/" + key))
-          .then(() => alert("Zamestnanec odstránený."))
-          .catch(err => alert("Chyba: " + err.message));
-      }
-    };
 
     // 📤 Export
     window.exportToExcel = (tableId, fileName) => {
       const table = document.getElementById(tableId);
-      const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
+      if (!table || !table.querySelectorAll("tbody tr").length) return alert("Tabuľka je prázdna!");
+      const wb = XLSX.utils.table_to_book(table, { sheet: "Údaje" });
       XLSX.writeFile(wb, fileName + ".xlsx");
     };
 
-    // 👤 Form funkcie
-    window.showAddUserForm = () => document.getElementById("addUserForm").style.display = "block";
-    window.hideAddUserForm = () => {
-      document.getElementById("addUserForm").style.display = "none";
-      document.getElementById("newUserName").value = "";
-      document.getElementById("newUserUid").value = "";
-      document.getElementById("addUserMsg").textContent = "";
-    };
-
-    // 🔄 Prepínanie sekcií
+    // 📋 Prepínanie sekcií
     const tabs = document.querySelectorAll(".sidebar li[data-target]");
     const sections = document.querySelectorAll("main section");
     tabs.forEach(tab => {
@@ -267,9 +269,19 @@
         document.getElementById(tab.dataset.target).classList.add("active");
       });
     });
+
+    // 👤 Form funkcie
+    window.showAddUserForm = () => document.getElementById("addUserForm").style.display = "block";
+    window.hideAddUserForm = () => {
+      document.getElementById("addUserForm").style.display = "none";
+      document.getElementById("newUserName").value = "";
+      document.getElementById("newUserUid").value = "";
+      document.getElementById("addUserMsg").textContent = "";
+    };
   </script>
 </body>
-</html>
+        </html>
+
 
 
 
