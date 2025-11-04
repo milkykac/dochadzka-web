@@ -57,18 +57,39 @@ input[type=text], input[type=password]{ width:100%; padding:8px; margin-top:10px
 
 <section id="dochadzka" class="active">
   <h2>Dochádzka</h2>
+  <div class="date-filter" style="margin-bottom:15px;">
+    <label for="startDateDochadzka">Od:</label>
+    <input type="date" id="startDateDochadzka" style="margin-right:10px;">
+    <label for="endDateDochadzka">Do:</label>
+    <input type="date" id="endDateDochadzka" style="margin-right:10px;">
+    <button onclick="filterTable('dochadzka')">Filtrovať</button>
+  </div>
   <button class="export-btn" onclick="exportTable('dochadzkaTable')">Exportovať do CSV</button>
   <div id="dochadzkaTable" class="loader">Načítavam dáta...</div>
 </section>
 
 <section id="prestávky">
   <h2>Prestávky</h2>
+  <div class="date-filter" style="margin-bottom:15px;">
+    <label for="startDatePrestávky">Od:</label>
+    <input type="date" id="startDatePrestávky" style="margin-right:10px;">
+    <label for="endDatePrestávky">Do:</label>
+    <input type="date" id="endDatePrestávky" style="margin-right:10px;">
+    <button onclick="filterTable('prestávky')">Filtrovať</button>
+  </div>
   <button class="export-btn" onclick="exportTable('prestávkyTable')">Exportovať do CSV</button>
   <div id="prestávkyTable" class="loader">Načítavam dáta...</div>
 </section>
 
 <section id="pn">
   <h2>PN</h2>
+  <div class="date-filter" style="margin-bottom:15px;">
+    <label for="startDatePn">Od:</label>
+    <input type="date" id="startDatePn" style="margin-right:10px;">
+    <label for="endDatePn">Do:</label>
+    <input type="date" id="endDatePn" style="margin-right:10px;">
+    <button onclick="filterTable('pn')">Filtrovať</button>
+  </div>
   <button class="export-btn" onclick="exportTable('pnTable')">Exportovať do CSV</button>
   <div id="pnTable" class="loader">Načítavam dáta...</div>
 </section>
@@ -162,7 +183,7 @@ function formatValue(key, value) {
 }
 
 // LOAD TABLES
-function loadTable(refName, tableId){
+function loadTable(refName, tableId, startDate = null, endDate = null){
   const container = document.getElementById(tableId);
   onValue(ref(db,refName),snapshot=>{
     if(!snapshot.exists()){ container.innerHTML="<p>Žiadne dáta.</p>"; return; }
@@ -173,6 +194,20 @@ function loadTable(refName, tableId){
       }else{ data.push({ key:userSnap.key, ...userSnap.val() }); }
     });
     if(data.length===0){ container.innerHTML="<p>Žiadne dáta.</p>"; return; }
+
+    // Filter by date if provided
+    if(startDate || endDate){
+      data = data.filter(item => {
+        if(!item.date) return true; // if no date, include
+        const itemDate = new Date(typeof item.date === 'number' ? item.date : item.date);
+        if(startDate && itemDate < new Date(startDate)) return false;
+        if(endDate && itemDate > new Date(endDate + 'T23:59:59')) return false;
+        return true;
+      });
+    }
+
+    if(data.length===0){ container.innerHTML="<p>Žiadne dáta v zadanom období.</p>"; return; }
+
     let html="<table><thead><tr>";
     const keys=Object.keys(data[0]);
     keys.forEach(k=>html+=`<th>${k}</th>`);
@@ -194,6 +229,14 @@ function loadTable(refName, tableId){
     html+="</tbody></table>"; container.innerHTML=html;
   });
 }
+
+// FILTER FUNCTION
+window.filterTable = (refName) => {
+  const startDate = document.getElementById(`startDate${refName.charAt(0).toUpperCase() + refName.slice(1)}`).value;
+  const endDate = document.getElementById(`endDate${refName.charAt(0).toUpperCase() + refName.slice(1)}`).value;
+  const tableId = `${refName}Table`;
+  loadTable(refName, tableId, startDate, endDate);
+};
 loadTable("dochadzka","dochadzkaTable");
 loadTable("prestávky","prestávkyTable");
 loadTable("pn","pnTable");
