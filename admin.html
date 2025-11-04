@@ -1,286 +1,243 @@
 <!DOCTYPE html>
 <html lang="sk">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Panel - Dochádzka</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;600&display=swap" rel="stylesheet" />
-  <style>
-    body { font-family: 'Roboto', sans-serif; margin: 0; background: #f4f5f7; color: #333; display: flex; }
-    .sidebar { width: 240px; background: #2b3a67; color: white; height: 100vh; display: flex; flex-direction: column; padding-top: 20px; }
-    .sidebar h2 { text-align: center; font-weight: 600; margin-bottom: 20px; }
-    .sidebar ul { list-style: none; padding: 0; }
-    .sidebar li { padding: 14px 20px; cursor: pointer; transition: background 0.2s; }
-    .sidebar li:hover, .sidebar li.active { background: #5060a8; font-weight: 600; }
-    main { flex: 1; padding: 20px; }
-    section { display: none; animation: fadeIn 0.3s ease; }
-    section.active { display: block; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
-    th { background: #dfe3ee; }
-    tbody tr:nth-child(even) { background: #f9f9f9; }
-    button { background: #3e4e88; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; margin-top: 10px; }
-    button:hover { background: #2b3a67; }
-    input { padding: 8px; margin-top: 5px; width: 200px; }
-    .loading { text-align: center; margin-top: 20px; font-style: italic; color: #666; display: none; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin panel – Dochádzka</title>
+<style>
+body {
+  font-family: 'Poppins', sans-serif;
+  margin: 0;
+  background: linear-gradient(135deg, #007bff, #6f42c1);
+  color: #333;
+}
+header {
+  background: white;
+  padding: 15px 25px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+h1 {
+  color: #007bff;
+  margin: 0;
+  font-size: 20px;
+}
+button {
+  background: #007bff;
+  border: none;
+  color: white;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+button:hover { background: #0056b3; }
+nav {
+  background: #fff;
+  display: flex;
+  justify-content: center;
+  padding: 10px;
+  gap: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+nav button.active {
+  background: #6f42c1;
+}
+section {
+  display: none;
+  padding: 20px;
+}
+section.active {
+  display: block;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+th {
+  background: #007bff;
+  color: white;
+}
+tr:nth-child(even) {
+  background: #f8f9fa;
+}
+.loader {
+  text-align: center;
+  padding: 20px;
+  color: #007bff;
+  font-weight: bold;
+}
+</style>
 </head>
 <body>
-  <aside class="sidebar">
-    <h2>👑 Admin Panel</h2>
-    <ul>
-      <li data-target="view-attendance" class="active">📅 Dochádzka</li>
-      <li data-target="view-breaks">☕ Prestávky</li>
-      <li data-target="view-pn">🏥 PN</li>
-      <li data-target="manage-users">👤 Správa zamestnancov</li>
-      <li id="logoutBtn">🚪 Odhlásiť</li>
-    </ul>
-  </aside>
 
-  <main>
-    <section id="view-attendance" class="active">
-      <h2>📅 Dochádzka</h2>
-      <button onclick="exportToExcel('dochadzkaTable', 'Dochadzka')">Export do Excel</button>
-      <div id="loading" class="loading">Načítavam údaje...</div>
-      <table id="dochadzkaTable">
-        <thead><tr><th>Zamestnanec</th><th>UID</th><th>Dátum</th><th>Čas</th><th>Typ</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </section>
+<header>
+  <h1>Admin panel – Dochádzkový systém</h1>
+  <button id="logoutBtn">Odhlásiť sa</button>
+</header>
 
-    <section id="view-breaks">
-      <h2>☕ Prestávky</h2>
-      <button onclick="exportToExcel('prestávkyTable', 'Prestávky')">Export do Excel</button>
-      <div id="loadingBreaks" class="loading">Načítavam údaje...</div>
-      <table id="prestávkyTable">
-        <thead><tr><th>Zamestnanec</th><th>Dátum</th><th>Začiatok</th><th>Koniec</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </section>
+<nav>
+  <button data-target="dochadzka" class="active">Dochádzka</button>
+  <button data-target="prestávky">Prestávky</button>
+  <button data-target="pn">PN</button>
+  <button data-target="pouzivatelia">Používatelia</button>
+</nav>
 
-    <section id="view-pn">
-      <h2>🏥 PN</h2>
-      <button onclick="exportToExcel('pnTable', 'PN')">Export do Excel</button>
-      <div id="loadingPN" class="loading">Načítavam údaje...</div>
-      <table id="pnTable">
-        <thead><tr><th>Zamestnanec</th><th>Od</th><th>Do</th><th>Poznámka</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </section>
+<section id="dochadzka" class="active">
+  <h2>Dochádzka</h2>
+  <div id="dochadzkaTable" class="loader">Načítavam dáta...</div>
+</section>
 
-    <section id="manage-users">
-      <h2>👤 Správa zamestnancov</h2>
-      <button onclick="showAddUserForm()">Pridať zamestnanca</button>
-      <button onclick="exportToExcel('usersTable', 'Zamestnanci')">Export do Excel</button>
-      <div id="loadingUsers" class="loading">Načítavam údaje...</div>
-      <table id="usersTable">
-        <thead><tr><th>Meno</th><th>UID čipu</th><th>Akcie</th></tr></thead>
-        <tbody id="usersList"></tbody>
-      </table>
+<section id="prestávky">
+  <h2>Prestávky</h2>
+  <div id="prestávkyTable" class="loader">Načítavam dáta...</div>
+</section>
 
-      <div id="addUserForm" style="display:none;margin-top:20px;">
-        <h3>Pridať nového zamestnanca</h3>
-        <input type="text" id="newUserName" placeholder="Meno"><br>
-        <input type="text" id="newUserUid" placeholder="UID čipu (povinné)"><br>
-        <button id="confirmAddUserBtn">Pridať</button>
-        <button onclick="hideAddUserForm()">Zrušiť</button>
-        <p id="addUserMsg"></p>
-      </div>
-    </section>
-  </main>
+<section id="pn">
+  <h2>PN</h2>
+  <div id="pnTable" class="loader">Načítavam dáta...</div>
+</section>
 
-  <!-- Firebase -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getDatabase, ref, onValue, push, remove, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-    import * as XLSX from "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/+esm";
+<section id="pouzivatelia">
+  <h2>Používatelia</h2>
+  <div id="usersTable" class="loader">Načítavam používateľov...</div>
+</section>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyB5ovJ-_GAnfIExgBsNuQtc4tb6mqhsdj8",
-      authDomain: "dochadzkaesp32.firebaseapp.com",
-      databaseURL: "https://dochadzkaesp32-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "dochadzkaesp32",
-      storageBucket: "dochadzkaesp32.appspot.com",
-      messagingSenderId: "417668021105",
-      appId: "1:417668021105:web:99a456dd622bb4ac4854d0"
-    };
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const auth = getAuth(app);
+// ✅ ADMIN LOGIN KONTROLA
+const isAdmin = localStorage.getItem("isAdmin");
+if (isAdmin !== "true") {
+  alert("Prístup len pre admina!");
+  window.location.href = "index.html";
+}
 
-    // 🔐 Overenie prihlásenia
-    const main = document.querySelector("main");
-    main.style.display = "none";
-    const info = document.createElement("p");
-    info.textContent = "🔐 Overujem prihlásenie...";
-    info.style.textAlign = "center";
-    info.style.margin = "40px auto";
-    document.body.appendChild(info);
+const logoutBtn = document.getElementById("logoutBtn");
+logoutBtn.addEventListener("click", () => {
+  localStorage.removeItem("isAdmin");
+  window.location.href = "index.html";
+});
 
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        info.remove();
-        main.style.display = "block";
-        loadAttendance();
-        loadBreaks();
-        loadPN();
-        loadUsers();
-      } else {
-        info.textContent = "⏳ Presmerovávam...";
-        setTimeout(() => window.location.href = "index.html", 1000);
-      }
-    });
+// 🔥 Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyB5ovJ-_GAnfIExgBsNuQtc4tb6mqhsdj8",
+  authDomain: "dochadzkaesp32.firebaseapp.com",
+  databaseURL: "https://dochadzkaesp32-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "dochadzkaesp32",
+  storageBucket: "dochadzkaesp32.firebasestorage.app",
+  messagingSenderId: "417668021105",
+  appId: "1:417668021105:web:7fa3e144892d8b304854d0",
+  measurementId: "G-ZKQNMZEPHD"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-    // 🚪 Odhlásenie
-    document.getElementById("logoutBtn").addEventListener("click", async () => {
-      await signOut(auth);
-      alert("Odhlásenie prebehlo úspešne.");
-      window.location.href = "index.html";
-    });
+// 🧭 Prepínanie sekcií
+document.querySelectorAll("nav button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    document.querySelectorAll("section").forEach(sec => sec.classList.remove("active"));
+    document.getElementById(btn.dataset.target).classList.add("active");
+  });
+});
 
-    // 📊 Načítania s error handlingom
-    function loadAttendance() {
-      const tbody = document.querySelector("#dochadzkaTable tbody");
-      const loader = document.getElementById("loading");
-      loader.style.display = "block";
-      onValue(ref(db, "dochadzka"), (snap) => {
-        const rows = [];
-        snap.forEach(c => {
-          const d = c.val();
-          rows.push(`<tr><td>${d.zamestnanec}</td><td>${d.uid || ""}</td><td>${d.datum}</td><td>${d.cas}</td><td>${d.typ}</td></tr>`);
-        });
-        tbody.innerHTML = rows.join("");
-        loader.style.display = "none";
-      }, (err) => {
-        console.error(err);
-        alert("Chyba pri načítaní dochádzky: " + err.message);
-      });
+// 📊 Načítanie dát
+function loadTable(refName, tableId) {
+  const container = document.getElementById(tableId);
+  onValue(ref(db, refName), snapshot => {
+    if (!snapshot.exists()) {
+      container.innerHTML = "<p>Žiadne dáta.</p>";
+      return;
     }
 
-    function loadBreaks() {
-      const tbody = document.querySelector("#prestávkyTable tbody");
-      const loader = document.getElementById("loadingBreaks");
-      loader.style.display = "block";
-      onValue(ref(db, "prestávky"), (snap) => {
-        const rows = [];
-        snap.forEach(c => {
-          const d = c.val();
-          rows.push(`<tr><td>${d.zamestnanec}</td><td>${d.datum}</td><td>${d.zaciatok}</td><td>${d.koniec}</td></tr>`);
-        });
-        tbody.innerHTML = rows.join("");
-        loader.style.display = "none";
-      }, (err) => {
-        console.error(err);
-        alert("Chyba pri načítaní prestávok: " + err.message);
-      });
+    let html = "<table><tr>";
+    const firstChild = Object.values(snapshot.val())[0];
+    for (const key in firstChild) {
+      html += `<th>${key}</th>`;
+    }
+    html += "</tr>";
+
+    snapshot.forEach(child => {
+      const val = child.val();
+      html += "<tr>";
+      for (const key in val) html += `<td>${val[key]}</td>`;
+      html += "</tr>";
+    });
+    html += "</table>";
+    container.innerHTML = html;
+  }, (err) => {
+    console.error(err);
+    container.innerHTML = "<p>Chyba načítania dát!</p>";
+  });
+}
+
+// 🧾 Načítania všetkých sekcií
+loadTable("dochadzka", "dochadzkaTable");
+loadTable("prestávky", "prestávkyTable");
+loadTable("pn", "pnTable");
+
+// 👥 Používatelia
+function loadUsers() {
+  const container = document.getElementById("usersTable");
+  onValue(ref(db, "users"), snapshot => {
+    if (!snapshot.exists()) {
+      container.innerHTML = "<p>Žiadni používatelia.</p>";
+      return;
     }
 
-    function loadPN() {
-      const tbody = document.querySelector("#pnTable tbody");
-      const loader = document.getElementById("loadingPN");
-      loader.style.display = "block";
-      onValue(ref(db, "pn"), (snap) => {
-        const rows = [];
-        snap.forEach(c => {
-          const d = c.val();
-          rows.push(`<tr><td>${d.zamestnanec}</td><td>${d.od}</td><td>${d.do}</td><td>${d.poznamka || ""}</td></tr>`);
-        });
-        tbody.innerHTML = rows.join("");
-        loader.style.display = "none";
-      }, (err) => {
-        console.error(err);
-        alert("Chyba pri načítaní PN: " + err.message);
-      });
-    }
+    let html = `<table>
+      <tr><th>Meno</th><th>UID</th><th>Akcie</th></tr>`;
 
-    function loadUsers() {
-      const tbody = document.getElementById("usersList");
-      const loader = document.getElementById("loadingUsers");
-      loader.style.display = "block";
-      onValue(ref(db, "users"), (snap) => {
-        const rows = [];
-        snap.forEach(child => {
-          const user = child.val();
-          rows.push(`<tr><td>${user.name}</td><td>${user.chipUid || ""}</td><td><button onclick="deleteUser('${child.key}')">Vymazať</button></td></tr>`);
-        });
-        tbody.innerHTML = rows.join("");
-        loader.style.display = "none";
-      }, (err) => {
-        console.error(err);
-        alert("Chyba pri načítaní používateľov: " + err.message);
-      });
-    }
-
-    // 🗑️ Mazanie používateľa + všetky jeho dáta
-    window.deleteUser = async (key) => {
-      if (!confirm("Naozaj chcete vymazať tohto používateľa a všetky jeho dáta?")) return;
-      try {
-        const paths = ["dochadzka", "prestávky", "pn"];
-        await Promise.all(paths.map(async (p) => {
-          const pathRef = ref(db, `${p}/${key}`);
-          const snap = await get(pathRef);
-          if (snap.exists()) await remove(pathRef);
-        }));
-        await remove(ref(db, "users/" + key));
-        alert("✅ Používateľ a všetky jeho dáta boli vymazané.");
-      } catch (err) {
-        console.error(err);
-        alert("❌ Chyba pri mazaní: " + err.message);
-      }
-    };
-
-    // ➕ Pridanie používateľa
-    document.getElementById("confirmAddUserBtn").addEventListener("click", async () => {
-      const name = document.getElementById("newUserName").value.trim();
-      const uid = document.getElementById("newUserUid").value.trim();
-      const msg = document.getElementById("addUserMsg");
-
-      if (!name) return msg.textContent = "Zadajte meno zamestnanca!";
-      if (!uid) return msg.textContent = "UID čipu je povinné!";
-
-      const q = query(ref(db, "users"), orderByChild("chipUid"), equalTo(uid));
-      const snap = await get(q);
-      if (snap.exists()) return msg.textContent = "Tento UID čipu už existuje!";
-
-      push(ref(db, "users"), { name, chipUid: uid, createdAt: new Date().toISOString() })
-        .then(() => { msg.textContent = "✅ Zamestnanec pridaný!"; hideAddUserForm(); })
-        .catch(err => msg.textContent = "Chyba: " + err.message);
+    snapshot.forEach(child => {
+      const u = child.val();
+      html += `
+        <tr>
+          <td>${u.name}</td>
+          <td>${u.chipUid || "-"}</td>
+          <td><button onclick="deleteUser('${child.key}')">Vymazať</button></td>
+        </tr>`;
     });
 
-    // 📤 Export
-    window.exportToExcel = (tableId, fileName) => {
-      const table = document.getElementById(tableId);
-      if (!table || !table.querySelectorAll("tbody tr").length) return alert("Tabuľka je prázdna!");
-      const wb = XLSX.utils.table_to_book(table, { sheet: "Údaje" });
-      XLSX.writeFile(wb, fileName + ".xlsx");
-    };
+    html += "</table>";
+    container.innerHTML = html;
+  }, err => {
+    console.error(err);
+    container.innerHTML = "<p>Chyba načítania používateľov.</p>";
+  });
+}
+loadUsers();
 
-    // 📋 Prepínanie sekcií
-    const tabs = document.querySelectorAll(".sidebar li[data-target]");
-    const sections = document.querySelectorAll("main section");
-    tabs.forEach(tab => {
-      tab.addEventListener("click", () => {
-        tabs.forEach(t => t.classList.remove("active"));
-        sections.forEach(s => s.classList.remove("active"));
-        tab.classList.add("active");
-        document.getElementById(tab.dataset.target).classList.add("active");
-      });
-    });
-
-    // 👤 Form funkcie
-    window.showAddUserForm = () => document.getElementById("addUserForm").style.display = "block";
-    window.hideAddUserForm = () => {
-      document.getElementById("addUserForm").style.display = "none";
-      document.getElementById("newUserName").value = "";
-      document.getElementById("newUserUid").value = "";
-      document.getElementById("addUserMsg").textContent = "";
-    };
-  </script>
+// ❌ Mazanie používateľov + dát
+window.deleteUser = async (key) => {
+  if (!confirm("Naozaj chcete vymazať používateľa a jeho dáta?")) return;
+  try {
+    await Promise.all([
+      remove(ref(db, "users/" + key)),
+      remove(ref(db, "dochadzka/" + key)),
+      remove(ref(db, "prestávky/" + key)),
+      remove(ref(db, "pn/" + key))
+    ]);
+    alert("Používateľ a jeho dáta boli odstránené.");
+  } catch (err) {
+    console.error(err);
+    alert("Chyba pri mazaní používateľa.");
+  }
+};
+</script>
 </body>
-        </html>
+</html>
+
 
 
 
