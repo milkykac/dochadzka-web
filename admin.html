@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="sk">
 <head>
 <meta charset="UTF-8">
@@ -6,206 +6,102 @@
 <title>Admin panel – Dochádzka</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 <style>
-body {
-  font-family: 'Poppins', sans-serif;
-  margin: 0;
-  background: linear-gradient(135deg, #007bff, #6f42c1);
-  color: #333;
-  min-height: 100vh;
-}
-header {
-  background: #fff;
-  padding: 15px 25px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-h1 {
-  color: #007bff;
-  margin: 0;
-  font-size: 22px;
-  font-weight: 600;
-}
-button {
-  background: #007bff;
-  border: none;
-  color: white;
-  padding: 8px 14px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: 0.3s;
-}
-button:hover { background: #0056b3; }
-nav {
-  background: #fff;
-  display: flex;
-  justify-content: center;
-  padding: 10px;
-  gap: 10px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  position: sticky;
-  top: 70px;
-  z-index: 5;
-}
-nav button {
-  background: #007bff;
-  color: white;
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-weight: 500;
-}
-nav button.active {
-  background: #6f42c1;
-}
-section {
-  display: none;
-  padding: 25px;
-  background: #fff;
-  margin: 25px auto;
-  border-radius: 12px;
-  max-width: 1000px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-}
-section.active { display: block; }
-h2 {
-  color: #007bff;
-  margin-top: 0;
-  border-bottom: 2px solid #007bff;
-  padding-bottom: 5px;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 15px;
-  border-radius: 8px;
-  overflow: hidden;
-}
-th, td {
-  border: 1px solid #ddd;
-  padding: 10px;
-  text-align: left;
-  font-size: 14px;
-}
-th {
-  background: #007bff;
-  color: white;
-  font-weight: 500;
-}
-tr:nth-child(even) { background: #f8f9fa; }
-.loader {
-  text-align: center;
-  padding: 20px;
-  color: #007bff;
-  font-weight: bold;
-}
-td button {
-  background: #28a745;
-  font-size: 13px;
-}
-td button:hover {
-  background: #1e7e34;
-}
-.export-btn {
-  margin-top: 15px;
-  background: #28a745;
-}
-.export-btn:hover {
-  background: #1e7e34;
-}
+body { font-family: 'Poppins', sans-serif; margin:0; background:linear-gradient(135deg,#007bff,#6f42c1); color:#333; min-height:100vh; }
+header { background:#fff; padding:15px 25px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 3px 10px rgba(0,0,0,0.1); position:sticky; top:0; z-index:10; }
+h1 { color:#007bff; margin:0; font-size:22px; font-weight:600; }
+button { border:none; border-radius:8px; cursor:pointer; font-size:14px; transition:0.3s; }
+button:hover { opacity:0.9; }
+nav { background:#fff; display:flex; justify-content:center; gap:10px; padding:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); position:sticky; top:70px; z-index:5; }
+nav button { background:#007bff; color:white; padding:8px 14px; border-radius:8px; font-weight:500; }
+nav button.active { background:#6f42c1; }
+section { display:none; padding:25px; background:#fff; margin:25px auto; border-radius:12px; max-width:1000px; box-shadow:0 4px 20px rgba(0,0,0,0.1); }
+section.active { display:block; }
+h2 { color:#007bff; margin-top:0; border-bottom:2px solid #007bff; padding-bottom:5px; }
+table { width:100%; border-collapse:collapse; margin-top:15px; border-radius:8px; overflow:hidden; }
+th, td { border:1px solid #ddd; padding:10px; text-align:left; font-size:14px; }
+th { background:#007bff; color:white; font-weight:500; cursor:pointer; }
+tr:nth-child(even){ background:#f8f9fa; }
+.loader { text-align:center; padding:20px; color:#007bff; font-weight:bold; }
+td button { background:#dc3545; font-size:13px; }
+td button:hover { background:#a71d2a; }
+.export-btn { margin-top:15px; background:#28a745; }
+.export-btn:hover { background:#1e7e34; }
 
-/* 🪟 Modal */
-.modal {
-  display: none;
-  position: fixed;
-  z-index: 50;
-  left: 0; top: 0;
-  width: 100%; height: 100%;
-  background-color: rgba(0,0,0,0.5);
-}
-.modal-content {
-  background: white;
-  margin: 15% auto;
-  padding: 20px;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 400px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-  text-align: center;
-}
-.modal-content h3 { color: #007bff; }
-.modal-content input {
-  width: 80%;
-  padding: 8px;
-  margin: 10px 0;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-}
+/* Modal */
+#assignModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:100; }
+.modal-content { background:#fff; padding:20px; border-radius:12px; position:relative; width:300px; animation:fadeIn 0.3s; }
+#closeModal { position:absolute; top:10px; right:15px; cursor:pointer; font-size:22px; }
+@keyframes fadeIn { from {opacity:0; transform:translateY(-20px);} to {opacity:1; transform:translateY(0);} }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>Admin panel – Dochádzkový systém</h1>
-  <button id="logoutBtn">Odhlásiť sa</button>
+<h1>Admin panel – Dochádzkový systém</h1>
+<button id="logoutBtn">Odhlásiť sa</button>
 </header>
 
 <nav>
-  <button data-target="dochadzka" class="active">Dochádzka</button>
-  <button data-target="prestávky">Prestávky</button>
-  <button data-target="pn">PN</button>
-  <button data-target="pouzivatelia">Používatelia</button>
-  <button data-target="novi">Noví zamestnanci</button>
+<button data-target="dochadzka" class="active">Dochádzka</button>
+<button data-target="prestávky">Prestávky</button>
+<button data-target="pn">PN</button>
+<button data-target="pouzivatelia">Používatelia</button>
+<button data-target="newChips">Noví zamestnanci</button>
 </nav>
 
 <section id="dochadzka" class="active">
-  <h2>Dochádzka</h2>
-  <button class="export-btn" onclick="exportTable('dochadzkaTable')">Exportovať do CSV</button>
-  <div id="dochadzkaTable" class="loader">Načítavam dáta...</div>
+<h2>Dochádzka</h2>
+<button class="export-btn" onclick="exportTable('dochadzkaTable')">Exportovať do CSV</button>
+<div id="dochadzkaTable" class="loader">Načítavam dáta...</div>
 </section>
 
 <section id="prestávky">
-  <h2>Prestávky</h2>
-  <button class="export-btn" onclick="exportTable('prestávkyTable')">Exportovať do CSV</button>
-  <div id="prestávkyTable" class="loader">Načítavam dáta...</div>
+<h2>Prestávky</h2>
+<button class="export-btn" onclick="exportTable('prestávkyTable')">Exportovať do CSV</button>
+<div id="prestávkyTable" class="loader">Načítavam dáta...</div>
 </section>
 
 <section id="pn">
-  <h2>PN</h2>
-  <button class="export-btn" onclick="exportTable('pnTable')">Exportovať do CSV</button>
-  <div id="pnTable" class="loader">Načítavam dáta...</div>
+<h2>PN</h2>
+<button class="export-btn" onclick="exportTable('pnTable')">Exportovať do CSV</button>
+<div id="pnTable" class="loader">Načítavam dáta...</div>
 </section>
 
 <section id="pouzivatelia">
-  <h2>Používatelia</h2>
-  <div id="usersTable" class="loader">Načítavam používateľov...</div>
+<h2>Používatelia</h2>
+<div id="usersTable" class="loader">Načítavam používateľov...</div>
 </section>
 
-<section id="novi">
-  <h2>Noví zamestnanci</h2>
-  <div id="newUsersTable" class="loader">Sledujem nové čipy...</div>
+<section id="newChips">
+<h2>Noví zamestnanci</h2>
+<div id="newChipsTable" class="loader">Načítavam nové čipy...</div>
 </section>
 
-<!-- 🪟 MODAL -->
-<div id="assignModal" class="modal">
-  <div class="modal-content">
-    <h3>Priradiť meno</h3>
-    <p id="modalUidText"></p>
-    <input type="text" id="assignNameInput" placeholder="Zadajte meno">
-    <br>
-    <button id="saveAssignBtn">Uložiť</button>
-    <button id="cancelAssignBtn" style="background:#dc3545;">Zrušiť</button>
-  </div>
+<!-- Modal -->
+<div id="assignModal">
+<div class="modal-content">
+<span id="closeModal">&times;</span>
+<h3>Priradiť meno novému čipu</h3>
+<input type="text" id="newUserName" placeholder="Meno zamestnanca" style="width:100%; padding:8px; margin-top:10px; border-radius:6px; border:1px solid #ccc;">
+<button id="assignBtn" style="margin-top:15px; width:100%; padding:8px; border:none; background:#007bff; color:white; border-radius:6px;">Priradiť</button>
+</div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getDatabase, ref, onValue, remove, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getDatabase, ref, onValue, set, remove, get } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
+// ✅ ADMIN LOGIN
+if (localStorage.getItem("isAdmin") !== "true") {
+  alert("Prístup len pre admina!");
+  window.location.href = "index.html";
+}
+document.getElementById("logoutBtn").onclick = () => {
+  localStorage.removeItem("isAdmin");
+  window.location.href = "index.html";
+};
+
+// 🔥 Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyB5ovJ-_GAnfIExgBsNuQtc4tb6mqhsdj8",
   authDomain: "dochadzkaesp32.firebaseapp.com",
@@ -218,82 +114,139 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// 🧭 Prepínanie sekcií
-document.querySelectorAll("nav button").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+// 🔄 Prepínanie sekcií
+document.querySelectorAll("nav button").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
     btn.classList.add("active");
-    document.querySelectorAll("section").forEach(sec => sec.classList.remove("active"));
+    document.querySelectorAll("section").forEach(sec=>sec.classList.remove("active"));
     document.getElementById(btn.dataset.target).classList.add("active");
   });
 });
 
-// 🆕 Noví zamestnanci
-const newUsersContainer = document.getElementById("newUsersTable");
-onValue(ref(db, "newChips"), snapshot => {
-  if (!snapshot.exists()) {
-    newUsersContainer.innerHTML = "<p>Žiadne nové čipy.</p>";
-    return;
-  }
+// 📊 Načítanie dát funkcia
+function loadTable(refName, tableId) {
+  const container = document.getElementById(tableId);
+  onValue(ref(db, refName), snapshot=>{
+    if(!snapshot.exists()){ container.innerHTML="<p>Žiadne dáta.</p>"; return; }
+    let data=[];
+    snapshot.forEach(userSnap=>{
+      if(typeof userSnap.val()==="object"){
+        userSnap.forEach(recordSnap=>{
+          const record = recordSnap.val();
+          data.push({ user:userSnap.key, ...record });
+        });
+      } else { data.push({ key:userSnap.key, ...userSnap.val() }); }
+    });
+    if(data.length===0){ container.innerHTML="<p>Žiadne dáta.</p>"; return; }
 
-  let data = Object.entries(snapshot.val());
-  // 🔢 Triedenie podľa timestamp, ak existuje
-  data.sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+    let html="<table><thead><tr>";
+    const keys = Object.keys(data[0]);
+    keys.forEach(k=>html+=`<th>${k}</th>`);
+    html+="</tr></thead><tbody>";
+    data.forEach(item=>{
+      html+="<tr>";
+      keys.forEach(k=>html+=`<td>${item[k]}</td>`);
+      html+="</tr>";
+    });
+    html+="</tbody></table>";
+    container.innerHTML=html;
+  }, err=>{ console.error(err); container.innerHTML="<p>Chyba načítania dát!</p>"; });
+}
 
-  let html = "<table><tr><th>UID</th><th>Čas príchodu</th><th>Akcie</th></tr>";
-  data.forEach(([uid, val]) => {
-    const cas = val.timestamp ? new Date(val.timestamp).toLocaleString("sk-SK") : "-";
-    html += `<tr><td>${uid}</td><td>${cas}</td><td><button onclick="openAssignModal('${uid}')">Priradiť meno</button></td></tr>`;
+// Načítanie sekcií
+loadTable("dochadzka","dochadzkaTable");
+loadTable("prestávky","prestávkyTable");
+loadTable("pn","pnTable");
+
+// 👥 Používatelia
+function loadUsers() {
+  const container = document.getElementById("usersTable");
+  onValue(ref(db,"users"),snapshot=>{
+    if(!snapshot.exists()){ container.innerHTML="<p>Žiadni používatelia.</p>"; return; }
+    let html=`<table><tr><th>Meno</th><th>UID</th><th>Akcie</th></tr>`;
+    snapshot.forEach(child=>{
+      const u=child.val();
+      html+=`<tr><td>${u.name}</td><td>${u.chipUid||"-"}</td><td><button onclick="deleteUser('${child.key}')">Vymazať</button></td></tr>`;
+    });
+    html+="</table>"; container.innerHTML=html;
   });
-  html += "</table>";
-  newUsersContainer.innerHTML = html;
-});
+}
+loadUsers();
 
-// 🪟 MODAL LOGIKA
+// ❌ Mazanie používateľov
+window.deleteUser=async key=>{
+  if(!confirm("Naozaj chcete vymazať používateľa a jeho dáta?")) return;
+  try{
+    await Promise.all([
+      remove(ref(db,"users/"+key)),
+      remove(ref(db,"dochadzka/"+key)),
+      remove(ref(db,"prestávky/"+key)),
+      remove(ref(db,"pn/"+key))
+    ]);
+    alert("Používateľ a jeho dáta boli odstránené.");
+  } catch(err){ console.error(err); alert("Chyba pri mazaní používateľa."); }
+};
+
+// 🔔 Noví čipy
 const modal = document.getElementById("assignModal");
-const modalUidText = document.getElementById("modalUidText");
-const assignInput = document.getElementById("assignNameInput");
-let currentUid = "";
+document.getElementById("closeModal").onclick = () => modal.style.display="none";
+modal.onclick = e => { if(e.target===modal) modal.style.display="none"; }
 
-window.openAssignModal = (uid) => {
-  currentUid = uid;
-  modalUidText.textContent = "UID: " + uid;
-  assignInput.value = "";
-  modal.style.display = "block";
-};
+function openAssignModal(chipUid){
+  modal.style.display="flex";
+  document.getElementById("assignBtn").onclick = () => assignUser(chipUid);
+}
 
-document.getElementById("cancelAssignBtn").onclick = () => {
-  modal.style.display = "none";
-};
+// Načítanie nových čipov
+function loadNewChips(){
+  const container = document.getElementById("newChipsTable");
+  onValue(ref(db,"newChips"),snapshot=>{
+    if(!snapshot.exists()){ container.innerHTML="<p>Žiadne nové čipy.</p>"; return; }
+    let html=`<table><tr><th>UID</th><th>Timestamp</th><th>Akcie</th></tr>`;
+    snapshot.forEach(child=>{
+      const c = child.val();
+      html+=`<tr><td>${child.key}</td><td>${c.timestamp||"-"}</td><td><button onclick="openAssignModal('${child.key}')">Priradiť</button></td></tr>`;
+    });
+    html+="</table>"; container.innerHTML=html;
+  });
+}
+loadNewChips();
 
-// 💾 Uložiť nové meno (s validáciou + error handling)
-document.getElementById("saveAssignBtn").onclick = async () => {
-  const name = assignInput.value.trim();
-  if (!name || !/^[\p{L}\d\s]+$/u.test(name)) {
-    alert("Zadajte platné meno (len písmená, čísla alebo medzery).");
-    return;
+// Priradenie nového používateľa
+async function assignUser(chipUid){
+  const name = document.getElementById("newUserName").value.trim();
+  if(!name || !/^[\w\s]+$/.test(name)){ alert("Zadajte platné meno (len písmená a čísla)."); return; }
+  try{
+    const userRef = ref(db,"users/"+chipUid);
+    const snapshot = await get(userRef);
+    if(snapshot.exists()){ alert("Tento čip je už priradený."); return; }
+    await set(userRef,{ name:name, chipUid:chipUid });
+    await remove(ref(db,"newChips/"+chipUid));
+    modal.style.display="none";
+    alert("Používateľ priradený!");
+  }catch(err){ console.error(err); alert("Chyba pri priraďovaní používateľa."); }
+}
+
+// 📤 Export CSV s formátovaným časom
+window.exportTable=tableId=>{
+  const table=document.querySelector(`#${tableId} table`);
+  if(!table) return;
+  let csv=[];
+  const headers=[]; for(let cell of table.rows[0].cells) headers.push(cell.textContent);
+  csv.push(headers.join(','));
+  for(let i=1;i<table.rows.length;i++){
+    let rowData=[];
+    for(let j=0;j<table.rows[i].cells.length;j++){
+      let val=table.rows[i].cells[j].textContent;
+      if(!isNaN(val) && val>1000000000){ val=new Date(parseInt(val)).toLocaleString('sk-SK'); }
+      rowData.push(`"${val.replace(/"/g,'""')}"`);
+    }
+    csv.push(rowData.join(','));
   }
-
-  try {
-    await set(ref(db, "users/" + currentUid), { name, chipUid: currentUid });
-    await remove(ref(db, "newChips/" + currentUid));
-    alert("Zamestnanec " + name + " bol pridaný.");
-    modal.style.display = "none";
-  } catch (err) {
-    console.error(err);
-    alert("❌ Chyba pri ukladaní: " + err.message);
-  }
+  const blob=new Blob([csv.join('\n')],{ type:'text/csv;charset=utf-8;' });
+  const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`${tableId}.csv`; a.click(); URL.revokeObjectURL(url);
 };
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
