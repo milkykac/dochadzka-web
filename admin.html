@@ -189,6 +189,15 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
+// 🕒 Pomocná funkcia na formátovanie času
+function formatTimestamp(value) {
+  if (!isNaN(value) && value > 1000000000) {
+    const date = new Date(parseInt(value));
+    return date.toLocaleString('sk-SK');
+  }
+  return value;
+}
+
 // 🧭 Prepínanie sekcií
 document.querySelectorAll("nav button").forEach(btn => {
   btn.addEventListener("click", () => {
@@ -199,7 +208,7 @@ document.querySelectorAll("nav button").forEach(btn => {
   });
 });
 
-// 📊 OPRAVENÉ načítanie dát (už nerozbitné)
+// 📊 Načítanie dát s konverziou času
 function loadTable(refName, tableId) {
   const container = document.getElementById(tableId);
   onValue(ref(db, refName), snapshot => {
@@ -210,7 +219,6 @@ function loadTable(refName, tableId) {
 
     let data = [];
 
-    // 🔧 Rozbalíme vnorené objekty
     snapshot.forEach(userSnap => {
       if (typeof userSnap.val() === "object") {
         userSnap.forEach(recordSnap => {
@@ -237,7 +245,7 @@ function loadTable(refName, tableId) {
 
     data.forEach(item => {
       html += "<tr>";
-      keys.forEach(k => html += `<td>${item[k]}</td>`);
+      keys.forEach(k => html += `<td>${formatTimestamp(item[k])}</td>`);
       html += "</tr>";
     });
     html += "</tbody></table>";
@@ -248,7 +256,7 @@ function loadTable(refName, tableId) {
   });
 }
 
-// 🧾 Načítania sekcií
+// 🔄 Načítania sekcií
 loadTable("dochadzka", "dochadzkaTable");
 loadTable("prestávky", "prestávkyTable");
 loadTable("pn", "pnTable");
@@ -301,20 +309,26 @@ window.deleteUser = async (key) => {
   }
 };
 
-// 📤 Export do CSV
+// 📤 Export do CSV (aj s formátovaním času)
 window.exportTable = (tableId) => {
   const table = document.querySelector(`#${tableId} table`);
   if (!table) return;
   let csv = [];
-  for (let row of table.rows) {
+  const headers = [];
+  for (let cell of table.rows[0].cells) headers.push(cell.textContent);
+  csv.push(headers.join(','));
+
+  for (let i = 1; i < table.rows.length; i++) {
     let rowData = [];
-    for (let cell of row.cells) {
-      rowData.push(cell.textContent);
+    for (let j = 0; j < table.rows[i].cells.length; j++) {
+      let cellValue = table.rows[i].cells[j].textContent;
+      rowData.push(`"${cellValue.replace(/"/g, '""')}"`);
     }
     csv.push(rowData.join(','));
   }
+
   const csvContent = csv.join('\n');
-  const blob = new Blob([csvContent], { type: 'text/csv' });
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -325,6 +339,7 @@ window.exportTable = (tableId) => {
 </script>
 </body>
 </html>
+
 
 
 
