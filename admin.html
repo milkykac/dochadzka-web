@@ -39,7 +39,7 @@
     </ul>
   </aside>
 
-  <main>
+  <main style="display:none;">
     <section id="view-attendance" class="active">
       <h2>📅 Dochádzka</h2>
       <button onclick="exportToExcel('dochadzkaTable', 'Dochadzka')">Export do Excel</button>
@@ -99,8 +99,19 @@
     const auth = getAuth(app);
 
     // 🔐 Kontrola prihlásenia
+    const mainContent = document.querySelector("main");
     onAuthStateChanged(auth, (user) => {
-      if (!user) window.location.href = "index.html";
+      if (user) {
+        // ✅ používateľ prihlásený
+        mainContent.style.display = "block";
+        loadAttendance();
+        loadBreaks();
+        loadPN();
+        loadUsers();
+      } else {
+        // ❌ nie je prihlásený – presmeruj
+        window.location.href = "index.html";
+      }
     });
 
     // 🚪 Odhlásenie
@@ -243,13 +254,8 @@
         document.getElementById(tab.dataset.target).classList.add("active");
       });
     });
-
-    // 🚀 Načítanie po spustení
-    loadAttendance();
-    loadBreaks();
-    loadPN();
-    loadUsers();
   </script>
 </body>
 </html>
+
 
