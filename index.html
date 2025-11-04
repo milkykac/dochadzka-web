@@ -14,7 +14,6 @@ body {
   background: linear-gradient(135deg, #007bff, #6f42c1);
   margin: 0;
 }
-
 .login-container {
   background: white;
   padding: 40px 45px;
@@ -24,24 +23,20 @@ body {
   width: 310px;
   animation: fadeIn 0.5s ease-in-out;
 }
-
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
 h2 {
   color: #007bff;
   margin-bottom: 18px;
   font-size: 22px;
 }
-
 .input-group {
   position: relative;
   width: 100%;
   margin: 10px 0;
 }
-
 input {
   width: 100%;
   padding: 10px 40px 10px 12px;
@@ -52,12 +47,10 @@ input {
   transition: 0.3s;
   box-sizing: border-box;
 }
-
 input:focus {
   border-color: #007bff;
   box-shadow: 0 0 6px rgba(0,123,255,0.25);
 }
-
 .eye-toggle {
   position: absolute;
   right: 12px;
@@ -68,7 +61,6 @@ input:focus {
   color: #666;
   user-select: none;
 }
-
 button {
   width: 100%;
   background: #007bff;
@@ -81,9 +73,7 @@ button {
   margin-top: 15px;
   transition: background 0.3s;
 }
-
 button:hover { background: #0056b3; }
-
 .error-msg {
   background: #f8d7da;
   color: #721c24;
@@ -93,7 +83,6 @@ button:hover { background: #0056b3; }
   font-size: 13px;
   display: none;
 }
-
 .footer {
   margin-top: 20px;
   color: #888;
@@ -125,7 +114,7 @@ const firebaseConfig = {
   authDomain: "dochadzkaesp32.firebaseapp.com",
   databaseURL: "https://dochadzkaesp32-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "dochadzkaesp32",
-  storageBucket: "dochadzkaesp32.firebasestorage.app",
+  storageBucket: "dochadzkaesp32.appspot.com",
   messagingSenderId: "417668021105",
   appId: "1:417668021105:web:7fa3e144892d8b304854d0",
   measurementId: "G-ZKQNMZEPHD"
@@ -160,9 +149,9 @@ loginBtn.addEventListener("click", async () => {
     return;
   }
 
-  // ADMIN login
+  // 🔐 ADMIN login
   if (name === "admin" && password === "1234") {
-    localStorage.setItem("uid", "admin");
+    localStorage.setItem("isAdmin", "true");
     window.location.href = "admin.html";
     return;
   }
@@ -194,3 +183,4 @@ loginBtn.addEventListener("click", async () => {
 </script>
 </body>
 </html>
+
