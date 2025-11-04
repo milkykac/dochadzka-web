@@ -84,6 +84,11 @@
     background: #dfe3ee;
   }
 
+  /* Pridané alternujúce riadky pre lepšiu čitateľnosť */
+  tbody tr:nth-child(even) {
+    background: #f9f9f9;
+  }
+
   button {
     background: #3e4e88;
     color: white;
@@ -178,13 +183,13 @@
 </main>
 
 <script>
-  // 🔥 Firebase konfigurácia
+  // 🔥 Firebase konfigurácia (opravená storageBucket)
   const firebaseConfig = {
     apiKey: "AIzaSyB5ovJ-_GAnfIExgBsNuQtc4tb6mqhsdj8",
     authDomain: "dochadzkaesp32.firebaseapp.com",
     databaseURL: "https://dochadzkaesp32-default-rtdb.europe-west1.firebasedatabase.app",
     projectId: "dochadzkaesp32",
-    storageBucket: "dochadzkaesp32.firebasestorage.app",
+    storageBucket: "dochadzkaesp32.appspot.com",  // ← opravené
     messagingSenderId: "417668021105",
     appId: "1:417668021105:web:99a456dd622bb4ac4854d0",
     measurementId: "G-268ZE9WLV1"
@@ -193,6 +198,14 @@
   const app = firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
   const auth = firebase.auth();
+
+  // ✅ Automatická kontrola prihlásenia
+  auth.onAuthStateChanged((user) => {
+    if (!user) {
+      // Ak nie je prihlásený → presmeruj
+      window.location.href = "index.html";
+    }
+  });
 
   // 🚪 Odhlásenie – vráti na index.html
   document.getElementById("logoutBtn").addEventListener("click", () => {
@@ -314,18 +327,25 @@
     XLSX.writeFile(wb, fileName + ".xlsx");
   }
 
-  // 🪄 Prepínanie sekcií
-  const tabs = document.querySelectorAll(".sidebar li[data-target]");
-  const sections = document.querySelectorAll("main section");
+  // 🪄 Prepínanie sekcií (zabezpečené po načítaní DOM)
+  window.addEventListener("DOMContentLoaded", () => {
+    const tabs = document.querySelectorAll(".sidebar li[data-target]");
+    const sections = document.querySelectorAll("main section");
 
-  tabs.forEach(tab => {
-    tab.addEventListener("click", () => {
-      tabs.forEach(t => t.classList.remove("active"));
-      sections.forEach(s => s.classList.remove("active"));
-      tab.classList.add("active");
-      const target = tab.dataset.target;
-      document.getElementById(target).classList.add("active");
+    tabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        if (tab.classList.contains("active")) return;
+        tabs.forEach(t => t.classList.remove("active"));
+        sections.forEach(s => s.classList.remove("active"));
+        tab.classList.add("active");
+        const target = tab.dataset.target;
+        document.getElementById(target).classList.add("active");
+      });
     });
+
+    // Po načítaní rovno aktivuj sekciu Dochádzka
+    document.querySelector(".sidebar li[data-target='view-attendance']").classList.add("active");
+    document.getElementById("view-attendance").classList.add("active");
   });
 
   // Načítaj všetky sekcie
