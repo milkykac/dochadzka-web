@@ -4,25 +4,31 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin panel – Dochádzka</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 <style>
 body {
   font-family: 'Poppins', sans-serif;
   margin: 0;
   background: linear-gradient(135deg, #007bff, #6f42c1);
   color: #333;
+  min-height: 100vh;
 }
 header {
-  background: white;
+  background: #fff;
   padding: 15px 25px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 h1 {
   color: #007bff;
   margin: 0;
-  font-size: 20px;
+  font-size: 22px;
+  font-weight: 600;
 }
 button {
   background: #007bff;
@@ -32,6 +38,7 @@ button {
   border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
+  transition: 0.3s;
 }
 button:hover { background: #0056b3; }
 nav {
@@ -40,31 +47,56 @@ nav {
   justify-content: center;
   padding: 10px;
   gap: 10px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  position: sticky;
+  top: 70px;
+  z-index: 5;
+}
+nav button {
+  background: #007bff;
+  color: white;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 500;
 }
 nav button.active {
   background: #6f42c1;
 }
 section {
   display: none;
-  padding: 20px;
+  padding: 25px;
+  background: #fff;
+  margin: 25px auto;
+  border-radius: 12px;
+  max-width: 1000px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
 }
 section.active {
   display: block;
+}
+h2 {
+  color: #007bff;
+  margin-top: 0;
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 5px;
 }
 table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 15px;
+  border-radius: 8px;
+  overflow: hidden;
 }
 th, td {
   border: 1px solid #ddd;
-  padding: 8px;
+  padding: 10px;
   text-align: left;
+  font-size: 14px;
 }
 th {
   background: #007bff;
   color: white;
+  font-weight: 500;
 }
 tr:nth-child(even) {
   background: #f8f9fa;
@@ -74,6 +106,13 @@ tr:nth-child(even) {
   padding: 20px;
   color: #007bff;
   font-weight: bold;
+}
+td button {
+  background: #dc3545;
+  font-size: 13px;
+}
+td button:hover {
+  background: #a71d2a;
 }
 </style>
 </head>
@@ -122,8 +161,7 @@ if (isAdmin !== "true") {
   window.location.href = "index.html";
 }
 
-const logoutBtn = document.getElementById("logoutBtn");
-logoutBtn.addEventListener("click", () => {
+document.getElementById("logoutBtn").addEventListener("click", () => {
   localStorage.removeItem("isAdmin");
   window.location.href = "index.html";
 });
@@ -136,8 +174,7 @@ const firebaseConfig = {
   projectId: "dochadzkaesp32",
   storageBucket: "dochadzkaesp32.firebasestorage.app",
   messagingSenderId: "417668021105",
-  appId: "1:417668021105:web:7fa3e144892d8b304854d0",
-  measurementId: "G-ZKQNMZEPHD"
+  appId: "1:417668021105:web:7fa3e144892d8b304854d0"
 };
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
@@ -152,7 +189,7 @@ document.querySelectorAll("nav button").forEach(btn => {
   });
 });
 
-// 📊 Načítanie dát
+// 📊 Načítanie dát z Firebase
 function loadTable(refName, tableId) {
   const container = document.getElementById(tableId);
   onValue(ref(db, refName), snapshot => {
@@ -163,9 +200,7 @@ function loadTable(refName, tableId) {
 
     let html = "<table><tr>";
     const firstChild = Object.values(snapshot.val())[0];
-    for (const key in firstChild) {
-      html += `<th>${key}</th>`;
-    }
+    for (const key in firstChild) html += `<th>${key}</th>`;
     html += "</tr>";
 
     snapshot.forEach(child => {
@@ -176,13 +211,13 @@ function loadTable(refName, tableId) {
     });
     html += "</table>";
     container.innerHTML = html;
-  }, (err) => {
+  }, err => {
     console.error(err);
     container.innerHTML = "<p>Chyba načítania dát!</p>";
   });
 }
 
-// 🧾 Načítania všetkých sekcií
+// 🧾 Načítania sekcií
 loadTable("dochadzka", "dochadzkaTable");
 loadTable("prestávky", "prestávkyTable");
 loadTable("pn", "pnTable");
@@ -237,6 +272,7 @@ window.deleteUser = async (key) => {
 </script>
 </body>
 </html>
+
 
 
 
