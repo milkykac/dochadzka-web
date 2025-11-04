@@ -332,7 +332,7 @@ window.exportTable = (tableId) => {
     csv.push(rowData.join(";")); // bodkočiarka vhodná pre Excel
   }
 
-  const csvContent = csv.join("\n");
+  const csvContent = '\ufeff' + csv.join("\n"); // Add BOM for UTF-8
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
   const link = document.createElement("a");
   const url = URL.createObjectURL(blob);
