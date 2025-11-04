@@ -6,24 +6,8 @@
 <title>Admin panel – Dochádzka</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 <style>
-body {
-  font-family: 'Poppins', sans-serif;
-  margin: 0;
-  background: linear-gradient(135deg, #007bff, #6f42c1);
-  min-height: 100vh;
-  color:#333;
-}
-header {
-  background: #fff;
-  padding: 15px 25px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
+body { font-family:'Poppins',sans-serif; margin:0; background:linear-gradient(135deg,#007bff,#6f42c1); min-height:100vh; color:#333; }
+header { background:#fff; padding:15px 25px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 3px 10px rgba(0,0,0,0.1); position:sticky; top:0; z-index:10; }
 h1 { color:#007bff; margin:0; font-size:22px; font-weight:600; }
 button { background:#007bff; border:none; color:white; padding:8px 14px; border-radius:8px; cursor:pointer; font-size:14px; transition:0.3s; }
 button:hover { background:#0056b3; }
@@ -46,7 +30,7 @@ td button:hover { background:#a71d2a; }
 /* MODAL */
 .modal { display:none; position:fixed; z-index:100; left:0; top:0; width:100%; height:100%; overflow:auto; background:rgba(0,0,0,0.5); }
 .modal-content{ background:#fff; margin:10% auto; padding:20px; border-radius:8px; width:90%; max-width:400px; position:relative; animation:fadeIn 0.3s; box-shadow:0 5px 15px rgba(0,0,0,0.2);}
-#closeModal, #closeNewUserModal{ position:absolute; right:10px; top:5px; font-size:22px; cursor:pointer; color:#333; }
+#closeModal,#closeNewUserModal{ position:absolute; right:10px; top:5px; font-size:22px; cursor:pointer; color:#333; }
 @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
 input[type=text]{ width:100%; padding:8px; margin-top:10px; margin-bottom:10px; border:1px solid #ccc; border-radius:6px; font-size:14px; }
 .modal button{ width:100%; margin-top:10px; border-radius:6px; padding:8px 0; font-weight:500; cursor:pointer; background:#007bff; color:white; transition:0.3s;}
@@ -88,7 +72,7 @@ input[type=text]{ width:100%; padding:8px; margin-top:10px; margin-bottom:10px; 
 <section id="pouzivatelia">
   <h2>Používatelia</h2>
   <button class="export-btn" onclick="exportTable('usersTable')">Exportovať do CSV</button>
-  <button onclick="openNewUserModal()" style="background:#17a2b8;">Nový zamestnanec</button>
+  <button id="newUserBtn" style="background:#17a2b8;">Nový zamestnanec</button>
   <div id="usersTable" class="loader">Načítavam používateľov...</div>
 </section>
 
@@ -98,7 +82,7 @@ input[type=text]{ width:100%; padding:8px; margin-top:10px; margin-bottom:10px; 
     <span id="closeModal">&times;</span>
     <h3>Priradiť čip zamestnancovi</h3>
     <input type="text" id="chipInput" placeholder="Zadaj UID čipu">
-    <button onclick="assignChip()">Priradiť</button>
+    <button id="assignChipBtn">Priradiť</button>
   </div>
 </div>
 
@@ -108,7 +92,7 @@ input[type=text]{ width:100%; padding:8px; margin-top:10px; margin-bottom:10px; 
     <span id="closeNewUserModal">&times;</span>
     <h3>Nový zamestnanec</h3>
     <input type="text" id="newUserName" placeholder="Meno zamestnanca">
-    <button onclick="createUser()">Vytvoriť</button>
+    <button id="createUserBtn">Vytvoriť</button>
   </div>
 </div>
 
@@ -117,9 +101,9 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebas
 import { getDatabase, ref, onValue, set, remove, update } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
 // ADMIN LOGIN
-const isAdmin=localStorage.getItem("isAdmin");
+const isAdmin = localStorage.getItem("isAdmin");
 if(isAdmin!=="true"){ alert("Prístup len pre admina!"); window.location.href="index.html"; }
-document.getElementById("logoutBtn").onclick=()=>{ localStorage.removeItem("isAdmin"); window.location.href="index.html"; }
+document.getElementById("logoutBtn").onclick = ()=>{ localStorage.removeItem("isAdmin"); window.location.href="index.html"; }
 
 // FIREBASE
 const firebaseConfig = {
@@ -131,8 +115,8 @@ const firebaseConfig = {
   messagingSenderId: "417668021105",
   appId: "1:417668021105:web:7fa3e144892d8b304854d0"
 };
-const app=initializeApp(firebaseConfig);
-const db=getDatabase(app);
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
 // NAV
 document.querySelectorAll("nav button").forEach(btn=>{
@@ -146,7 +130,7 @@ document.querySelectorAll("nav button").forEach(btn=>{
 
 // LOAD TABLES
 function loadTable(refName, tableId){
-  const container=document.getElementById(tableId);
+  const container = document.getElementById(tableId);
   onValue(ref(db,refName),snapshot=>{
     if(!snapshot.exists()){ container.innerHTML="<p>Žiadne dáta.</p>"; return; }
     let data=[];
@@ -179,7 +163,7 @@ function loadUsers(){
     if(!snapshot.exists()){ container.innerHTML="<p>Žiadni používatelia.</p>"; return; }
     let html=`<table><tr><th>Meno</th><th>Čip UID</th><th>Akcie</th></tr>`;
     snapshot.forEach(child=>{
-      const u=child.val();
+      const u = child.val();
       html+=`<tr>
         <td>${u.name}</td>
         <td>${u.chipUid||"-"}</td>
@@ -196,32 +180,45 @@ loadUsers();
 
 // MODAL ASSIGN
 let selectedUserKey=null;
-const modal=document.getElementById("assignModal");
-document.getElementById("closeModal").onclick=()=>modal.style.display="none";
-modal.onclick=(e)=>{ if(e.target===modal) modal.style.display="none"; }
-function openAssignModal(userKey){ selectedUserKey=userKey; modal.style.display="block"; document.getElementById("chipInput").value=""; }
-async function assignChip(){
-  const uid=document.getElementById("chipInput").value.trim();
+const modal = document.getElementById("assignModal");
+document.getElementById("closeModal").onclick = ()=>modal.style.display="none";
+function openAssignModal(userKey){
+  selectedUserKey = userKey;
+  modal.style.display = "block";
+  document.getElementById("chipInput").value = "";
+}
+document.getElementById("assignChipBtn").onclick = async ()=>{
+  const uid = document.getElementById("chipInput").value.trim();
   if(!uid){ alert("Zadajte UID čipu!"); return; }
-  try{ await update(ref(db,"users/"+selectedUserKey),{ chipUid:uid }); modal.style.display="none"; loadUsers(); alert("Čip priradený."); }
-  catch(e){ console.error(e); alert("Chyba pri priradení čipu."); }
-}
+  try{
+    await update(ref(db,"users/"+selectedUserKey),{ chipUid:uid });
+    modal.style.display="none";
+    loadUsers();
+    alert("Čip priradený.");
+  }catch(e){ console.error(e); alert("Chyba pri priradení čipu."); }
+};
 
-// MODAL NEW USER
-const newUserModal=document.getElementById("newUserModal");
-document.getElementById("closeNewUserModal").onclick=()=>newUserModal.style.display="none";
-newUserModal.onclick=(e)=>{ if(e.target===newUserModal) newUserModal.style.display="none"; }
-function openNewUserModal(){ newUserModal.style.display="block"; document.getElementById("newUserName").value=""; }
-async function createUser(){
-  const name=document.getElementById("newUserName").value.trim();
+// MODAL NOVÝ ZAMESTNANEC
+const newUserModal = document.getElementById("newUserModal");
+document.getElementById("closeNewUserModal").onclick = ()=>newUserModal.style.display="none";
+document.getElementById("newUserBtn").onclick = ()=>{
+  newUserModal.style.display="block";
+  document.getElementById("newUserName").value = "";
+};
+document.getElementById("createUserBtn").onclick = async ()=>{
+  const name = document.getElementById("newUserName").value.trim();
   if(!name){ alert("Zadajte meno!"); return; }
-  const newRef=ref(db,"users/"+Date.now());
-  try{ await set(newRef,{ name, password:"" }); newUserModal.style.display="none"; loadUsers(); alert("Zamestnanec vytvorený."); }
-  catch(e){ console.error(e); alert("Chyba pri vytváraní zamestnanca."); }
-}
+  const newRef = ref(db,"users/"+Date.now());
+  try{
+    await set(newRef,{ name, password:"" });
+    newUserModal.style.display="none";
+    loadUsers();
+    alert("Zamestnanec vytvorený.");
+  }catch(e){ console.error(e); alert("Chyba pri vytváraní zamestnanca."); }
+};
 
-// MAZANIE
-window.deleteUser=async(key)=>{
+// MAZANIE POUŽÍVATEĽA
+window.deleteUser = async(key)=>{
   if(!confirm("Naozaj chcete vymazať používateľa a jeho dáta?")) return;
   try{
     await Promise.all([
@@ -232,26 +229,43 @@ window.deleteUser=async(key)=>{
     ]);
     loadUsers();
     alert("Používateľ a jeho dáta boli odstránené. Heslo bolo resetované.");
-  }
-  catch(err){ console.error(err); alert("Chyba pri mazaní používateľa."); }
-}
+  }catch(err){ console.error(err); alert("Chyba pri mazaní používateľa."); }
+};
 
 // EXPORT CSV
-window.exportTable=(tableId)=>{
-  const table=document.querySelector(`#${tableId} table`); if(!table) return;
-  let csv=[]; const headers=[]; for(let cell of table.rows[0].cells) headers.push(cell.textContent); csv.push(headers.join(','));
+window.exportTable = (tableId)=>{
+  const table=document.querySelector(`#${tableId} table`);
+  if(!table) return;
+  let csv=[];
+  const headers=[];
+  for(let cell of table.rows[0].cells) headers.push(cell.textContent);
+  csv.push(headers.join(','));
   for(let i=1;i<table.rows.length;i++){
     let rowData=[];
     for(let j=0;j<table.rows[i].cells.length;j++){
       let cellValue=table.rows[i].cells[j].textContent;
-      if(!isNaN(cellValue) && cellValue>1000000000){ const date=new Date(parseInt(cellValue)); cellValue=date.toLocaleString('sk-SK'); }
+      if(!isNaN(cellValue) && cellValue>1000000000){ 
+        const date=new Date(parseInt(cellValue));
+        cellValue=date.toLocaleString('sk-SK');
+      }
       rowData.push(`"${cellValue.replace(/"/g,'""')}"`);
-    } csv.push(rowData.join(','));
+    }
+    csv.push(rowData.join(','));
   }
   const blob=new Blob([csv.join('\n')],{type:'text/csv;charset=utf-8;'});
-  const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`${tableId}.csv`; a.click(); URL.revokeObjectURL(url);
-}
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`${tableId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+// Zatvorenie modalu kliknutím mimo
+window.onclick = (e)=>{
+  if(e.target === modal) modal.style.display="none";
+  if(e.target === newUserModal) newUserModal.style.display="none";
+};
 </script>
 </body>
 </html>
-
