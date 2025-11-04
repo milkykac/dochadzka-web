@@ -21,10 +21,10 @@ table { width:100%; border-collapse:collapse; margin-top:15px; border-radius:8px
 th,td { border:1px solid #ddd; padding:10px; text-align:left; font-size:14px; }
 th { background:#007bff; color:white; font-weight:500; cursor:pointer; }
 tr:nth-child(even){ background:#f8f9fa; }
-.arrival { background-color: #d4edda !important; } /* light green for arrivals */
-.departure { background-color: #f8d7da !important; } /* light red for departures */
-.break { background-color: #cce7ff !important; } /* light blue for breaks */
-.pn { background-color: #fff3cd !important; } /* light yellow for PN */
+.prichod { background-color: #28a745; color: white; }
+.odchod { background-color: #dc3545; color: white; }
+.pn { background-color: #ffc107; }
+.prestávky { background-color: #007bff; color: white; }
 .loader{ text-align:center; padding:20px; color:#007bff; font-weight:bold; }
 td button { background:#dc3545; font-size:13px; margin-right:5px; border-radius:6px; padding:5px 8px; }
 td button:hover { background:#a71d2a; }
@@ -58,6 +58,10 @@ input[type=text], input[type=password]{ width:100%; padding:8px; margin-top:10px
 <section id="dochadzka" class="active">
   <h2>Dochádzka</h2>
   <button class="export-btn" onclick="exportTable('dochadzkaTable')">Exportovať do CSV</button>
+  <div style="display:flex; gap:10px; margin-top:10px;">
+    <input type="date" id="dateInput" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:6px; font-size:14px;">
+    <input type="text" id="searchInput" placeholder="Hľadať podľa textu..." style="flex:2; padding:8px; border:1px solid #ccc; border-radius:6px; font-size:14px;">
+  </div>
   <div id="dochadzkaTable" class="loader">Načítavam dáta...</div>
 </section>
 
@@ -143,25 +147,9 @@ document.querySelectorAll("nav button").forEach(btn=>{
   }
 });
 
-// FORMAT VALUE
-function formatValue(key, value) {
-  if (key === 'date' || key === 'from' || key === 'to') {
-    if (typeof value === 'number') {
-      return new Date(value).toLocaleDateString('sk-SK');
-    } else if (typeof value === 'string') {
-      return value;
-    }
-  } else if (key === 'time') {
-    if (typeof value === 'number') {
-      return new Date(value).toLocaleTimeString('sk-SK', { hour: '2-digit', minute: '2-digit' });
-    } else if (typeof value === 'string') {
-      return value;
-    }
-  }
-  return value;
-}
-
 // LOAD TABLES
+let searchTerm = "";
+let selectedDate = "";
 function loadTable(refName, tableId){
   const container = document.getElementById(tableId);
   onValue(ref(db,refName),snapshot=>{
@@ -173,22 +161,33 @@ function loadTable(refName, tableId){
       }else{ data.push({ key:userSnap.key, ...userSnap.val() }); }
     });
     if(data.length===0){ container.innerHTML="<p>Žiadne dáta.</p>"; return; }
+    // Filter data if searchTerm or selectedDate is set and tableId is dochadzkaTable
+    if (tableId === "dochadzkaTable") {
+      if (selectedDate) {
+        data = data.filter(item => item.cas && item.cas.startsWith(selectedDate));
+      }
+      if (searchTerm) {
+        data = data.filter(item => {
+          return Object.values(item).some(val => val && val.toString().toLowerCase().includes(searchTerm.toLowerCase()));
+        });
+      }
+    }
     let html="<table><thead><tr>";
     const keys=Object.keys(data[0]);
     keys.forEach(k=>html+=`<th>${k}</th>`);
     html+="</tr></thead><tbody>";
-    data.forEach((item, index)=>{
+    data.forEach(item=>{
       let rowClass = "";
-      if(refName === "dochadzka"){
-        if(item.type === 'PRICHOD') rowClass = "arrival";
-        else if(item.type === 'ODCHOD') rowClass = "departure";
-      } else if(refName === "prestávky"){
-        rowClass = "break";
-      } else if(refName === "pn"){
+      if (tableId === "dochadzkaTable") {
+        if (item.typ === "prichod") rowClass = "prichod";
+        else if (item.typ === "odchod") rowClass = "odchod";
+      } else if (tableId === "prestávkyTable") {
+        rowClass = "prestávky";
+      } else if (tableId === "pnTable") {
         rowClass = "pn";
       }
-      html+=`<tr class="${rowClass}">`;
-      keys.forEach(k=>html+=`<td>${formatValue(k, item[k])}</td>`);
+      html += `<tr${rowClass ? ` class="${rowClass}"` : ""}>`;
+      keys.forEach(k=>html+=`<td>${item[k]}</td>`);
       html+="</tr>";
     });
     html+="</tbody></table>"; container.innerHTML=html;
@@ -274,6 +273,18 @@ window.deleteUser=async(key)=>{
   catch(err){ console.error(err); alert("Chyba pri mazaní používateľa."); }
 }
 
+// SEARCH INPUT EVENT
+document.getElementById("searchInput").addEventListener("input", (e) => {
+  searchTerm = e.target.value.trim();
+  loadTable("dochadzka", "dochadzkaTable"); // Reload the dochadzka table with filter
+});
+
+// DATE INPUT EVENT
+document.getElementById("dateInput").addEventListener("change", (e) => {
+  selectedDate = e.target.value;
+  loadTable("dochadzka", "dochadzkaTable"); // Reload the dochadzka table with filter
+});
+
 // EXPORT CSV
 window.exportTable = (tableId) => {
   const table = document.querySelector(`#${tableId} table`);
@@ -304,3 +315,5 @@ window.exportTable = (tableId) => {
 
 </body>
 </html>
+
+
