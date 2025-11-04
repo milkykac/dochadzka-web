@@ -6,37 +6,160 @@
 <title>Admin panel – Dochádzka</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 <style>
-body { font-family:'Poppins',sans-serif; margin:0; background:linear-gradient(135deg,#007bff,#6f42c1); min-height:100vh; color:#333; }
-header { background:#fff; padding:15px 25px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 3px 10px rgba(0,0,0,0.1); position:sticky; top:0; z-index:10; }
+body {
+  font-family:'Poppins',sans-serif;
+  margin:0;
+  background:linear-gradient(135deg,#007bff,#6f42c1);
+  min-height:100vh;
+  color:#333;
+}
+header {
+  background:#fff;
+  padding:15px 25px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  box-shadow:0 3px 10px rgba(0,0,0,0.1);
+  position:sticky;
+  top:0;
+  z-index:10;
+}
 h1 { color:#007bff; margin:0; font-size:22px; font-weight:600; }
-button { background:#007bff; border:none; color:white; padding:8px 14px; border-radius:8px; cursor:pointer; font-size:14px; transition:0.3s; }
+button {
+  background:#007bff;
+  border:none;
+  color:white;
+  padding:8px 14px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:14px;
+  transition:0.3s;
+}
 button:hover { background:#0056b3; }
-nav { background:#fff; display:flex; justify-content:center; padding:10px; gap:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); position:sticky; top:70px; z-index:5; }
-nav button { background:#007bff; color:white; padding:8px 14px; border-radius:8px; font-weight:500; }
+nav {
+  background:#fff;
+  display:flex;
+  justify-content:center;
+  padding:10px;
+  gap:10px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+  position:sticky;
+  top:70px;
+  z-index:5;
+}
+nav button {
+  background:#007bff;
+  color:white;
+  padding:8px 14px;
+  border-radius:8px;
+  font-weight:500;
+}
 nav button.active { background:#6f42c1; }
-section { display:none; padding:25px; background:#fff; margin:25px auto; border-radius:12px; max-width:1000px; box-shadow:0 4px 20px rgba(0,0,0,0.1); transition:0.3s; }
+section {
+  display:none;
+  padding:25px;
+  background:#fff;
+  margin:25px auto;
+  border-radius:12px;
+  max-width:1000px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.1);
+  transition:0.3s;
+}
 section.active { display:block; }
-h2 { color:#007bff; margin-top:0; border-bottom:2px solid #007bff; padding-bottom:5px; }
-table { width:100%; border-collapse:collapse; margin-top:15px; border-radius:8px; overflow:hidden; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
-th,td { border:1px solid #ddd; padding:10px; text-align:left; font-size:14px; }
-th { background:#007bff; color:white; font-weight:500; cursor:pointer; }
+h2 {
+  color:#007bff;
+  margin-top:0;
+  border-bottom:2px solid #007bff;
+  padding-bottom:5px;
+}
+table {
+  width:100%;
+  border-collapse:collapse;
+  margin-top:15px;
+  border-radius:8px;
+  overflow:hidden;
+  box-shadow:0 2px 5px rgba(0,0,0,0.1);
+}
+th,td {
+  border:1px solid #ddd;
+  padding:10px;
+  text-align:left;
+  font-size:14px;
+}
+th {
+  background:#007bff;
+  color:white;
+  font-weight:500;
+  cursor:pointer;
+}
 tr:nth-child(even){ background:#f8f9fa; }
-.arrival { background-color: #d4edda !important; } /* light green for arrivals */
-.departure { background-color: #f8d7da !important; } /* light red for departures */
-.break { background-color: #cce7ff !important; } /* light blue for breaks */
+
+/* 🎨 Farebné rozlíšenie typov záznamov */
+.arrival { background-color:#d4edda !important; }     /* zelená pre príchody */
+.departure { background-color:#f8d7da !important; }   /* červená pre odchody */
+.break { background-color:#cce7ff !important; }       /* modrá pre prestávky */
+.pn { background-color:#fff3cd !important; }          /* žltá pre PN */
+tr:hover { filter:brightness(1.05); transition:0.2s; }
+
 .loader{ text-align:center; padding:20px; color:#007bff; font-weight:bold; }
-td button { background:#dc3545; font-size:13px; margin-right:5px; border-radius:6px; padding:5px 8px; }
+td button {
+  background:#dc3545;
+  font-size:13px;
+  margin-right:5px;
+  border-radius:6px;
+  padding:5px 8px;
+}
 td button:hover { background:#a71d2a; }
-.export-btn{ margin-top:15px; background:#28a745; border-radius:8px; padding:8px 14px; }
+.export-btn{
+  margin-top:15px;
+  background:#28a745;
+  border-radius:8px;
+  padding:8px 14px;
+}
 .export-btn:hover{ background:#1e7e34; }
 
 /* MODAL */
 .modal { display:none; position:fixed; z-index:100; left:0; top:0; width:100%; height:100%; overflow:auto; background:rgba(0,0,0,0.5); }
-.modal-content{ background:#fff; margin:10% auto; padding:20px; border-radius:8px; width:90%; max-width:400px; position:relative; animation:fadeIn 0.3s; box-shadow:0 5px 15px rgba(0,0,0,0.2);}
-#closeModal,#closeNewUserModal,#closeChangePasswordModal{ position:absolute; right:10px; top:5px; font-size:22px; cursor:pointer; color:#333; }
+.modal-content{
+  background:#fff;
+  margin:10% auto;
+  padding:20px;
+  border-radius:8px;
+  width:90%;
+  max-width:400px;
+  position:relative;
+  animation:fadeIn 0.3s;
+  box-shadow:0 5px 15px rgba(0,0,0,0.2);
+}
+#closeModal,#closeNewUserModal,#closeChangePasswordModal{
+  position:absolute;
+  right:10px;
+  top:5px;
+  font-size:22px;
+  cursor:pointer;
+  color:#333;
+}
 @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
-input[type=text], input[type=password]{ width:100%; padding:8px; margin-top:10px; margin-bottom:10px; border:1px solid #ccc; border-radius:6px; font-size:14px; }
-.modal button{ width:100%; margin-top:10px; border-radius:6px; padding:8px 0; font-weight:500; cursor:pointer; background:#007bff; color:white; transition:0.3s;}
+input[type=text], input[type=password]{
+  width:100%;
+  padding:8px;
+  margin-top:10px;
+  margin-bottom:10px;
+  border:1px solid #ccc;
+  border-radius:6px;
+  font-size:14px;
+}
+.modal button{
+  width:100%;
+  margin-top:10px;
+  border-radius:6px;
+  padding:8px 0;
+  font-weight:500;
+  cursor:pointer;
+  background:#007bff;
+  color:white;
+  transition:0.3s;
+}
 .modal button:hover{ background:#0056b3;}
 </style>
 </head>
@@ -111,15 +234,10 @@ input[type=text], input[type=password]{ width:100%; padding:8px; margin-top:10px
 </div>
 
 <script type="module">
+// Firebase setup
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getDatabase, ref, onValue, set, remove, update } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
-// ADMIN LOGIN
-const isAdmin = localStorage.getItem("isAdmin");
-if(isAdmin!=="true"){ alert("Prístup len pre admina!"); window.location.href="index.html"; }
-document.getElementById("logoutBtn").onclick=()=>{ localStorage.removeItem("isAdmin"); window.location.href="index.html"; }
-
-// FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyB5ovJ-_GAnfIExgBsNuQtc4tb6mqhsdj8",
   authDomain: "dochadzkaesp32.firebaseapp.com",
@@ -132,7 +250,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// NAV
+// Prepínanie kategórií
 document.querySelectorAll("nav button").forEach(btn=>{
   btn.onclick=()=>{
     document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
@@ -142,25 +260,7 @@ document.querySelectorAll("nav button").forEach(btn=>{
   }
 });
 
-// FORMAT VALUE
-function formatValue(key, value) {
-  if (key === 'date' || key === 'from' || key === 'to') {
-    if (typeof value === 'number') {
-      return new Date(value).toLocaleDateString('sk-SK');
-    } else if (typeof value === 'string') {
-      return value;
-    }
-  } else if (key === 'time') {
-    if (typeof value === 'number') {
-      return new Date(value).toLocaleTimeString('sk-SK', { hour: '2-digit', minute: '2-digit' });
-    } else if (typeof value === 'string') {
-      return value;
-    }
-  }
-  return value;
-}
-
-// LOAD TABLES
+// Načítanie dát s farebným rozlíšením
 function loadTable(refName, tableId){
   const container = document.getElementById(tableId);
   onValue(ref(db,refName),snapshot=>{
@@ -176,127 +276,28 @@ function loadTable(refName, tableId){
     const keys=Object.keys(data[0]);
     keys.forEach(k=>html+=`<th>${k}</th>`);
     html+="</tr></thead><tbody>";
-    data.forEach((item, index)=>{
-      let rowClass = "";
-      if(refName === "dochadzka"){
-        rowClass = index % 2 === 0 ? "arrival" : "departure";
-      } else if(refName === "prestávky"){
-        rowClass = "break";
+    data.forEach(item=>{
+      let rowClass="";
+      if(refName==="dochadzka"){
+        if(item.Typ==="PRICHOD") rowClass="arrival";
+        else if(item.Typ==="ODCHOD") rowClass="departure";
       }
+      else if(refName==="prestávky") rowClass="break";
+      else if(refName==="pn") rowClass="pn";
+
       html+=`<tr class="${rowClass}">`;
-      keys.forEach(k=>html+=`<td>${formatValue(k, item[k])}</td>`);
+      keys.forEach(k=>html+=`<td>${item[k]}</td>`);
       html+="</tr>";
     });
-    html+="</tbody></table>"; container.innerHTML=html;
+    html+="</tbody></table>";
+    container.innerHTML=html;
   });
 }
 loadTable("dochadzka","dochadzkaTable");
 loadTable("prestávky","prestávkyTable");
 loadTable("pn","pnTable");
-
-// POUŽÍVATELIA
-function loadUsers(){
-  const container=document.getElementById("usersTable");
-  onValue(ref(db,"users"),snapshot=>{
-    if(!snapshot.exists()){ container.innerHTML="<p>Žiadni používatelia.</p>"; return; }
-    let html=`<table><tr><th>Meno</th><th>Čip UID</th><th>Akcie</th></tr>`;
-    snapshot.forEach(child=>{
-      const u = child.val();
-      html+=`<tr>
-        <td>${u.name}</td>
-        <td>${u.chipUid||"-"}</td>
-        <td>
-          ${!u.chipUid ? `<button onclick="openAssignModal('${child.key}')">Priradiť čip</button>` : ""}
-          <button onclick="openChangePasswordModal('${child.key}','${u.password||''}')">Zmeniť heslo</button>
-          <button onclick="deleteUser('${child.key}')">Vymazať</button>
-        </td>
-      </tr>`;
-    });
-    html+="</table>"; container.innerHTML=html;
-  });
-}
-loadUsers();
-
-// MODAL PRIRADENIE ČIPU
-let selectedUserKey = null;
-const assignModal = document.getElementById("assignModal");
-document.getElementById("closeModal").onclick = ()=>assignModal.style.display="none";
-assignModal.onclick=(e)=>{ if(e.target===assignModal) assignModal.style.display="none"; }
-window.openAssignModal=(userKey)=>{ selectedUserKey=userKey; assignModal.style.display="block"; document.getElementById("chipInput").value=""; }
-document.getElementById("assignChipBtn").onclick = async ()=>{
-  const uid = document.getElementById("chipInput").value.trim();
-  if(!uid){ alert("Zadajte UID čipu!"); return; }
-  try{ await update(ref(db,"users/"+selectedUserKey),{ chipUid:uid }); assignModal.style.display="none"; loadUsers(); alert("Čip priradený."); }
-  catch(e){ console.error(e); alert("Chyba pri priradení čipu."); }
-}
-
-// MODAL NOVÝ ZAMESTNANEC
-const newUserModal=document.getElementById("newUserModal");
-document.getElementById("closeNewUserModal").onclick = ()=>newUserModal.style.display="none";
-newUserModal.onclick=(e)=>{ if(e.target===newUserModal) newUserModal.style.display="none"; }
-document.getElementById("newUserBtn").onclick = ()=>{ newUserModal.style.display="block"; document.getElementById("newUserName").value=""; document.getElementById("newUserPassword").value=""; }
-
-document.getElementById("createUserBtn").onclick = async ()=>{
-  const name = document.getElementById("newUserName").value.trim();
-  const password = document.getElementById("newUserPassword").value.trim();
-  if(!name){ alert("Zadajte meno!"); return; }
-  const newRef = ref(db,"users/"+Date.now());
-  try{ await set(newRef,{ name, password }); newUserModal.style.display="none"; loadUsers(); alert("Zamestnanec vytvorený."); }
-  catch(e){ console.error(e); alert("Chyba pri vytváraní zamestnanca."); }
-}
-
-// MODAL ZMIENA HESLA
-let passwordUserKey = null;
-const changePasswordModal = document.getElementById("changePasswordModal");
-document.getElementById("closeChangePasswordModal").onclick = ()=>changePasswordModal.style.display="none";
-changePasswordModal.onclick=(e)=>{ if(e.target===changePasswordModal) changePasswordModal.style.display="none"; }
-
-window.openChangePasswordModal=(userKey,currentPassword)=>{
-  passwordUserKey=userKey;
-  changePasswordModal.style.display="block";
-  document.getElementById("changePasswordInput").value = currentPassword || "";
-}
-document.getElementById("savePasswordBtn").onclick = async ()=>{
-  const newPassword = document.getElementById("changePasswordInput").value.trim();
-  if(!newPassword){ alert("Zadajte heslo!"); return; }
-  try{ await update(ref(db,"users/"+passwordUserKey),{ password:newPassword }); changePasswordModal.style.display="none"; loadUsers(); alert("Heslo bolo zmenené."); }
-  catch(e){ console.error(e); alert("Chyba pri zmene hesla."); }
-}
-
-// MAZANIE
-window.deleteUser=async(key)=>{
-  if(!confirm("Naozaj chcete vymazať používateľa a jeho dáta?")) return;
-  try{ await Promise.all([ remove(ref(db,"users/"+key)), remove(ref(db,"dochadzka/"+key)), remove(ref(db,"prestávky/"+key)), remove(ref(db,"pn/"+key)) ]); loadUsers(); alert("Používateľ a jeho dáta boli odstránené."); }
-  catch(err){ console.error(err); alert("Chyba pri mazaní používateľa."); }
-}
-
-// EXPORT CSV
-window.exportTable = (tableId) => {
-  const table = document.querySelector(`#${tableId} table`);
-  if (!table) return;
-
-  let csv = [];
-  for (let row of table.rows) {
-    let rowData = [];
-    for (let cell of row.cells) {
-      // odstrániť prípadné čiarky z textu a obaliť do úvodzoviek
-      rowData.push('"' + cell.innerText.replace(/"/g, '""') + '"');
-    }
-    csv.push(rowData.join(";")); // bodkočiarka vhodná pre Excel
-  }
-
-  const csvContent = csv.join("\n");
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  const link = document.createElement("a");
-  const url = URL.createObjectURL(blob);
-  link.setAttribute("href", url);
-  link.setAttribute("download", `${tableId}.csv`);
-  link.style.display = "none";
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
 </script>
-
 </body>
 </html>
+
+
