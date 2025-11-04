@@ -133,10 +133,19 @@ tr:nth-child(even) { background: rgba(0,0,0,0.03); }
   border-radius: 8px;
   margin-right: 5px;
 }
-  .dark-toggle:hover {
-    background: var(--accent);
-    color: white;
-  }
+.dark-toggle:hover {
+  background: var(--accent);
+  color: white;
+}
+
+.status-box {
+  margin: 10px 0 20px;
+  font-weight: 600;
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+  background: rgba(0,0,0,0.05);
+}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -152,6 +161,7 @@ tr:nth-child(even) { background: rgba(0,0,0,0.03); }
 
 <div class="container">
   <h2>📅 Moja dochádzka</h2>
+  <div id="statusBox" class="status-box">Načítavam stav...</div>
   <button onclick="exportMyData()">Export do Excel</button>
   <div class="filter">
     <label for="filterDate">Filtrovať podľa dátumu:</label>
@@ -160,32 +170,20 @@ tr:nth-child(even) { background: rgba(0,0,0,0.03); }
 
   <h3>Dochádzka (Príchod / Odchod)</h3>
   <table>
-    <thead>
-      <tr><th>Čas</th><th>Stav</th></tr>
-    </thead>
-    <tbody id="myAttendanceBody">
-      <tr><td colspan="2">Načítavam údaje...</td></tr>
-    </tbody>
+    <thead><tr><th>Čas</th><th>Stav</th></tr></thead>
+    <tbody id="myAttendanceBody"><tr><td colspan="2">Načítavam údaje...</td></tr></tbody>
   </table>
 
   <h3>Prestávky</h3>
   <table>
-    <thead>
-      <tr><th>Čas</th></tr>
-    </thead>
-    <tbody id="myBreaksBody">
-      <tr><td>Žiadne prestávky</td></tr>
-    </tbody>
+    <thead><tr><th>Čas</th></tr></thead>
+    <tbody id="myBreaksBody"><tr><td>Žiadne prestávky</td></tr></tbody>
   </table>
 
   <h3>PN</h3>
   <table>
-    <thead>
-      <tr><th>Čas</th></tr>
-    </thead>
-    <tbody id="myPNBody">
-      <tr><td>Žiadne PN</td></tr>
-    </tbody>
+    <thead><tr><th>Čas</th></tr></thead>
+    <tbody id="myPNBody"><tr><td>Žiadne PN</td></tr></tbody>
   </table>
 </div>
 
@@ -207,9 +205,11 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 const userId = localStorage.getItem("uid");
-if(!userId){
+if (!userId) {
   alert("Nie si prihlásený!");
   window.location.href = "index.html";
+} else if (userId === "admin") {
+  window.location.href = "admin.html";
 }
 
 const myAttendanceBody = document.getElementById("myAttendanceBody");
@@ -217,19 +217,32 @@ const myBreaksBody = document.getElementById("myBreaksBody");
 const myPNBody = document.getElementById("myPNBody");
 const userNameEl = document.getElementById("userName");
 const filterDate = document.getElementById("filterDate");
+const statusBox = document.getElementById("statusBox");
 
 let allRecords = [];
 
+// 🔹 Načítanie používateľa
 get(ref(db, "users/" + userId)).then(snapshot => {
   if (!snapshot.exists()) {
     alert("Používateľ nenájdený!");
     window.location.href = "index.html";
     return;
   }
+
   const userData = snapshot.val();
   userNameEl.textContent = userData.name;
   const chipUid = userData.chipUid;
 
+  // 🔹 Posledný stav
+  onValue(ref(db, "dochadzka/" + chipUid + "/posledny_stav"), snap => {
+    if (snap.exists()) {
+      statusBox.textContent = "Posledný stav: " + snap.val();
+    } else {
+      statusBox.textContent = "Žiadny stav nezaznamenaný.";
+    }
+  });
+
+  // 🔹 Dochádzka záznamy
   onValue(ref(db, "dochadzka/" + chipUid), snap => {
     myAttendanceBody.innerHTML = "";
     myBreaksBody.innerHTML = "";
@@ -237,14 +250,11 @@ get(ref(db, "users/" + userId)).then(snapshot => {
     allRecords = [];
     if (!snap.exists()) {
       myAttendanceBody.innerHTML = "<tr><td colspan='2'>Žiadne záznamy</td></tr>";
-      myBreaksBody.innerHTML = "<tr><td>Žiadne prestávky</td></tr>";
-      myPNBody.innerHTML = "<tr><td>Žiadne PN</td></tr>";
       return;
     }
     snap.forEach(childSnap => {
       if (childSnap.key === "posledny_stav") return;
-      const z = childSnap.val();
-      allRecords.push(z);
+      allRecords.push(childSnap.val());
     });
     renderTables();
   });
@@ -259,73 +269,73 @@ function renderTables() {
   const selectedDate = filterDate.value;
   if (selectedDate) filtered = filtered.filter(r => r.cas.startsWith(selectedDate));
 
-  const attendance = filtered.filter(r => r.stav === "PRICHOD" || r.stav === "ODCHOD");
+  const attendance = filtered.filter(r => ["PRICHOD","ODCHOD"].includes(r.stav));
   const breaks = filtered.filter(r => r.stav === "PRESTAVKA");
   const pn = filtered.filter(r => r.stav === "PN");
 
   if (!attendance.length) myAttendanceBody.innerHTML = "<tr><td colspan='2'>Žiadne záznamy</td></tr>";
   else attendance.reverse().forEach(z => {
-    const statusClass = z.stav.toLowerCase() === "prichod" ? "status-prichod" : "status-odchod";
-    const row = document.createElement("tr");
-    row.innerHTML = `<td>${z.cas}</td><td class="${statusClass}">${z.stav}</td>`;
-    myAttendanceBody.appendChild(row);
+    const cls = z.stav === "PRICHOD" ? "status-prichod" : "status-odchod";
+    myAttendanceBody.innerHTML += `<tr><td>${z.cas}</td><td class="${cls}">${z.stav}</td></tr>`;
   });
 
   if (!breaks.length) myBreaksBody.innerHTML = "<tr><td>Žiadne prestávky</td></tr>";
   else breaks.reverse().forEach(z => {
-    const row = document.createElement("tr");
-    row.innerHTML = `<td class="status-prestavka">${z.cas}</td>`;
-    myBreaksBody.appendChild(row);
+    myBreaksBody.innerHTML += `<tr><td class="status-prestavka">${z.cas}</td></tr>`;
   });
 
   if (!pn.length) myPNBody.innerHTML = "<tr><td>Žiadne PN</td></tr>";
   else pn.reverse().forEach(z => {
-    const row = document.createElement("tr");
-    row.innerHTML = `<td class="status-pn">${z.cas}</td>`;
-    myPNBody.appendChild(row);
+    myPNBody.innerHTML += `<tr><td class="status-pn">${z.cas}</td></tr>`;
   });
 }
 
 filterDate.addEventListener("change", renderTables);
 
+// 🔹 Odhlásenie
 document.getElementById("logoutBtn").addEventListener("click", () => {
   localStorage.removeItem("uid");
   window.location.href = "index.html";
 });
 
+// 🔹 Dark Mode – zapamätanie
 const darkBtn = document.getElementById("darkModeBtn");
+if (localStorage.getItem("theme") === "dark") {
+  document.body.setAttribute("data-theme", "dark");
+  darkBtn.textContent = "☀️ Light mode";
+}
+
 darkBtn.addEventListener("click", () => {
   const isDark = document.body.getAttribute("data-theme") === "dark";
   document.body.setAttribute("data-theme", isDark ? "" : "dark");
+  localStorage.setItem("theme", isDark ? "" : "dark");
   darkBtn.textContent = isDark ? "🌙 Dark mode" : "☀️ Light mode";
 });
 
-// 📊 Export do Excel pre zamestnanca
-function exportMyData() {
-  const userName = document.getElementById("userName").textContent;
+// 📊 Export do Excel
+window.exportMyData = function() {
+  const userName = userNameEl.textContent;
   const data = [
     ["Zamestnanec", userName],
+    ["Posledný stav", statusBox.textContent],
     [],
     ["Dochádzka (Príchod / Odchod)"],
     ["Čas", "Stav"],
-    ...Array.from(document.querySelectorAll("#myAttendanceBody tr")).map(tr => {
-      const tds = tr.querySelectorAll("td");
-      return tds.length ? [tds[0].textContent, tds[1].textContent] : [];
-    }),
+    ...Array.from(document.querySelectorAll("#myAttendanceBody tr")).map(tr =>
+      Array.from(tr.querySelectorAll("td")).map(td => td.textContent)
+    ),
     [],
     ["Prestávky"],
     ["Čas"],
-    ...Array.from(document.querySelectorAll("#myBreaksBody tr")).map(tr => {
-      const tds = tr.querySelectorAll("td");
-      return tds.length ? [tds[0].textContent] : [];
-    }),
+    ...Array.from(document.querySelectorAll("#myBreaksBody tr")).map(tr =>
+      Array.from(tr.querySelectorAll("td")).map(td => td.textContent)
+    ),
     [],
     ["PN"],
     ["Čas"],
-    ...Array.from(document.querySelectorAll("#myPNBody tr")).map(tr => {
-      const tds = tr.querySelectorAll("td");
-      return tds.length ? [tds[0].textContent] : [];
-    })
+    ...Array.from(document.querySelectorAll("#myPNBody tr")).map(tr =>
+      Array.from(tr.querySelectorAll("td")).map(td => td.textContent)
+    )
   ];
   const ws = XLSX.utils.aoa_to_sheet(data);
   const wb = XLSX.utils.book_new();
@@ -335,5 +345,6 @@ function exportMyData() {
 </script>
 </body>
 </html>
+
 
 
