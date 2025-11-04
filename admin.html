@@ -30,9 +30,9 @@ td button:hover { background:#a71d2a; }
 /* MODAL */
 .modal { display:none; position:fixed; z-index:100; left:0; top:0; width:100%; height:100%; overflow:auto; background:rgba(0,0,0,0.5); }
 .modal-content{ background:#fff; margin:10% auto; padding:20px; border-radius:8px; width:90%; max-width:400px; position:relative; animation:fadeIn 0.3s; box-shadow:0 5px 15px rgba(0,0,0,0.2);}
-#closeModal,#closeNewUserModal{ position:absolute; right:10px; top:5px; font-size:22px; cursor:pointer; color:#333; }
+#closeModal,#closeNewUserModal,#closeChangePasswordModal{ position:absolute; right:10px; top:5px; font-size:22px; cursor:pointer; color:#333; }
 @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
-input[type=text]{ width:100%; padding:8px; margin-top:10px; margin-bottom:10px; border:1px solid #ccc; border-radius:6px; font-size:14px; }
+input[type=text], input[type=password]{ width:100%; padding:8px; margin-top:10px; margin-bottom:10px; border:1px solid #ccc; border-radius:6px; font-size:14px; }
 .modal button{ width:100%; margin-top:10px; border-radius:6px; padding:8px 0; font-weight:500; cursor:pointer; background:#007bff; color:white; transition:0.3s;}
 .modal button:hover{ background:#0056b3;}
 </style>
@@ -92,7 +92,18 @@ input[type=text]{ width:100%; padding:8px; margin-top:10px; margin-bottom:10px; 
     <span id="closeNewUserModal">&times;</span>
     <h3>Nový zamestnanec</h3>
     <input type="text" id="newUserName" placeholder="Meno zamestnanca">
+    <input type="password" id="newUserPassword" placeholder="Heslo (voliteľné)">
     <button id="createUserBtn">Vytvoriť</button>
+  </div>
+</div>
+
+<!-- MODAL zmena hesla -->
+<div id="changePasswordModal" class="modal">
+  <div class="modal-content">
+    <span id="closeChangePasswordModal">&times;</span>
+    <h3>Zmeniť heslo</h3>
+    <input type="password" id="changePasswordInput" placeholder="Nové heslo">
+    <button id="savePasswordBtn">Uložiť</button>
   </div>
 </div>
 
@@ -103,7 +114,7 @@ import { getDatabase, ref, onValue, set, remove, update } from "https://www.gsta
 // ADMIN LOGIN
 const isAdmin = localStorage.getItem("isAdmin");
 if(isAdmin!=="true"){ alert("Prístup len pre admina!"); window.location.href="index.html"; }
-document.getElementById("logoutBtn").onclick = ()=>{ localStorage.removeItem("isAdmin"); window.location.href="index.html"; }
+document.getElementById("logoutBtn").onclick=()=>{ localStorage.removeItem("isAdmin"); window.location.href="index.html"; }
 
 // FIREBASE
 const firebaseConfig = {
@@ -169,6 +180,7 @@ function loadUsers(){
         <td>${u.chipUid||"-"}</td>
         <td>
           ${!u.chipUid ? `<button onclick="openAssignModal('${child.key}')">Priradiť čip</button>` : ""}
+          <button onclick="openChangePasswordModal('${child.key}','${u.password||''}')">Zmeniť heslo</button>
           <button onclick="deleteUser('${child.key}')">Vymazať</button>
         </td>
       </tr>`;
@@ -178,94 +190,86 @@ function loadUsers(){
 }
 loadUsers();
 
-// MODAL ASSIGN
-let selectedUserKey=null;
-const modal = document.getElementById("assignModal");
-document.getElementById("closeModal").onclick = ()=>modal.style.display="none";
-function openAssignModal(userKey){
-  selectedUserKey = userKey;
-  modal.style.display = "block";
-  document.getElementById("chipInput").value = "";
-}
+// MODAL PRIRADENIE ČIPU
+let selectedUserKey = null;
+const assignModal = document.getElementById("assignModal");
+document.getElementById("closeModal").onclick = ()=>assignModal.style.display="none";
+assignModal.onclick=(e)=>{ if(e.target===assignModal) assignModal.style.display="none"; }
+window.openAssignModal=(userKey)=>{ selectedUserKey=userKey; assignModal.style.display="block"; document.getElementById("chipInput").value=""; }
 document.getElementById("assignChipBtn").onclick = async ()=>{
   const uid = document.getElementById("chipInput").value.trim();
   if(!uid){ alert("Zadajte UID čipu!"); return; }
-  try{
-    await update(ref(db,"users/"+selectedUserKey),{ chipUid:uid });
-    modal.style.display="none";
-    loadUsers();
-    alert("Čip priradený.");
-  }catch(e){ console.error(e); alert("Chyba pri priradení čipu."); }
-};
+  try{ await update(ref(db,"users/"+selectedUserKey),{ chipUid:uid }); assignModal.style.display="none"; loadUsers(); alert("Čip priradený."); }
+  catch(e){ console.error(e); alert("Chyba pri priradení čipu."); }
+}
 
 // MODAL NOVÝ ZAMESTNANEC
-const newUserModal = document.getElementById("newUserModal");
+const newUserModal=document.getElementById("newUserModal");
 document.getElementById("closeNewUserModal").onclick = ()=>newUserModal.style.display="none";
-document.getElementById("newUserBtn").onclick = ()=>{
-  newUserModal.style.display="block";
-  document.getElementById("newUserName").value = "";
-};
+newUserModal.onclick=(e)=>{ if(e.target===newUserModal) newUserModal.style.display="none"; }
+document.getElementById("newUserBtn").onclick = ()=>{ newUserModal.style.display="block"; document.getElementById("newUserName").value=""; document.getElementById("newUserPassword").value=""; }
+
 document.getElementById("createUserBtn").onclick = async ()=>{
   const name = document.getElementById("newUserName").value.trim();
+  const password = document.getElementById("newUserPassword").value.trim();
   if(!name){ alert("Zadajte meno!"); return; }
   const newRef = ref(db,"users/"+Date.now());
-  try{
-    await set(newRef,{ name, password:"" });
-    newUserModal.style.display="none";
-    loadUsers();
-    alert("Zamestnanec vytvorený.");
-  }catch(e){ console.error(e); alert("Chyba pri vytváraní zamestnanca."); }
-};
+  try{ await set(newRef,{ name, password }); newUserModal.style.display="none"; loadUsers(); alert("Zamestnanec vytvorený."); }
+  catch(e){ console.error(e); alert("Chyba pri vytváraní zamestnanca."); }
+}
 
-// MAZANIE POUŽÍVATEĽA
-window.deleteUser = async(key)=>{
+// MODAL ZMIENA HESLA
+let passwordUserKey = null;
+const changePasswordModal = document.getElementById("changePasswordModal");
+document.getElementById("closeChangePasswordModal").onclick = ()=>changePasswordModal.style.display="none";
+changePasswordModal.onclick=(e)=>{ if(e.target===changePasswordModal) changePasswordModal.style.display="none"; }
+
+window.openChangePasswordModal=(userKey,currentPassword)=>{
+  passwordUserKey=userKey;
+  changePasswordModal.style.display="block";
+  document.getElementById("changePasswordInput").value = currentPassword || "";
+}
+document.getElementById("savePasswordBtn").onclick = async ()=>{
+  const newPassword = document.getElementById("changePasswordInput").value.trim();
+  if(!newPassword){ alert("Zadajte heslo!"); return; }
+  try{ await update(ref(db,"users/"+passwordUserKey),{ password:newPassword }); changePasswordModal.style.display="none"; loadUsers(); alert("Heslo bolo zmenené."); }
+  catch(e){ console.error(e); alert("Chyba pri zmene hesla."); }
+}
+
+// MAZANIE
+window.deleteUser=async(key)=>{
   if(!confirm("Naozaj chcete vymazať používateľa a jeho dáta?")) return;
-  try{
-    await Promise.all([
-      remove(ref(db,"users/"+key)),
-      remove(ref(db,"dochadzka/"+key)),
-      remove(ref(db,"prestávky/"+key)),
-      remove(ref(db,"pn/"+key))
-    ]);
-    loadUsers();
-    alert("Používateľ a jeho dáta boli odstránené. Heslo bolo resetované.");
-  }catch(err){ console.error(err); alert("Chyba pri mazaní používateľa."); }
-};
+  try{ await Promise.all([ remove(ref(db,"users/"+key)), remove(ref(db,"dochadzka/"+key)), remove(ref(db,"prestávky/"+key)), remove(ref(db,"pn/"+key)) ]); loadUsers(); alert("Používateľ a jeho dáta boli odstránené."); }
+  catch(err){ console.error(err); alert("Chyba pri mazaní používateľa."); }
+}
 
 // EXPORT CSV
-window.exportTable = (tableId)=>{
-  const table=document.querySelector(`#${tableId} table`);
-  if(!table) return;
-  let csv=[];
-  const headers=[];
-  for(let cell of table.rows[0].cells) headers.push(cell.textContent);
-  csv.push(headers.join(','));
-  for(let i=1;i<table.rows.length;i++){
-    let rowData=[];
-    for(let j=0;j<table.rows[i].cells.length;j++){
-      let cellValue=table.rows[i].cells[j].textContent;
-      if(!isNaN(cellValue) && cellValue>1000000000){ 
-        const date=new Date(parseInt(cellValue));
-        cellValue=date.toLocaleString('sk-SK');
-      }
-      rowData.push(`"${cellValue.replace(/"/g,'""')}"`);
-    }
-    csv.push(rowData.join(','));
-  }
-  const blob=new Blob([csv.join('\n')],{type:'text/csv;charset=utf-8;'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;
-  a.download=`${tableId}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-};
+window.exportTable = (tableId) => {
+  const table = document.querySelector(`#${tableId} table`);
+  if (!table) return;
 
-// Zatvorenie modalu kliknutím mimo
-window.onclick = (e)=>{
-  if(e.target === modal) modal.style.display="none";
-  if(e.target === newUserModal) newUserModal.style.display="none";
+  let csv = [];
+  for (let row of table.rows) {
+    let rowData = [];
+    for (let cell of row.cells) {
+      // odstrániť prípadné čiarky z textu a obaliť do úvodzoviek
+      rowData.push('"' + cell.innerText.replace(/"/g, '""') + '"');
+    }
+    csv.push(rowData.join(";")); // bodkočiarka vhodná pre Excel
+  }
+
+  const csvContent = csv.join("\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  link.setAttribute("href", url);
+  link.setAttribute("download", `${tableId}.csv`);
+  link.style.display = "none";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 };
 </script>
+
 </body>
 </html>
