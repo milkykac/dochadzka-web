@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="sk">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Panel - Dochádzka</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;600&display=swap" rel="stylesheet" />
   <style>
     body { font-family: 'Roboto', sans-serif; margin: 0; background: #f4f5f7; color: #333; display: flex; }
     .sidebar { width: 240px; background: #2b3a67; color: white; height: 100vh; display: flex; flex-direction: column; padding-top: 20px; }
@@ -39,7 +39,7 @@
     </ul>
   </aside>
 
-  <main style="display:none;">
+  <main>
     <section id="view-attendance" class="active">
       <h2>📅 Dochádzka</h2>
       <button onclick="exportToExcel('dochadzkaTable', 'Dochadzka')">Export do Excel</button>
@@ -98,19 +98,32 @@
     const db = getDatabase(app);
     const auth = getAuth(app);
 
-    // 🔐 Kontrola prihlásenia
+    // 🔐 Bezpečná kontrola prihlásenia
     const mainContent = document.querySelector("main");
+    const loaderText = document.createElement("div");
+    loaderText.textContent = "🔄 Overujem prihlásenie...";
+    loaderText.style.textAlign = "center";
+    loaderText.style.marginTop = "40px";
+    mainContent.before(loaderText);
+    mainContent.style.display = "none";
+
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        // ✅ používateľ prihlásený
+        console.log("✅ Prihlásený ako:", user.email);
+        loaderText.remove();
         mainContent.style.display = "block";
+
+        // Načítaj dáta až po potvrdení prihlásenia
         loadAttendance();
         loadBreaks();
         loadPN();
         loadUsers();
       } else {
-        // ❌ nie je prihlásený – presmeruj
-        window.location.href = "index.html";
+        console.warn("❌ Používateľ nie je prihlásený");
+        loaderText.textContent = "⏳ Odhlasujem...";
+        setTimeout(() => {
+          window.location.href = "index.html";
+        }, 1500);
       }
     });
 
@@ -190,7 +203,7 @@
       });
     }
 
-    // ➕ Pridanie zamestnanca s kontrolou duplicitného UID
+    // ➕ Pridanie zamestnanca
     document.getElementById("confirmAddUserBtn").addEventListener("click", async () => {
       const name = document.getElementById("newUserName").value.trim();
       const uid = document.getElementById("newUserUid").value.trim();
@@ -257,5 +270,6 @@
   </script>
 </body>
 </html>
+
 
 
