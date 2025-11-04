@@ -21,6 +21,10 @@ table { width:100%; border-collapse:collapse; margin-top:15px; border-radius:8px
 th,td { border:1px solid #ddd; padding:10px; text-align:left; font-size:14px; }
 th { background:#007bff; color:white; font-weight:500; cursor:pointer; }
 tr:nth-child(even){ background:#f8f9fa; }
+.arrival { background-color: #d4edda !important; } /* light green for arrivals */
+.departure { background-color: #f8d7da !important; } /* light red for departures */
+.break { background-color: #cce7ff !important; } /* light blue for breaks */
+.pn { background-color: #fff3cd !important; } /* light yellow for PN */
 .loader{ text-align:center; padding:20px; color:#007bff; font-weight:bold; }
 td button { background:#dc3545; font-size:13px; margin-right:5px; border-radius:6px; padding:5px 8px; }
 td button:hover { background:#a71d2a; }
@@ -139,6 +143,24 @@ document.querySelectorAll("nav button").forEach(btn=>{
   }
 });
 
+// FORMAT VALUE
+function formatValue(key, value) {
+  if (key === 'date' || key === 'from' || key === 'to') {
+    if (typeof value === 'number') {
+      return new Date(value).toLocaleDateString('sk-SK');
+    } else if (typeof value === 'string') {
+      return value;
+    }
+  } else if (key === 'time') {
+    if (typeof value === 'number') {
+      return new Date(value).toLocaleTimeString('sk-SK', { hour: '2-digit', minute: '2-digit' });
+    } else if (typeof value === 'string') {
+      return value;
+    }
+  }
+  return value;
+}
+
 // LOAD TABLES
 function loadTable(refName, tableId){
   const container = document.getElementById(tableId);
@@ -155,9 +177,18 @@ function loadTable(refName, tableId){
     const keys=Object.keys(data[0]);
     keys.forEach(k=>html+=`<th>${k}</th>`);
     html+="</tr></thead><tbody>";
-    data.forEach(item=>{
-      html+="<tr>";
-      keys.forEach(k=>html+=`<td>${item[k]}</td>`);
+    data.forEach((item, index)=>{
+      let rowClass = "";
+      if(refName === "dochadzka"){
+        if(item.type === 'PRICHOD') rowClass = "arrival";
+        else if(item.type === 'ODCHOD') rowClass = "departure";
+      } else if(refName === "prestávky"){
+        rowClass = "break";
+      } else if(refName === "pn"){
+        rowClass = "pn";
+      }
+      html+=`<tr class="${rowClass}">`;
+      keys.forEach(k=>html+=`<td>${formatValue(k, item[k])}</td>`);
       html+="</tr>";
     });
     html+="</tbody></table>"; container.innerHTML=html;
@@ -273,5 +304,3 @@ window.exportTable = (tableId) => {
 
 </body>
 </html>
-
-
