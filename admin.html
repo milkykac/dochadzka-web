@@ -173,13 +173,11 @@
       <input type="text" id="newUserName" placeholder="Meno"><br>
       <input type="password" id="newUserPassword" placeholder="Heslo"><br>
       <input type="text" id="newUserUid" placeholder="UID čipu (voliteľné)"><br>
-      <button onclick="addUser()">Pridať</button>
+      <button id="confirmAddUserBtn">Pridať</button>
       <button onclick="hideAddUserForm()">Zrušiť</button>
       <p id="addUserMsg"></p>
     </div>
   </section>
-
-
 
   <!-- Modal pre pridanie nového zamestnanca -->
   <div id="newEmployeeModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
@@ -207,17 +205,25 @@
     measurementId: "G-268ZE9WLV1"
   };
 
-  let db = null;
-  try {
-    const app = firebase.initializeApp(firebaseConfig);
-    db = firebase.database();
-  } catch (error) {
-    console.error("Firebase inicializácia zlyhala:", error);
-  }
+  const app = firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const auth = firebase.auth();
 
-  // 📋 Načítanie dát z databázy
+  // 🚪 Odhlásenie – teraz ťa vráti na index.html
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+    auth.signOut()
+      .then(() => {
+        alert("Boli ste úspešne odhlásený.");
+        window.location.href = "index.html";
+      })
+      .catch((error) => {
+        console.error("Chyba pri odhlasovaní:", error);
+        alert("Nepodarilo sa odhlásiť. Skúste znova.");
+      });
+  });
+
+  // 📋 Načítanie dát
   function loadAttendance() {
-    if (!db) return;
     const ref = db.ref("dochadzka");
     ref.on("value", (snapshot) => {
       const tbody = document.querySelector("#dochadzkaTable tbody");
@@ -233,7 +239,6 @@
   }
 
   function loadBreaks() {
-    if (!db) return;
     const ref = db.ref("prestávky");
     ref.on("value", (snapshot) => {
       const tbody = document.querySelector("#prestávkyTable tbody");
@@ -249,7 +254,6 @@
   }
 
   function loadPN() {
-    if (!db) return;
     const ref = db.ref("pn");
     ref.on("value", (snapshot) => {
       const tbody = document.querySelector("#pnTable tbody");
@@ -264,39 +268,7 @@
     });
   }
 
-  loadAttendance();
-  loadBreaks();
-  loadPN();
-  loadUsers();
-
-  // 🪄 Prepínanie sekcií
-  const tabs = document.querySelectorAll(".sidebar li");
-  const sections = document.querySelectorAll("main section");
-  tabs.forEach(tab => {
-    tab.addEventListener("click", () => {
-      tabs.forEach(t => t.classList.remove("active"));
-      sections.forEach(s => s.classList.remove("active"));
-      tab.classList.add("active");
-      const target = tab.dataset.target;
-      if (target) {
-        document.getElementById(target).classList.add("active");
-      }
-    });
-  });
-
-  // 🚪 Odhlásenie
-  document.getElementById("logoutBtn").addEventListener("click", () => {
-    firebase.auth().signOut().then(() => {
-      alert("Odhlásený!");
-      window.location.reload();
-    }).catch(err => {
-      alert("Chyba pri odhlasovaní: " + err.message);
-    });
-  });
-
-  // 👤 Správa zamestnancov
   function loadUsers() {
-    if (!db) return;
     const ref = db.ref("users");
     ref.on("value", (snapshot) => {
       const tbody = document.getElementById("usersList");
@@ -306,10 +278,8 @@
         const row = document.createElement('tr');
         const nameTd = document.createElement('td');
         nameTd.textContent = user.name;
-        nameTd.onclick = () => editCell(nameTd, childSnap.key, 'name');
         const uidTd = document.createElement('td');
         uidTd.textContent = user.chipUid || "";
-        uidTd.onclick = () => editCell(uidTd, childSnap.key, 'chipUid');
         const actionsTd = document.createElement('td');
         const deleteBtn = document.createElement('button');
         deleteBtn.textContent = 'Vymazať';
@@ -323,60 +293,33 @@
     });
   }
 
-  function editCell(td, key, field) {
-    if (!db) return;
-    const originalText = td.textContent;
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.value = originalText;
-    input.onblur = () => {
-      const newValue = input.value.trim();
-      if (newValue !== originalText) {
-        if (field === 'name' && !newValue) {
-          td.textContent = originalText;
-          return;
-        }
-        if (field === 'chipUid' && newValue) {
-          // Kontrola duplicitného UID
-          db.ref("users").orderByChild("chipUid").equalTo(newValue).once("value", snapshot => {
-            let duplicate = false;
-            snapshot.forEach(childSnap => {
-              if (childSnap.key !== key) {
-                duplicate = true;
-              }
-            });
-            if (duplicate) {
-              alert("UID čipu už existuje!");
-              td.textContent = originalText;
-              return;
-            }
-            updateField(td, key, field, newValue, originalText);
-          });
-        } else {
-          updateField(td, key, field, newValue, originalText);
-        }
-      } else {
-        td.textContent = originalText;
-      }
-    };
-    input.onkeydown = (e) => {
-      if (e.key === 'Enter') input.blur();
-      if (e.key === 'Escape') {
-        td.textContent = originalText;
-      }
-    };
-    td.innerHTML = '';
-    td.appendChild(input);
-    input.focus();
-    input.select();
-  }
+  // 👤 Pridanie zamestnanca
+  document.getElementById("confirmAddUserBtn").addEventListener("click", () => {
+    const name = document.getElementById("newUserName").value.trim();
+    const password = document.getElementById("newUserPassword").value.trim();
+    const uid = document.getElementById("newUserUid").value.trim();
+    const msg = document.getElementById("addUserMsg");
 
-  function updateField(td, key, field, newValue, originalText) {
-    td.textContent = newValue;
-    db.ref("users/" + key).update({ [field]: newValue }).catch(err => {
-      alert("Chyba pri aktualizácii: " + err.message);
-      td.textContent = originalText;
-    });
+    if (!name || !password) {
+      msg.textContent = "Vyplňte meno a heslo!";
+      return;
+    }
+
+    const ref = db.ref("users").push();
+    ref.set({ name, password, chipUid: uid || "" })
+      .then(() => {
+        msg.textContent = "Zamestnanec pridaný!";
+        hideAddUserForm();
+      })
+      .catch((err) => {
+        msg.textContent = "Chyba: " + err.message;
+      });
+  });
+
+  function deleteUser(key) {
+    if (confirm("Naozaj chcete vymazať tohto zamestnanca?")) {
+      db.ref("users/" + key).remove();
+    }
   }
 
   function showAddUserForm() {
@@ -391,135 +334,18 @@
     document.getElementById("addUserMsg").textContent = "";
   }
 
-  function addUser() {
-    if (!db) return;
-    const name = document.getElementById("newUserName").value.trim();
-    const password = document.getElementById("newUserPassword").value;
-    const msg = document.getElementById("addUserMsg");
-    if (!name || !password) {
-      msg.textContent = "Vyplňte meno a heslo!";
-      return;
-    }
-    // Kontrola duplicitného UID
-    const uid = document.getElementById("newUserUid").value.trim();
-    if (uid) {
-      db.ref("users").orderByChild("chipUid").equalTo(uid).once("value", snapshot => {
-        if (snapshot.exists()) {
-          msg.textContent = "UID čipu už existuje!";
-          return;
-        }
-        proceedAddUser(name, password, uid, msg);
-      });
-    } else {
-      proceedAddUser(name, password, "", msg);
-    }
-  }
-
-  function proceedAddUser(name, password, uid, msg) {
-    msg.textContent = "Pridávanie...";
-    const ref = db.ref("users").push();
-    const userData = { name, password, chipUid: uid || "" };
-    ref.set(userData).then(() => {
-      msg.textContent = "Zamestnanec pridaný!";
-      hideAddUserForm();
-      loadUsers(); // Reload the users table
-    }).catch(err => {
-      msg.textContent = "Chyba: " + err.message;
-    });
-  }
-
-  function deleteUser(key) {
-    if (!db) return;
-    if (confirm("Naozaj chcete vymazať tohto zamestnanca?")) {
-      db.ref("users/" + key).remove().then(() => {
-        alert("Zamestnanec vymazaný!");
-      }).catch(err => {
-        alert("Chyba: " + err.message);
-      });
-    }
-  }
-
-  // 🔑 Zmena hesla
-  function changePassword() {
-    const newEmail = document.getElementById("newEmail").value;
-    const newPass = document.getElementById("newPassword").value;
-    const msg = document.getElementById("changePassMsg");
-    msg.textContent = "Zmena prebieha...";
-    firebase.auth().onAuthStateChanged(user => {
-      if (user) {
-        user.updateEmail(newEmail).then(() => {
-          return user.updatePassword(newPass);
-        }).then(() => {
-          msg.textContent = "Úspešne zmenené!";
-        }).catch(err => {
-          msg.textContent = "Chyba: " + err.message;
-        });
-      } else msg.textContent = "Nie si prihlásený!";
-    });
-  }
-
-  // 📊 Export do Excel
+  // 📊 Export
   function exportToExcel(tableId, fileName) {
     const table = document.getElementById(tableId);
     const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
     XLSX.writeFile(wb, fileName + ".xlsx");
   }
 
-  // 👤 Detekcia nového čipu a pridanie zamestnanca
-  let knownUids = new Set();
-  function checkForNewChips() {
-    if (!db) return;
-    const ref = db.ref("dochadzka");
-    ref.on("value", (snapshot) => {
-      snapshot.forEach(userSnap => {
-        userSnap.forEach(rec => {
-          const d = rec.val();
-          const uid = d.uid;
-          if (uid && !knownUids.has(uid)) {
-            knownUids.add(uid);
-            // Skontroluj, či už existuje v users
-            db.ref("users").orderByChild("chipUid").equalTo(uid).once("value", userSnap => {
-              if (!userSnap.exists()) {
-                // Nový čip, zobraz modal
-                document.getElementById("newChipUid").textContent = uid;
-                document.getElementById("newEmployeeModal").style.display = "flex";
-              }
-            });
-          }
-        });
-      });
-    });
-  }
-
-  function addNewEmployee() {
-    if (!db) return;
-    const name = document.getElementById("newEmpName").value.trim();
-    const uid = document.getElementById("newChipUid").textContent;
-    const msg = document.getElementById("newEmpMsg");
-    if (!name) {
-      msg.textContent = "Vyplňte meno!";
-      return;
-    }
-    msg.textContent = "Pridávanie...";
-    const ref = db.ref("users").push();
-    const userData = { name, chipUid: uid };
-    ref.set(userData).then(() => {
-      msg.textContent = "Zamestnanec pridaný!";
-      closeNewEmployeeModal();
-      loadUsers(); // Reload the users table
-    }).catch(err => {
-      msg.textContent = "Chyba: " + err.message;
-    });
-  }
-
-  function closeNewEmployeeModal() {
-    document.getElementById("newEmployeeModal").style.display = "none";
-    document.getElementById("newEmpName").value = "";
-    document.getElementById("newEmpMsg").textContent = "";
-  }
-
-  // Spusti kontrolu nových čipov
-  checkForNewChips();
+  // Spustenie načítania dát
+  loadAttendance();
+  loadBreaks();
+  loadPN();
+  loadUsers();
 </script>
 </body>
-</html>
+  </html>
