@@ -84,10 +84,6 @@
     background: #dfe3ee;
   }
 
-  .dochadzka { background: #e8f5e9; }
-  .prestávky { background: #fff3e0; }
-  .pn { background: #fce4ec; }
-
   button {
     background: #3e4e88;
     color: white;
@@ -115,10 +111,10 @@
 <aside class="sidebar">
   <h2>👑 Admin Panel</h2>
   <ul>
-    <li id="viewAttendanceTab" data-target="view-attendance" class="active">📅 Dochádzka</li>
-    <li id="viewBreaksTab" data-target="view-breaks">☕ Prestávky</li>
-    <li id="viewPnTab" data-target="view-pn">🏥 PN</li>
-    <li id="manageUsersTab" data-target="manage-users">👤 Správa zamestnancov</li>
+    <li data-target="view-attendance" class="active">📅 Dochádzka</li>
+    <li data-target="view-breaks">☕ Prestávky</li>
+    <li data-target="view-pn">🏥 PN</li>
+    <li data-target="manage-users">👤 Správa zamestnancov</li>
     <li id="logoutBtn">🚪 Odhlásiť</li>
   </ul>
 </aside>
@@ -168,6 +164,7 @@
       </thead>
       <tbody id="usersList"></tbody>
     </table>
+
     <div id="addUserForm" style="display: none; margin-top: 20px;">
       <h3>Pridať nového zamestnanca</h3>
       <input type="text" id="newUserName" placeholder="Meno"><br>
@@ -178,18 +175,6 @@
       <p id="addUserMsg"></p>
     </div>
   </section>
-
-  <!-- Modal pre pridanie nového zamestnanca -->
-  <div id="newEmployeeModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
-    <div style="background: white; padding: 20px; border-radius: 8px; max-width: 400px; width: 90%;">
-      <h3>Nový zamestnanec detekovaný</h3>
-      <p>Nový čip UID: <span id="newChipUid"></span></p>
-      <input type="text" id="newEmpName" placeholder="Meno zamestnanca"><br>
-      <button onclick="addNewEmployee()">Pridať zamestnanca</button>
-      <button onclick="closeNewEmployeeModal()">Zrušiť</button>
-      <p id="newEmpMsg"></p>
-    </div>
-  </div>
 </main>
 
 <script>
@@ -209,7 +194,7 @@
   const db = firebase.database();
   const auth = firebase.auth();
 
-  // 🚪 Odhlásenie – teraz ťa vráti na index.html
+  // 🚪 Odhlásenie – vráti na index.html
   document.getElementById("logoutBtn").addEventListener("click", () => {
     auth.signOut()
       .then(() => {
@@ -217,8 +202,7 @@
         window.location.href = "index.html";
       })
       .catch((error) => {
-        console.error("Chyba pri odhlasovaní:", error);
-        alert("Nepodarilo sa odhlásiť. Skúste znova.");
+        alert("Nepodarilo sa odhlásiť: " + error.message);
       });
   });
 
@@ -275,20 +259,12 @@
       tbody.innerHTML = "";
       snapshot.forEach(childSnap => {
         const user = childSnap.val();
-        const row = document.createElement('tr');
-        const nameTd = document.createElement('td');
-        nameTd.textContent = user.name;
-        const uidTd = document.createElement('td');
-        uidTd.textContent = user.chipUid || "";
-        const actionsTd = document.createElement('td');
-        const deleteBtn = document.createElement('button');
-        deleteBtn.textContent = 'Vymazať';
-        deleteBtn.onclick = () => deleteUser(childSnap.key);
-        actionsTd.appendChild(deleteBtn);
-        row.appendChild(nameTd);
-        row.appendChild(uidTd);
-        row.appendChild(actionsTd);
-        tbody.appendChild(row);
+        const row = `<tr>
+          <td>${user.name}</td>
+          <td>${user.chipUid || ""}</td>
+          <td><button onclick="deleteUser('${childSnap.key}')">Vymazať</button></td>
+        </tr>`;
+        tbody.innerHTML += row;
       });
     });
   }
@@ -305,15 +281,12 @@
       return;
     }
 
-    const ref = db.ref("users").push();
-    ref.set({ name, password, chipUid: uid || "" })
+    db.ref("users").push({ name, password, chipUid: uid || "" })
       .then(() => {
         msg.textContent = "Zamestnanec pridaný!";
         hideAddUserForm();
       })
-      .catch((err) => {
-        msg.textContent = "Chyba: " + err.message;
-      });
+      .catch(err => msg.textContent = "Chyba: " + err.message);
   });
 
   function deleteUser(key) {
@@ -341,11 +314,25 @@
     XLSX.writeFile(wb, fileName + ".xlsx");
   }
 
-  // Spustenie načítania dát
+  // 🪄 Prepínanie sekcií
+  const tabs = document.querySelectorAll(".sidebar li[data-target]");
+  const sections = document.querySelectorAll("main section");
+
+  tabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      tabs.forEach(t => t.classList.remove("active"));
+      sections.forEach(s => s.classList.remove("active"));
+      tab.classList.add("active");
+      const target = tab.dataset.target;
+      document.getElementById(target).classList.add("active");
+    });
+  });
+
+  // Načítaj všetky sekcie
   loadAttendance();
   loadBreaks();
   loadPN();
   loadUsers();
 </script>
 </body>
-  </html>
+</html>
