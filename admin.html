@@ -36,7 +36,7 @@ td button:hover { background:#a71d2a; }
 .modal-content{ background:#fff; margin:10% auto; padding:20px; border-radius:8px; width:90%; max-width:400px; position:relative; animation:fadeIn 0.3s; box-shadow:0 5px 15px rgba(0,0,0,0.2);}
 #closeModal,#closeNewUserModal,#closeChangePasswordModal{ position:absolute; right:10px; top:5px; font-size:22px; cursor:pointer; color:#333; }
 @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
-input[type=text], input[type=password], input[type=date]{ width:100%; padding:8px; margin-top:10px; margin-bottom:10px; border:1px solid #ccc; border-radius:6px; font-size:14px; }
+input[type=text], input[type=password]{ width:100%; padding:8px; margin-top:10px; margin-bottom:10px; border:1px solid #ccc; border-radius:6px; font-size:14px; }
 .modal button{ width:100%; margin-top:10px; border-radius:6px; padding:8px 0; font-weight:500; cursor:pointer; background:#007bff; color:white; transition:0.3s;}
 .modal button:hover{ background:#0056b3;}
 </style>
@@ -67,7 +67,7 @@ input[type=text], input[type=password], input[type=date]{ width:100%; padding:8p
 
 <section id="prestávky">
   <h2>Prestávky</h2>
-  <button class="export-btn" onclick="exportBreaks()">Exportovať do CSV</button>
+  <button class="export-btn" onclick="exportTable('prestávkyTable')">Exportovať do CSV</button>
   <div id="prestávkyTable" class="loader">Načítavam dáta...</div>
 </section>
 
@@ -147,9 +147,7 @@ document.querySelectorAll("nav button").forEach(btn=>{
   }
 });
 
-// -----------------------------
-// LOAD DOCHÁZKA
-// -----------------------------
+// LOAD TABLES
 let searchTerm = "";
 let selectedDate = "";
 function loadTable(refName, tableId){
@@ -163,14 +161,12 @@ function loadTable(refName, tableId){
       }else{ data.push({ key:userSnap.key, ...userSnap.val() }); }
     });
     if(data.length===0){ container.innerHTML="<p>Žiadne dáta.</p>"; return; }
+
     if (tableId === "dochadzkaTable") {
-      if (selectedDate) { data = data.filter(item => item.cas && item.cas.startsWith(selectedDate)); }
-      if (searchTerm) {
-        data = data.filter(item => {
-          return Object.values(item).some(val => val && val.toString().toLowerCase().includes(searchTerm.toLowerCase()));
-        });
-      }
+      if (selectedDate) data = data.filter(item => item.cas && item.cas.startsWith(selectedDate));
+      if (searchTerm) data = data.filter(item => Object.values(item).some(val => val && val.toString().toLowerCase().includes(searchTerm.toLowerCase())));
     }
+
     let html="<table><thead><tr>";
     const keys=Object.keys(data[0]);
     keys.forEach(k=>html+=`<th>${k}</th>`);
@@ -180,7 +176,8 @@ function loadTable(refName, tableId){
       if (tableId === "dochadzkaTable") {
         if (item.typ === "prichod") rowClass = "prichod";
         else if (item.typ === "odchod") rowClass = "odchod";
-      } else if (tableId === "pnTable") { rowClass = "pn"; }
+      } else if (tableId === "prestávkyTable") rowClass = "prestávky";
+      else if (tableId === "pnTable") rowClass = "pn";
       html += `<tr${rowClass ? ` class="${rowClass}"` : ""}>`;
       keys.forEach(k=>html+=`<td>${item[k]}</td>`);
       html+="</tr>";
@@ -189,69 +186,10 @@ function loadTable(refName, tableId){
   });
 }
 loadTable("dochadzka","dochadzkaTable");
+loadTable("prestávky","prestávkyTable");
 loadTable("pn","pnTable");
 
-// -----------------------------
-// LOAD PRESTÁVKY
-// -----------------------------
-function loadBreaks() {
-  const container = document.getElementById("prestávkyTable");
-  onValue(ref(db, "/dochadzka/breaks"), snapshot => {
-    if (!snapshot.exists()) { 
-      container.innerHTML = "<p>Žiadne dáta.</p>"; 
-      return; 
-    }
-
-    let data = [];
-    snapshot.forEach(child => {
-      const val = child.val();
-      data.push({
-        cas: val.cas || "-",
-        typ: val.typ || "prestávka"
-      });
-    });
-
-    let html = `<table>
-                  <thead>
-                    <tr><th>Čas</th><th>Typ</th></tr>
-                  </thead>
-                  <tbody>`;
-    data.forEach(item => {
-      html += `<tr class="prestávky">
-                 <td>${item.cas}</td>
-                 <td>${item.typ}</td>
-               </tr>`;
-    });
-    html += "</tbody></table>";
-    container.innerHTML = html;
-  });
-}
-loadBreaks();
-
-// EXPORT PRESTÁVKY
-function exportBreaks() {
-  const table = document.querySelector("#prestávkyTable table");
-  if (!table) return;
-
-  let csv = [];
-  for (let row of table.rows) {
-    let rowData = [];
-    for (let cell of row.cells) { rowData.push('"' + cell.innerText.replace(/"/g, '""') + '"'); }
-    csv.push(rowData.join(";"));
-  }
-  const blob = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.setAttribute("download", `prestávky.csv`);
-  link.style.display = "none";
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
-
-// -----------------------------
 // POUŽÍVATELIA
-// -----------------------------
 function loadUsers(){
   const container=document.getElementById("usersTable");
   onValue(ref(db,"users"),snapshot=>{
@@ -280,11 +218,19 @@ const assignModal = document.getElementById("assignModal");
 document.getElementById("closeModal").onclick = ()=>assignModal.style.display="none";
 assignModal.onclick=(e)=>{ if(e.target===assignModal) assignModal.style.display="none"; }
 window.openAssignModal=(userKey)=>{ selectedUserKey=userKey; assignModal.style.display="block"; document.getElementById("chipInput").value=""; }
+
 document.getElementById("assignChipBtn").onclick = async ()=>{
   const uid = document.getElementById("chipInput").value.trim();
   if(!uid){ alert("Zadajte UID čipu!"); return; }
-  try{ await update(ref(db,"users/"+selectedUserKey),{ chipUid:uid }); assignModal.style.display="none"; loadUsers(); alert("Čip priradený."); }
-  catch(e){ console.error(e); alert("Chyba pri priradení čipu."); }
+  try {
+    await update(ref(db,"users/"+selectedUserKey),{ chipUid:uid });
+    assignModal.style.display="none";
+    loadUsers();
+    alert("Čip priradený.");
+  } catch(e){
+    console.error(e);
+    alert("Chyba pri priradení čipu.");
+  }
 }
 
 // MODAL NOVÝ ZAMESTNANEC
@@ -298,8 +244,15 @@ document.getElementById("createUserBtn").onclick = async ()=>{
   const password = document.getElementById("newUserPassword").value.trim();
   if(!name){ alert("Zadajte meno!"); return; }
   const newRef = ref(db,"users/"+Date.now());
-  try{ await set(newRef,{ name, password }); newUserModal.style.display="none"; loadUsers(); alert("Zamestnanec vytvorený."); }
-  catch(e){ console.error(e); alert("Chyba pri vytváraní zamestnanca."); }
+  try{
+    await set(newRef,{ name, password });
+    newUserModal.style.display="none";
+    loadUsers();
+    alert("Zamestnanec vytvorený.");
+  } catch(e){
+    console.error(e);
+    alert("Chyba pri vytváraní zamestnanca.");
+  }
 }
 
 // MODAL ZMIENA HESLA
@@ -316,14 +269,33 @@ window.openChangePasswordModal=(userKey,currentPassword)=>{
 document.getElementById("savePasswordBtn").onclick = async ()=>{
   const newPassword = document.getElementById("changePasswordInput").value.trim();
   if(!newPassword){ alert("Zadajte heslo!"); return; }
-  try{ await update(ref(db,"users/"+passwordUserKey),{ password:newPassword }); changePasswordModal.style.display="none"; loadUsers(); alert("Heslo bolo zmenené."); }
-  catch(e){ console.error(e); alert("Chyba pri zmene hesla."); }
+  try{
+    await update(ref(db,"users/"+passwordUserKey),{ password:newPassword });
+    changePasswordModal.style.display="none";
+    loadUsers();
+    alert("Heslo bolo zmenené.");
+  } catch(e){
+    console.error(e);
+    alert("Chyba pri zmene hesla.");
+  }
 }
 
 // MAZANIE
 window.deleteUser=async(key)=>{
   if(!confirm("Naozaj chcete vymazať používateľa a jeho dáta?")) return;
-  try{ await Promise.all([ remove(ref(db,"users/"+key)), remove(ref(db,"dochadzka/"+key)), remove(ref(db,"prestávky/"+key)), remove(ref(db,"pn/"+key)) ]); loadUsers(); alert("Používateľ a jeho dáta boli odstránené."); }
+  try{
+    await Promise.all([
+      remove(ref(db,"users/"+key)),
+      remove(ref(db,"dochadzka/"+key)),
+      remove(ref(db,"prestávky/"+key)),
+      remove(ref(db,"pn/"+key))
+    ]);
+    loadUsers();
+    alert("Používateľ a jeho dáta boli odstránené.");
+  } catch(err){
+    console.error(err);
+    alert("Chyba pri mazaní používateľa.");
+  }
 }
 
 // SEARCH INPUT EVENT
@@ -355,7 +327,8 @@ window.exportTable = (tableId) => {
   const csvContent = csv.join("\n");
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
   const link = document.createElement("a");
-  link.setAttribute("href", URL.createObjectURL(blob));
+  const url = URL.createObjectURL(blob);
+  link.setAttribute("href", url);
   link.setAttribute("download", `${tableId}.csv`);
   link.style.display = "none";
   document.body.appendChild(link);
@@ -366,6 +339,3 @@ window.exportTable = (tableId) => {
 
 </body>
 </html>
-
-
-
