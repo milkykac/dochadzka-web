@@ -117,8 +117,14 @@ input[type=text], input[type=password], input[type=date]{ width:100%; padding:8p
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getDatabase, ref, onValue, set, remove, update, push } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
-if(localStorage.getItem("isAdmin")!=="true"){ alert("Prístup len pre admina!"); window.location.href="index.html"; }
-document.getElementById("logoutBtn").onclick=()=>{ localStorage.removeItem("isAdmin"); window.location.href="index.html"; }
+if(localStorage.getItem("isAdmin")!=="true"){ 
+  alert("Prístup len pre admina!"); 
+  window.location.href="index.html"; 
+}
+document.getElementById("logoutBtn").onclick = () => { 
+  localStorage.removeItem("isAdmin"); 
+  window.location.href="index.html"; 
+}
 
 const firebaseConfig = {
   apiKey: "AIzaSyB5ovJ-_GAnfIExgBsNuQtc4tb6mqhsdj8",
@@ -132,94 +138,142 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// prepínanie sekcií
-document.querySelectorAll("nav button").forEach(btn=>{
-  btn.onclick=()=>{
-    document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+// --- Prepínanie sekcií ---
+document.querySelectorAll("nav button").forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
-    document.querySelectorAll("section").forEach(sec=>sec.classList.remove("active"));
+    document.querySelectorAll("section").forEach(sec => sec.classList.remove("active"));
     document.getElementById(btn.dataset.target).classList.add("active");
   }
 });
 
-// funkcia pre načítanie tabuliek
+// --- Funkcia načítania tabuliek ---
 function loadTable(path, elementId) {
-  const element=document.getElementById(elementId);
-  element.innerHTML="Načítavam dáta...";
-  onValue(ref(db, path),(snap)=>{
-    if(!snap.exists()){element.innerHTML="Žiadne dáta.";return;}
+  const element = document.getElementById(elementId);
+  element.innerHTML = "Načítavam dáta...";
+  onValue(ref(db, path), (snap) => {
+    if(!snap.exists()){ element.innerHTML="Žiadne dáta."; return; }
     let html="<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>";
-    snap.forEach(user=>{
-      const val=user.val();
-      html+=`<tr><td>${val.meno||"-"}</td><td>${val.cas||"-"}</td><td>${val.typ||"-"}</td></tr>`;
+    snap.forEach(user => {
+      const val = user.val();
+      html += `<tr><td>${val.meno||"-"}</td><td>${val.cas||"-"}</td><td>${val.typ||"-"}</td></tr>`;
     });
-    html+="</table>";
-    element.innerHTML=html;
+    html += "</table>";
+    element.innerHTML = html;
   });
 }
 loadTable("dochadzka","dochadzkaTable");
 loadTable("prestávky","prestávkyTable");
 loadTable("pn","pnTable");
 
-// používatelia
+// --- Funkcia pre používateľov ---
 function loadUsers(){
-  const el=document.getElementById("usersTable");
+  const el = document.getElementById("usersTable");
   onValue(ref(db,"users"),(snap)=>{
-    if(!snap.exists()){el.innerHTML="Žiadni používatelia";return;}
+    if(!snap.exists()){ el.innerHTML="Žiadni používatelia"; return; }
+    console.log("Firebase users:", snap.val());
     let html="<table><tr><th>Meno</th><th>Čip</th><th>Akcie</th></tr>";
     snap.forEach(u=>{
-      const d=u.val();
-      html+=`<tr><td>${d.name||"(bez mena)"}</td><td>${d.chipUid||"-"}</td><td><button onclick="removeUser('${u.key}')">🗑️</button></td></tr>`;
+      const d = u.val();
+      html += `<tr>
+        <td>${d.name || "(bez mena)"}</td>
+        <td>${d.chipUid || "-"}</td>
+        <td><button onclick="removeUser('${u.key}')">🗑️</button></td>
+      </tr>`;
     });
     html+="</table>";
-    el.innerHTML=html;
+    el.innerHTML = html;
   });
 }
-window.removeUser=(id)=>remove(ref(db,"users/"+id));
-loadUsers();
-
-// export
-window.exportTable=(id)=>{
-  const table=document.getElementById(id).querySelector("table");
-  if(!table)return alert("Nie je čo exportovať!");
-  let csv="";
-  for(const row of table.rows){
-    const cols=[...row.cells].map(td=>td.innerText.replace(/,/g," "));
-    csv+=cols.join(",")+"\n";
+window.removeUser = async (id) => {
+  try {
+    await remove(ref(db,"users/"+id));
+    console.log("Používateľ odstránený:", id);
+  } catch(err){
+    console.error("Chyba pri odstraňovaní:", err);
   }
-  const blob=new Blob([csv],{type:"text/csv"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download=id+".csv";
+}
+
+// --- Funkcia na pridanie nového používateľa ---
+async function createNewUser(name, chipUid = "-") {
+  if(!name) return alert("Zadaj meno používateľa!");
+  try {
+    const newUserRef = await push(ref(db, "users"), { name, chipUid });
+    console.log("Používateľ pridaný:", newUserRef.key);
+    loadUsers(); // okamžité zobrazenie
+  } catch(err){
+    console.error("Chyba pri pridávaní používateľa:", err);
+    alert("Nepodarilo sa pridať používateľa. Skontroluj pravidlá Firebase.");
+  }
+}
+
+// --- Tlačidlo v modale ---
+document.getElementById("createUserBtn").onclick = () => {
+  const name = document.getElementById("newUserName").value.trim();
+  createNewUser(name);
+  document.getElementById("newUserName").value = "";
+  document.getElementById("newUserModal").style.display = "none";
+}
+
+// --- Export CSV ---
+window.exportTable = (id) => {
+  const table = document.getElementById(id).querySelector("table");
+  if(!table) return alert("Nie je čo exportovať!");
+  let csv = "";
+  for(const row of table.rows){
+    const cols = [...row.cells].map(td => td.innerText.replace(/,/g," "));
+    csv += cols.join(",") + "\n";
+  }
+  const blob = new Blob([csv], {type:"text/csv"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = id + ".csv";
   a.click();
 };
 
-// nové čipy – upozornenie
+// --- Listener pre nové čipy ---
 onValue(ref(db,"newChips"),(snap)=>{
-  if(!snap.exists())return;
-  snap.forEach(ch=>{
-    const uid=ch.val().uid;
-    const notif=document.createElement("div");
-    notif.style.position="fixed";
-    notif.style.bottom="20px";
-    notif.style.right="20px";
-    notif.style.background="#fff";
-    notif.style.padding="15px";
-    notif.style.borderRadius="10px";
-    notif.style.boxShadow="0 4px 10px rgba(0,0,0,0.2)";
-    notif.innerHTML=`<strong>Nový čip detegovaný:</strong><br>UID: <b>${uid}</b><br>
-      <button id="addChip">Pridať</button>`;
+  if(!snap.exists()) return;
+  snap.forEach(ch => {
+    const uid = ch.val().uid;
+    if(document.getElementById("notif-"+uid)) return;
+
+    const notif = document.createElement("div");
+    notif.id = "notif-" + uid;
+    notif.style.position = "fixed";
+    notif.style.bottom = "20px";
+    notif.style.right = "20px";
+    notif.style.background = "#fff";
+    notif.style.padding = "15px";
+    notif.style.borderRadius = "10px";
+    notif.style.boxShadow = "0 4px 10px rgba(0,0,0,0.2)";
+    notif.innerHTML = `
+      <strong>Nový čip detegovaný:</strong><br>
+      UID: <b>${uid}</b><br>
+      <button id="addChipBtn-${uid}">Pridať</button>
+    `;
     document.body.appendChild(notif);
-    notif.querySelector("#addChip").onclick=async()=>{
-      const name=prompt("Zadaj meno používateľa:");
-      if(!name)return;
-      await push(ref(db,"users"),{name,chipUid:uid});
-      await remove(ref(db,"newChips/"+ch.key));
-      notif.remove();
-      loadUsers();
+
+    document.getElementById("addChipBtn-" + uid).onclick = async () => {
+      const name = prompt("Zadaj meno používateľa:");
+      if(!name) return;
+      try {
+        await createNewUser(name, uid);
+        await remove(ref(db,"newChips/"+ch.key));
+        notif.remove();
+      } catch(err){
+        console.error("Chyba pri priraďovaní čipu:", err);
+        alert("Nepodarilo sa pridať čip. Skontroluj pravidlá Firebase.");
+      }
     };
   });
 });
+
+// --- Načítanie používateľov pri štarte ---
+loadUsers();
 </script>
 </body>
 </html>
+
+
