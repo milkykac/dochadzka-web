@@ -180,7 +180,7 @@ document.getElementById("closeNewUserModal").onclick=()=>{ document.getElementBy
 document.getElementById("createUserBtn").onclick=()=>{
   const name=document.getElementById("newUserName").value.trim();
   if(!name) return alert("Zadaj meno!");
-  push(ref(db,"users"),{name, chipUid:"-"});
+  push(ref(db,"users"),{name, chipUid:"-"}); 
   document.getElementById("newUserName").value="";
   document.getElementById("newUserModal").style.display="none";
 };
@@ -208,6 +208,67 @@ document.getElementById("savePasswordBtn").onclick=async()=>{
   }
 };
 
+// --- Nové čipy s upozornením a zvukom ---
+onValue(ref(db,"newChips"), snap => {
+  if(!snap.exists()) return;
+
+  snap.forEach(ch => {
+    const uid = ch.key;
+    if(document.getElementById("notif-" + uid)) return;
+
+    const notif = document.createElement("div");
+    notif.id = "notif-" + uid;
+    notif.style.position = "fixed";
+    notif.style.bottom = "20px";
+    notif.style.right = "20px";
+    notif.style.background = "#ffc107";
+    notif.style.padding = "15px";
+    notif.style.borderRadius = "10px";
+    notif.style.boxShadow = "0 4px 10px rgba(0,0,0,0.2)";
+    notif.style.zIndex = "999";
+    notif.innerHTML = `
+      <strong>Nový čip detegovaný:</strong><br>
+      UID: <b>${uid}</b><br>
+      <button id="addChipBtn-${uid}">Pridať používateľa</button>
+    `;
+    document.body.appendChild(notif);
+
+    const audio = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
+    audio.play();
+
+    // automatické odstránenie notifikácie po 10 sekundách
+    setTimeout(()=>{ if(notif.parentNode) notif.remove(); }, 10000);
+
+    document.getElementById("addChipBtn-" + uid).onclick = async () => {
+      const choice = prompt(
+        "Zadaj meno nového používateľa alebo ID existujúceho používateľa pre priradenie čipu.\n" +
+        "Ak chceš vytvoriť nového, zadaj meno. Ak existujúceho, zadaj jeho ID."
+      );
+      if(!choice) return;
+
+      try {
+        let userKey;
+        if(choice.match(/^\d+$/)){
+          userKey = choice;
+          await update(ref(db,"users/"+userKey), { chipUid: uid });
+        } else {
+          const newUserRef = push(ref(db,"users"));
+          userKey = newUserRef.key;
+          await update(ref(db,"users/" + userKey), { name: choice, chipUid: uid });
+        }
+
+        await remove(ref(db,"newChips/"+uid));
+        notif.remove();
+        loadUsers();
+        alert("Čip úspešne priradený k používateľovi!");
+      } catch(err){
+        console.error("Chyba pri priraďovaní čipu:", err);
+        alert("Nepodarilo sa priradiť čip. Skontroluj Firebase pravidlá.");
+      }
+    };
+  });
+});
+
 // --- Export CSV ---
 window.exportTable=id=>{
   const table=document.getElementById(id).querySelector("table");
@@ -226,6 +287,7 @@ window.exportTable=id=>{
 </script>
 </body>
 </html>
+
 
 
 
