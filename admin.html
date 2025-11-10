@@ -137,26 +137,39 @@ document.querySelectorAll("nav button").forEach(btn => {
   }
 });
 
-// --- Funkcia načítania dochádzky a prestávok ---
+// --- Funkcie na načítanie dochádzky, prestávok a PN ---
 async function loadAttendance(type, elementId){
   const el = document.getElementById(elementId);
   el.innerHTML = "Načítavam dáta...";
 
   const usersSnap = await get(ref(db,"users"));
   const usersData = usersSnap.val() || {};
+  
+  // mapovanie čipUid -> meno
+  const chipToUser = {};
+  Object.keys(usersData).forEach(uid=>{
+    const user = usersData[uid];
+    if(user.chipUid && user.chipUid !== "-") chipToUser[user.chipUid] = user.name || "(bez mena)";
+  });
 
   onValue(ref(db,type), snap => {
     let html = "<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>";
     if(snap.exists()){
-      snap.forEach(userNode => {
-        const userId = userNode.key;
-        const userInfo = usersData[userId] || {};
-        const userName = userInfo.name || "(bez mena)";
-        const chipUid = userInfo.chipUid || "-";
+      snap.forEach(node => {
+        const key = node.key;
 
-        userNode.forEach(logNode => {
-          const val = logNode.val();
-          html += `<tr><td>${userName} (čip: ${chipUid})</td><td>${val.cas || "-"}</td><td>${val.typ || "-"}</td></tr>`;
+        node.forEach(log => {
+          const val = log.val();
+          let userName;
+          let chipUid = key;
+
+          if(type === "prestavky"){
+            userName = chipToUser[chipUid] || `(bez mena, čip: ${chipUid})`;
+          } else {
+            userName = usersData[key]?.name || `(bez mena, UID: ${key})`;
+          }
+
+          html += `<tr><td>${userName}</td><td>${val.cas || "-"}</td><td>${val.typ || "-"}</td></tr>`;
         });
       });
     }
@@ -197,7 +210,6 @@ function loadUsers(){
     loadAttendance("pn","pnTable");
   });
 }
-
 window.removeUser = async (id) => { try { await set(ref(db,"users/"+id), null); loadUsers(); } catch(err){ console.error(err); } }
 
 async function createNewUser(name, chipUid="-") {
@@ -241,7 +253,6 @@ async function loadNewChips() {
     });
   });
 }
-
 async function assignChip(chipUid){
   const userName = prompt("Zadaj meno používateľa pre tento čip:");
   if(!userName) return alert("Meno používateľa je povinné!");
@@ -256,7 +267,6 @@ async function assignChip(chipUid){
   alert("Čip priradený a prvá dochádzka zaznamenaná!");
   loadUsers(); loadNewChips();
 }
-
 async function removeChip(chipUid){
   if(confirm("Naozaj chceš odstrániť tento čip?")) {
     await set(ref(db,"newChips/"+chipUid), null);
