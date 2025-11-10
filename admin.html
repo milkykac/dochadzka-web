@@ -137,39 +137,24 @@ document.querySelectorAll("nav button").forEach(btn => {
   }
 });
 
-// --- Funkcia na načítanie dochádzky / prestávok / PN ---
+// --- Funkcie na načítanie dochádzky, prestávok a PN ---
 async function loadAttendance(type, elementId){
   const el = document.getElementById(elementId);
   el.innerHTML = "Načítavam dáta...";
 
   const usersSnap = await get(ref(db,"users"));
   const users = {};
-  const chipToUser = {};
-  usersSnap.forEach(u=>{
-    const data = u.val();
-    const name = data.name || "(bez mena)";
-    users[u.key] = {name, chipUid: data.chipUid || "-"};
-    if(data.chipUid && data.chipUid !== "-") chipToUser[data.chipUid] = name;
-  });
-
   onValue(ref(db,type), snap => {
     let html = "<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>";
     if(snap.exists()){
       snap.forEach(node => {
+        const userId = node.key;
+        const userData = usersSnap.val()[userId];
+        const userName = userData?.name || "(bez mena)";
+        const chipUid = userData?.chipUid || "-";
         node.forEach(log => {
           const val = log.val();
-          let userName = "(bez mena)";
-          let chipDisplay = "-";
-
-          if(type === "prestavky"){
-            const chipUid = val.chipUid || users[node.key]?.chipUid || "-";
-            chipDisplay = chipUid;
-            userName = chipToUser[chipUid] || "(bez mena)";
-          } else {
-            userName = users[node.key]?.name || `(bez mena, UID: ${node.key})`;
-          }
-
-          html += `<tr><td>${userName} (čip: ${chipDisplay})</td><td>${val.cas || "-"}</td><td>${val.typ || "-"}</td></tr>`;
+          html += `<tr><td>${userName} (čip: ${chipUid})</td><td>${val.cas || "-"}</td><td>${val.typ || "-"}</td></tr>`;
         });
       });
     }
@@ -210,7 +195,6 @@ function loadUsers(){
     loadAttendance("pn","pnTable");
   });
 }
-
 window.removeUser = async (id) => { try { await set(ref(db,"users/"+id), null); loadUsers(); } catch(err){ console.error(err); } }
 
 async function createNewUser(name, chipUid="-") {
@@ -301,5 +285,3 @@ loadNewChips();
 </script>
 </body>
 </html>
-
-
