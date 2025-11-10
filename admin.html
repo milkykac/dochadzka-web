@@ -1,165 +1,49 @@
 <!DOCTYPE html>
 <html lang="sk">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Admin panel – Dochádzka</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 <style>
-body {
-  font-family: 'Poppins', sans-serif;
-  margin: 0;
-  background: linear-gradient(135deg, #eef2f3, #8e9eab);
-  color: #222;
-}
-header {
-  background: #2c3e50;
-  color: white;
-  padding: 15px 25px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-}
-header h1 {
-  margin: 0;
-  font-size: 20px;
-}
-header button {
-  background: #1abc9c;
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-header button:hover {
-  background: #16a085;
-}
-nav {
-  background: #34495e;
-  display: flex;
-  flex-wrap: wrap;
-}
-nav button {
-  flex: 1;
-  padding: 12px;
-  border: none;
-  background: #34495e;
-  color: white;
-  cursor: pointer;
-  font-weight: 600;
-  transition: background 0.3s;
-}
-nav button:hover, nav button.active {
-  background: #1abc9c;
-}
-section {
-  display: none;
-  padding: 20px;
-}
-section.active {
-  display: block;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-  background: white;
-  border-radius: 10px;
-  overflow: hidden;
-}
-th, td {
-  padding: 10px;
-  border-bottom: 1px solid #ddd;
-  text-align: left;
-}
-th {
-  background: #1abc9c;
-  color: white;
-}
-.loader {
-  text-align: center;
-  margin-top: 20px;
-}
-.export-btn {
-  background: #1abc9c;
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-.export-btn:hover {
-  background: #16a085;
-}
-.modal {
-  display: none;
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.5);
-  justify-content: center;
-  align-items: center;
-}
-.modal-content {
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  width: 300px;
-  text-align: center;
-}
-.modal-content input {
-  width: 100%;
-  margin-top: 10px;
-  padding: 8px;
-}
-.modal-content button {
-  margin-top: 10px;
-  padding: 8px 12px;
-  border: none;
-  cursor: pointer;
-  border-radius: 6px;
-}
-.modal-content .save {
-  background: #1abc9c;
-  color: white;
-}
-.modal-content .close {
-  background: #ccc;
-}
+/* pôvodný vizuál (modro-fialný gradient, biele karty) */
+body { font-family:'Poppins',sans-serif; margin:0; background:linear-gradient(135deg,#007bff,#6f42c1); min-height:100vh; color:#333; }
+header { background:#fff; padding:15px 25px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 3px 10px rgba(0,0,0,0.1); position:sticky; top:0; z-index:10; }
+h1 { color:#007bff; margin:0; font-size:22px; font-weight:600; }
+button { background:#007bff; border:none; color:white; padding:8px 14px; border-radius:8px; cursor:pointer; font-size:14px; transition:0.3s; }
+button:hover { background:#0056b3; }
+nav { background:#fff; display:flex; justify-content:center; padding:10px; gap:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); position:sticky; top:70px; z-index:5; }
+nav button { background:#007bff; color:white; padding:8px 14px; border-radius:8px; font-weight:500; }
+nav button.active { background:#6f42c1; }
+section { display:none; padding:25px; background:#fff; margin:25px auto; border-radius:12px; max-width:1100px; box-shadow:0 4px 20px rgba(0,0,0,0.1); transition:0.3s; }
+section.active { display:block; }
+h2 { color:#007bff; margin-top:0; border-bottom:2px solid #007bff; padding-bottom:5px; }
+table { width:100%; border-collapse:collapse; margin-top:15px; border-radius:8px; overflow:hidden; box-shadow:0 2px 5px rgba(0,0,0,0.1); background:#fff; }
+th,td { border:1px solid #ddd; padding:10px; text-align:left; font-size:14px; }
+th { background:#007bff; color:white; font-weight:500; user-select:none; }
+tr:nth-child(even){ background:#f8f9fa; }
+.loader{ text-align:center; padding:20px; color:#007bff; font-weight:bold; }
+td button { background:#dc3545; font-size:13px; margin-right:5px; border-radius:6px; padding:5px 8px; }
+td button:hover { background:#a71d2a; }
+.export-btn{ margin-top:15px; background:#28a745; border-radius:8px; padding:8px 14px; }
+.export-btn:hover{ background:#1e7e34; }
+.new-chip { background:#17a2b8; padding:8px 10px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border-radius:6px; color:white; font-size:14px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+.new-chip button { background:#ffc107; color:#333; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-size:13px; }
+.new-chip button:hover { background:#e0a800; }
 
-/* 📱 Mobilná optimalizácia */
-@media (max-width: 768px) {
-  header {
-    flex-direction: column;
-    text-align: center;
-    gap: 10px;
-  }
-  nav button {
-    flex: 1 1 50%;
-    font-size: 14px;
-    padding: 10px;
-  }
-  section h2 {
-    text-align: center;
-  }
-  .export-btn {
-    width: 100%;
-    margin-top: 5px;
-  }
-  div[style*="display:flex"] {
-    flex-direction: column !important;
-  }
-  table {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
-  }
-  th, td {
-    padding: 8px 6px;
-    font-size: 14px;
-  }
+/* modal */
+.modal { display:none; position:fixed; z-index:200; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; }
+.modal .content { background:#fff; padding:18px; border-radius:8px; width:90%; max-width:420px; box-shadow:0 6px 20px rgba(0,0,0,0.2); }
+.modal .content h3{ margin-top:0; color:#007bff; }
+.input-row { margin-top:8px; }
+select,input,button.modal-action { width:100%; padding:8px; margin-top:6px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box; }
+button.modal-action { background:#007bff; color:#fff; border:none; cursor:pointer; }
+button.modal-cancel { background:#ccc; color:#333; margin-top:8px; }
+
+/* responsive */
+@media (max-width:768px){
+  nav { flex-wrap:wrap; }
+  section { margin:12px; padding:15px; }
 }
 </style>
 </head>
@@ -167,12 +51,12 @@ th {
 
 <header>
   <h1>Admin panel – Dochádzka</h1>
-  <button onclick="logout()">Odhlásiť sa</button>
+  <button id="logoutBtn">Odhlásiť sa</button>
 </header>
 
 <nav>
-  <button class="active" data-target="dochadzka">Dochádzka</button>
-  <button data-target="prestávky">Prestávky</button>
+  <button data-target="dochadzka" class="active">Dochádzka</button>
+  <button data-target="prestavky">Prestávky</button>
   <button data-target="pn">PN</button>
   <button data-target="pouzivatelia">Používatelia</button>
 </nav>
@@ -187,14 +71,14 @@ th {
   <div id="dochadzkaTable" class="loader">Načítavam dáta...</div>
 </section>
 
-<section id="prestávky">
+<section id="prestavky">
   <h2>Prestávky</h2>
-  <button class="export-btn" onclick="exportTable('prestávkyTable')">Exportovať do CSV</button>
+  <button class="export-btn" onclick="exportTable('prestavkyTable')">Exportovať do CSV</button>
   <div style="display:flex; gap:10px; margin-top:10px;">
-    <input type="date" id="datePrestávky" style="flex:1;">
-    <input type="text" id="searchPrestávky" placeholder="Hľadať..." style="flex:2;">
+    <input type="date" id="datePrestavky" style="flex:1;">
+    <input type="text" id="searchPrestavky" placeholder="Hľadať..." style="flex:2;">
   </div>
-  <div id="prestávkyTable" class="loader">Načítavam dáta...</div>
+  <div id="prestavkyTable" class="loader">Načítavam dáta...</div>
 </section>
 
 <section id="pn">
@@ -210,23 +94,48 @@ th {
 <section id="pouzivatelia">
   <h2>Používatelia</h2>
   <button class="export-btn" onclick="exportTable('usersTable')">Exportovať do CSV</button>
+  <button id="newUserBtn" style="background:#17a2b8;">Nový zamestnanec</button>
   <div id="usersTable" class="loader">Načítavam používateľov...</div>
+
+  <h3 style="margin-top:18px;">Nepřiradené čipy</h3>
+  <div id="newChipsContainer" class="loader">Načítavam čipy...</div>
 </section>
 
-<div class="modal" id="changePasswordModal">
-  <div class="modal-content">
-    <h3>Zmeniť heslo</h3>
-    <input type="hidden" id="changePasswordUserId">
-    <input type="password" id="newPassword" placeholder="Nové heslo">
-    <button class="save" onclick="saveNewPassword()">Uložiť</button>
-    <button class="close" onclick="closeModal()">Zavrieť</button>
+<!-- Modály -->
+<div id="assignChipModal" class="modal">
+  <div class="content">
+    <h3>Priradiť čip</h3>
+    <div class="input-row">
+      <label>Vybrať používateľa</label>
+      <select id="assignUserSelect"></select>
+    </div>
+    <div class="input-row">
+      <label>Čip UID</label>
+      <input id="assignChipUid" readonly />
+    </div>
+    <button class="modal-action" id="assignChipSave">Priradiť</button>
+    <button class="modal-cancel" id="assignChipCancel">Zrušiť</button>
   </div>
 </div>
 
+<div id="changePasswordModal" class="modal">
+  <div class="content">
+    <h3>Zmeniť heslo používateľa</h3>
+    <input type="hidden" id="pwdUserId">
+    <div class="input-row">
+      <input type="password" id="pwdInput" placeholder="Nové heslo" />
+    </div>
+    <button class="modal-action" id="pwdSave">Uložiť</button>
+    <button class="modal-cancel" id="pwdCancel">Zrušiť</button>
+  </div>
+</div>
+
+<!-- Firebase (namespaced) -->
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js"></script>
 
 <script>
+/* ====== vlož sem svoju firebase konfiguráciu ====== */
 const firebaseConfig = {
   apiKey: "AIzaSyB5ovJ-_GAnfIExgBsNuQtc4tb6mqhsdj8",
   authDomain: "dochadzkaesp32.firebaseapp.com",
@@ -239,106 +148,312 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-document.querySelectorAll("nav button").forEach(btn=>{
-  btn.addEventListener("click",()=>{
-    document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
-    btn.classList.add("active");
-    document.querySelectorAll("section").forEach(sec=>sec.classList.remove("active"));
-    document.getElementById(btn.dataset.target).classList.add("active");
+/* ---------- UI navigation ---------- */
+document.querySelectorAll('nav button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
+    document.getElementById(btn.dataset.target).classList.add('active');
   });
 });
 
-function exportTable(tableId){
-  const table=document.getElementById(tableId).querySelector("table");
-  if(!table){alert("Žiadne dáta na export.");return;}
-  let csv=[];
-  table.querySelectorAll("tr").forEach(row=>{
-    const cols=[...row.querySelectorAll("th,td")].map(td=>`"${td.innerText}"`);
-    csv.push(cols.join(","));
-  });
-  const blob=new Blob([csv.join("\n")],{type:"text/csv"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download=`${tableId}.csv`;
+/* ---------- helpers ---------- */
+function escapeHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function formatCsvCell(s){ return '"' + String(s==null?'':s).replace(/"/g,'""') + '"'; }
+
+/* ---------- CSV export ---------- */
+function exportTable(containerId){
+  const container = document.getElementById(containerId);
+  const table = container.querySelector('table');
+  if(!table){ alert('Žiadne dáta na export.'); return; }
+  const rows = [...table.rows];
+  const csv = rows.map(r=>[...r.querySelectorAll('th,td')].map(td=>formatCsvCell(td.innerText)).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${containerId}.csv`;
   a.click();
 }
 
-let usersData={};
-async function loadUsersData(){
-  const snap=await db.ref("users").get();
-  usersData={};
-  snap.forEach(u=>usersData[u.key]=u.val());
-}
+/* ---------- dátové cache a realtime listeners ---------- */
+let usersData = {};    // userId -> object
+let chipToUid = {};    // chipUid -> userId
 
-async function loadUsers(){
-  const el=document.getElementById("usersTable");
-  el.innerHTML="Načítavam používateľov...";
-  try{
-    const snap=await db.ref("users").get();
-    if(!snap.exists()){el.innerHTML="Žiadni používatelia";return;}
-    let html="<table><tr><th>Meno</th><th>Čip</th><th>Akcie</th></tr>";
+// onValue listeners to auto-update when DB changes
+db.ref('users').on('value', async snap => {
+  usersData = {};
+  chipToUid = {};
+  if(snap.exists()){
     snap.forEach(u=>{
-      const d=u.val();
-      html+=`<tr><td>${d.name||"(bez mena)"}</td><td>${d.chipUid||"-"}</td>
-      <td><button onclick="removeUser('${u.key}')">🗑️</button>
-      <button onclick="openChangePassword('${u.key}')">🔑</button></td></tr>`;
+      usersData[u.key] = u.val() || {};
+      const c = (u.val() && u.val().chipUid) ? u.val().chipUid : null;
+      if(c && c !== '-' && c !== '') chipToUid[c] = u.key;
     });
-    html+="</table>";
-    el.innerHTML=html;
-  }catch(err){el.innerHTML="Chyba pri načítaní používateľov.";}
+  }
+  renderUsersTable();
+  renderAssignUserSelect();
+  // attendance tables rely on usersData/chipToUid -> re-render them
+  renderAttendance('dochadzka','dochadzkaTable','dateDochadzka','searchDochadzka');
+  renderAttendance('prestavky','prestavkyTable','datePrestavky','searchPrestavky');
+  renderAttendance('pn','pnTable','datePN','searchPN');
+});
+
+db.ref('newChips').on('value', snap => {
+  renderNewChips(snap);
+});
+
+// attendance nodes: use on('value') to auto update
+db.ref('dochadzka').on('value', snap => renderAttendanceFromSnap(snap, 'dochadzka', 'dochadzkaTable','dateDochadzka','searchDochadzka'));
+db.ref('prestavky').on('value', snap => renderAttendanceFromSnap(snap, 'prestavky', 'prestavkyTable','datePrestavky','searchPrestavky'));
+db.ref('pn').on('value', snap => renderAttendanceFromSnap(snap, 'pn', 'pnTable','datePN','searchPN'));
+
+/* ---------- render functions ---------- */
+
+function renderUsersTable(){
+  const el = document.getElementById('usersTable');
+  if(!Object.keys(usersData).length){ el.innerHTML = 'Načítavam používateľov...'; return; }
+  let html = '<table><tr><th>Meno</th><th>Čip</th><th>Akcie</th></tr>';
+  for(const [id, v] of Object.entries(usersData)){
+    html += `<tr>
+      <td>${escapeHtml(v.name || '(bez mena)')}</td>
+      <td>${escapeHtml(v.chipUid || '-')}</td>
+      <td>
+        <button onclick="removeUser('${id}')">🗑️</button>
+        <button onclick="openPwdModal('${id}')">🔑</button>
+      </td>
+    </tr>`;
+  }
+  html += '</table>';
+  el.innerHTML = html;
 }
 
-async function loadAttendance(type, tableId, dateInputId, searchInputId){
-  const el=document.getElementById(tableId);
-  el.innerHTML="Načítavam dáta...";
+function renderNewChips(snap){
+  const container = document.getElementById('newChipsContainer');
+  if(!snap.exists()){ container.innerHTML = 'Žiadne nové čipy'; return; }
+  container.innerHTML = '';
+  snap.forEach(c=>{
+    const chip = c.key;
+    const div = document.createElement('div');
+    div.className = 'new-chip';
+    div.innerHTML = `${escapeHtml(chip)}<div><button onclick="openAssignModal('${chip}')">Priradiť</button><button style="margin-left:6px" onclick="removeChip('${chip}')">Odstrániť</button></div>`;
+    container.appendChild(div);
+  });
+}
+
+/* attendance renderer helper: we use snapshots delivered by on('value') listeners above */
+function renderAttendanceFromSnap(snap, type, containerId, dateInputId, searchInputId){
+  // store snapshot for rendering with filters
+  const container = document.getElementById(containerId);
+  const dateFilter = document.getElementById(dateInputId)?.value || '';
+  const searchFilter = (document.getElementById(searchInputId)?.value || '').toLowerCase();
+  let html = '<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>';
+  if(!snap.exists()){ container.innerHTML = '<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr></table>'; return; }
+
+  snap.forEach(node=>{
+    const nodeKey = node.key; // userId (dochadzka/pn) or chipUid (prestavky) depending on DB
+    node.forEach(logSnap=>{
+      const val = logSnap.val() || {};
+      const cas = val.cas || '-';
+      const typ = val.typ || '-';
+      // compute name:
+      let name = '(neznámy používateľ)';
+      if(type === 'prestavky'){
+        const chipUid = nodeKey;
+        const uid = chipToUid[chipUid];
+        if(uid && usersData[uid] && usersData[uid].name) name = usersData[uid].name;
+      } else {
+        const uid = nodeKey;
+        if(usersData[uid] && usersData[uid].name) name = usersData[uid].name;
+      }
+
+      // apply date filter and search filter
+      const logDate = cas.indexOf('T')!==-1 ? cas.split('T')[0] : (cas.length>=10 ? cas.slice(0,10) : '');
+      if((!dateFilter || logDate === dateFilter) && (!searchFilter || name.toLowerCase().includes(searchFilter))){
+        html += `<tr><td>${escapeHtml(name)}</td><td>${escapeHtml(cas)}</td><td>${escapeHtml(typ)}</td></tr>`;
+      }
+    });
+  });
+
+  html += '</table>';
+  container.innerHTML = html;
+}
+
+// convenience wrapper to re-render using current data (calls will be ignored if realtime listeners already updated)
+function renderAttendance(type, containerId, dateInputId, searchInputId){
+  // read current snapshot once and call the rendering logic above by reading DB once (but listeners already call renderAttendanceFromSnap)
+  db.ref(type).get().then(snap => renderAttendanceFromSnap(snap, type, containerId, dateInputId, searchInputId)).catch(e=>{
+    document.getElementById(containerId).innerHTML = 'Chyba pri načítaní dát.';
+    console.error(e);
+  });
+}
+
+/* ---------- actions ---------- */
+
+async function removeUser(id){
+  if(!confirm('Naozaj odstrániť používateľa?')) return;
   try{
-    const snap=await db.ref(type).get();
-    let html="<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>";
-    const dateFilter=document.getElementById(dateInputId).value;
-    const searchFilter=document.getElementById(searchInputId).value.toLowerCase();
-    if(snap.exists()){
-      snap.forEach(userNode=>{
-        const userId=userNode.key;
-        userNode.forEach(log=>{
-          const val=log.val();
-          const logDate=val.cas?val.cas.slice(0,10):"";
-          const name=usersData[userId]?.name||"(bez mena)";
-          if((!dateFilter||logDate===dateFilter)&&(!searchFilter||name.toLowerCase().includes(searchFilter))){
-            html+=`<tr><td>${name}</td><td>${val.cas||"-"}</td><td>${val.typ||"-"}</td></tr>`;
-          }
-        });
+    await db.ref('users/' + id).set(null);
+    alert('Používateľ odstránený.');
+  }catch(e){
+    console.error(e); alert('Chyba pri odstraňovaní používateľa.');
+  }
+}
+
+/* assign chip modal logic (dropdown) */
+function renderAssignUserSelect(){
+  const sel = document.getElementById('assignUserSelect');
+  if(!sel) return;
+  sel.innerHTML = '';
+  const opt0 = document.createElement('option'); opt0.value=''; opt0.innerText='-- vyber používateľa --';
+  sel.appendChild(opt0);
+  for(const [id, u] of Object.entries(usersData)){
+    const o = document.createElement('option');
+    o.value = id;
+    o.innerText = `${u.name || '(bez mena)'}${u.chipUid && u.chipUid !== '-' ? ' — ' + u.chipUid : ''}`;
+    sel.appendChild(o);
+  }
+}
+let currentAssignChipUid = null;
+function openAssignModal(chipUid){
+  currentAssignChipUid = chipUid;
+  renderAssignUserSelect();
+  document.getElementById('assignChipUid').value = chipUid;
+  document.getElementById('assignChipModal').style.display = 'flex';
+}
+document.getElementById('assignChipCancel').addEventListener('click', ()=> {
+  document.getElementById('assignChipModal').style.display = 'none';
+  currentAssignChipUid = null;
+});
+document.getElementById('assignChipSave').addEventListener('click', async ()=> {
+  const sel = document.getElementById('assignUserSelect');
+  const uid = sel.value;
+  if(!uid){ alert('Vyber používateľa.'); return; }
+  const chip = currentAssignChipUid;
+  try{
+    // set user's chipUid
+    await db.ref('users/' + uid).update({ chipUid: chip });
+    // remove from newChips
+    await db.ref('newChips/' + chip).set(null);
+    // add one prichod record to dochadzka
+    await db.ref('dochadzka/' + uid).push({ cas: new Date().toISOString(), typ: 'prichod', manual: false });
+    alert('Čip priradený.');
+    document.getElementById('assignChipModal').style.display = 'none';
+    currentAssignChipUid = null;
+  }catch(e){
+    console.error(e);
+    alert('Nepodarilo sa priradiť čip.');
+  }
+});
+
+/* remove chip (from newChips) */
+async function removeChip(chipUid){
+  if(!confirm('Naozaj chceš odstrániť tento čip?')) return;
+  try{
+    await db.ref('newChips/' + chipUid).set(null);
+    alert('Čip odstránený.');
+  }catch(e){ console.error(e); alert('Chyba pri odstraňovaní čipu.'); }
+}
+
+/* password modal */
+function openPwdModal(userId){
+  document.getElementById('pwdUserId').value = userId;
+  document.getElementById('pwdInput').value = '';
+  document.getElementById('changePasswordModal').style.display = 'flex';
+}
+document.getElementById('pwdCancel').addEventListener('click', ()=> document.getElementById('changePasswordModal').style.display = 'none');
+document.getElementById('pwdSave').addEventListener('click', async ()=>{
+  const id = document.getElementById('pwdUserId').value;
+  const pass = document.getElementById('pwdInput').value;
+  if(!pass || !pass.trim()) return alert('Zadaj nové heslo.');
+  try{
+    await db.ref('users/' + id + '/password').set(pass);
+    alert('Heslo zmenené.');
+    document.getElementById('changePasswordModal').style.display = 'none';
+  }catch(e){ console.error(e); alert('Chyba pri ukladaní hesla.'); }
+});
+
+/* filter inputs: re-render (we have realtime listeners but filtering is local) */
+['dateDochadzka','searchDochadzka','datePrestavky','searchPrestavky','datePN','searchPN'].forEach(id=>{
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.addEventListener('input', ()=> {
+    // triggers re-render using current cache + current DB snapshot
+    const type = id.includes('Dochadzka') ? 'dochadzka' : (id.includes('Prestavky') ? 'prestavky' : 'pn');
+    const container = id.includes('Dochadzka') ? 'dochadzkaTable' : (id.includes('Prestavky') ? 'prestavkyTable' : 'pnTable');
+    renderAttendance(type, container, id, id.replace('date','search'));
+  });
+});
+
+/* renderAttendance wrapper that reads DB once (used by filters) */
+function renderAttendance(type, containerId, dateInputId, searchInputId){
+  db.ref(type).get().then(snap => renderAttendanceFromSnapshotForFilter(snap,type,containerId,dateInputId,searchInputId))
+    .catch(e=>{ document.getElementById(containerId).innerHTML='Chyba pri načítaní.'; console.error(e); });
+}
+function renderAttendanceFromSnapshotForFilter(snap,type,containerId,dateInputId,searchInputId){
+  const container = document.getElementById(containerId);
+  const dateFilter = document.getElementById(dateInputId)?.value || '';
+  const searchFilter = (document.getElementById(searchInputId)?.value || '').toLowerCase();
+  let html = '<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>';
+  if(snap.exists()){
+    snap.forEach(node=>{
+      const nodeKey = node.key;
+      node.forEach(logSnap=>{
+        const val = logSnap.val() || {};
+        const cas = val.cas || '-';
+        const typ = val.typ || '-';
+        let name = '(neznámy používateľ)';
+        if(type === 'prestavky'){
+          const chipUid = nodeKey;
+          const uid = chipToUid[chipUid];
+          if(uid && usersData[uid] && usersData[uid].name) name = usersData[uid].name;
+        } else {
+          const uid = nodeKey;
+          if(usersData[uid] && usersData[uid].name) name = usersData[uid].name;
+        }
+        const logDate = cas.indexOf('T')!==-1 ? cas.split('T')[0] : (cas.length>=10 ? cas.slice(0,10) : '');
+        if((!dateFilter || logDate===dateFilter) && (!searchFilter || name.toLowerCase().includes(searchFilter))){
+          html += `<tr><td>${escapeHtml(name)}</td><td>${escapeHtml(cas)}</td><td>${escapeHtml(typ)}</td></tr>`;
+        }
       });
-    }
-    html+="</table>";
-    el.innerHTML=html;
-  }catch(err){el.innerHTML="Chyba pri načítaní dát.";}
+    });
+  }
+  html += '</table>';
+  container.innerHTML = html;
 }
 
-async function loadAllTables(){
-  await loadUsersData();
-  await loadAttendance("dochadzka","dochadzkaTable","dateDochadzka","searchDochadzka");
-  await loadAttendance("prestavky","prestávkyTable","datePrestávky","searchPrestávky");
-  await loadAttendance("pn","pnTable","datePN","searchPN");
-  loadUsers();
+/* renderAttendanceFromSnap used by realtime on('value') listeners earlier */
+function renderAttendanceFromSnap(snap, type, containerId, dateInputId, searchInputId){
+  renderAttendanceFromSnapshotForFilter(snap,type,containerId,dateInputId,searchInputId);
 }
 
-["dateDochadzka","searchDochadzka","datePrestávky","searchPrestávky","datePN","searchPN"]
-.forEach(id=>document.getElementById(id).addEventListener("input",loadAllTables));
+/* ---------- initial load for users list (in case 'users' hasn't fired yet) ---------- */
+db.ref('users').get().then(snap => {
+  if(snap.exists()){
+    usersData = {};
+    chipToUid = {};
+    snap.forEach(u=>{
+      usersData[u.key] = u.val() || {};
+      const c = u.val().chipUid;
+      if(c && c !== '-' && c !== '') chipToUid[c] = u.key;
+    });
+    renderUsersTable();
+    renderAssignUserSelect();
+  }
+}).catch(e=>console.error(e));
 
-function logout(){alert("Odhlásenie");}
-async function removeUser(id){if(confirm("Naozaj odstrániť používateľa?")){await db.ref("users/"+id).set(null);loadUsers();}}
-function openChangePassword(id){document.getElementById("changePasswordModal").style.display="flex";document.getElementById("changePasswordUserId").value=id;}
-function closeModal(){document.getElementById("changePasswordModal").style.display="none";}
-async function saveNewPassword(){
-  const id=document.getElementById("changePasswordUserId").value;
-  const newPass=document.getElementById("newPassword").value;
-  if(!newPass.trim())return alert("Zadaj nové heslo.");
-  await db.ref("users/"+id+"/password").set(newPass);
-  alert("Heslo zmenené");
-  closeModal();
-}
+/* ---------- logout stub ---------- */
+document.getElementById('logoutBtn').addEventListener('click', ()=> {
+  // default: navigate to index.html (uprav podľa potreby)
+  window.location.href = 'index.html';
+});
 
-loadAllTables();
+/* expose some functions globally for inline onclicks in generated HTML */
+window.removeUser = removeUser;
+window.openAssignModal = openAssignModal;
+window.removeChip = removeChip;
+window.openPwdModal = openPwdModal;
 </script>
 </body>
 </html>
+
