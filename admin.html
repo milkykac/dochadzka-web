@@ -147,24 +147,23 @@ async function loadAttendance(type, elementId){
   usersSnap.forEach(u=>{ users[u.key] = u.val().name || "(bez mena)"; });
 
   onValue(ref(db,type), snap=>{
-    if(!snap.exists()){ el.innerHTML="Žiadne dáta."; return; }
     let html = "<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>";
-    snap.forEach(userNode=>{
-      const userId = userNode.key;
-      const userName = users[userId] || "(bez mena)";
-      userNode.forEach(log=>{
-        const val = log.val();
-        html += `<tr><td>${userName}</td><td>${val.cas||"-"}</td><td>${val.typ||"-"}</td></tr>`;
+    if(snap.exists()){
+      snap.forEach(userNode=>{
+        const userId = userNode.key;
+        const userName = users[userId] || "(bez mena)";
+        userNode.forEach(log=>{
+          const val = log.val();
+          html += `<tr><td>${userName}</td><td>${val.cas||"-"}</td><td>${val.typ||"-"}</td></tr>`;
+        });
       });
-    });
+    }
     html += "</table>";
     el.innerHTML = html;
   });
 }
 
-loadAttendance("dochadzka","dochadzkaTable");
-loadAttendance("prestávky","prestávkyTable");
-loadAttendance("pn","pnTable");
+loadUsers();
 
 // --- Používatelia ---
 function loadUsers(){
@@ -192,6 +191,11 @@ function loadUsers(){
         document.getElementById("changePasswordUserId").value = btn.dataset.userid;
       }
     });
+
+    // Load attendance after users are loaded
+    loadAttendance("dochadzka","dochadzkaTable");
+    loadAttendance("prestavky","prestávkyTable");
+    loadAttendance("pn","pnTable");
   });
 }
 window.removeUser = async (id) => { try { await set(ref(db,"users/"+id), null); loadUsers(); } catch(err){ console.error(err); } }
