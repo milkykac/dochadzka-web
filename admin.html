@@ -144,15 +144,24 @@ async function loadAttendance(type, elementId){
 
   const usersSnap = await get(ref(db,"users"));
   const users = {};
-  usersSnap.forEach(u=>{ users[u.key] = u.val().name || "(bez mena)"; });
+  const chipToUser = {};
+  usersSnap.forEach(u=>{
+    users[u.key] = u.val().name || "(bez mena)";
+    if(u.val().chipUid) chipToUser[u.val().chipUid] = u.val().name || "(bez mena)";
+  });
 
   onValue(ref(db,type), snap=>{
     let html = "<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>";
     if(snap.exists()){
-      snap.forEach(userNode=>{
-        const userId = userNode.key;
-        const userName = users[userId] || "(bez mena)";
-        userNode.forEach(log=>{
+      snap.forEach(node=>{
+        const key = node.key;
+        let userName;
+        if(type === "prestavky"){
+          userName = chipToUser[key] || "(bez mena)";
+        } else {
+          userName = users[key] || "(bez mena)";
+        }
+        node.forEach(log=>{
           const val = log.val();
           html += `<tr><td>${userName}</td><td>${val.cas||"-"}</td><td>${val.typ||"-"}</td></tr>`;
         });
@@ -288,3 +297,4 @@ loadNewChips();
 </script>
 </body>
 </html>
+
