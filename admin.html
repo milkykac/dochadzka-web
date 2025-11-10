@@ -138,34 +138,39 @@ document.querySelectorAll("nav button").forEach(btn => {
 });
 
 // --- Funkcie na načítanie dochádzky, prestávok a PN ---
+let usersData = {};
 async function loadAttendance(type, elementId){
   const el = document.getElementById(elementId);
   el.innerHTML = "Načítavam dáta...";
 
   const usersSnap = await get(ref(db,"users"));
-  const usersData = {};
+  usersData = {};
   const chipToUser = {};
   usersSnap.forEach(u=>{
-    const data = u.val();
-    usersData[u.key] = data;
-    if(data.chipUid && data.chipUid !== "-") chipToUser[data.chipUid] = data.name || "(bez mena)";
+    const name = u.val().name || "(bez mena)";
+    usersData[u.key] = u.val();
+    if(u.val().chipUid && u.val().chipUid !== "-") chipToUser[u.val().chipUid] = name;
   });
 
-  onValue(ref(db,type), snap=>{
+  onValue(ref(db,type), snap => {
     let html = "<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>";
     if(snap.exists()){
-      snap.forEach(node=>{
+      snap.forEach(node => {
         const key = node.key;
-        node.forEach(log=>{
+        node.forEach(log => {
           const val = log.val();
           let userName = "(neznámy používateľ)";
           let chipUid = key;
+
           if(type === "prestavky"){
-            if(chipToUser[chipUid]) userName = chipToUser[chipUid];
+            chipUid = key;
+            // tvrdé priradenie mena pre konkrétne čipy
+            if(["1443438","1445120","1446637"].includes(chipUid)) userName = "Martin";
           } else {
             if(usersData[key]) userName = usersData[key].name || "(bez mena)";
             chipUid = usersData[key]?.chipUid || "-";
           }
+
           html += `<tr><td>${userName} (čip: ${chipUid})</td><td>${val.cas || "-"}</td><td>${val.typ || "-"}</td></tr>`;
         });
       });
@@ -208,6 +213,7 @@ function loadUsers(){
     loadAttendance("pn","pnTable");
   });
 }
+
 window.removeUser = async (id) => { try { await set(ref(db,"users/"+id), null); loadUsers(); } catch(err){ console.error(err); } }
 
 async function createNewUser(name, chipUid="-") {
@@ -251,6 +257,7 @@ async function loadNewChips() {
     });
   });
 }
+
 async function assignChip(chipUid){
   const userName = prompt("Zadaj meno používateľa pre tento čip:");
   if(!userName) return alert("Meno používateľa je povinné!");
@@ -265,6 +272,7 @@ async function assignChip(chipUid){
   alert("Čip priradený a prvá dochádzka zaznamenaná!");
   loadUsers(); loadNewChips();
 }
+
 async function removeChip(chipUid){
   if(confirm("Naozaj chceš odstrániť tento čip?")) {
     await set(ref(db,"newChips/"+chipUid), null);
