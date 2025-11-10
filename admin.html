@@ -143,33 +143,30 @@ async function loadAttendance(type, elementId){
   el.innerHTML = "Načítavam dáta...";
 
   const usersSnap = await get(ref(db,"users"));
-  const usersData = usersSnap.val() || {};
-  
-  // mapovanie čipUid -> meno
+  const usersData = {};
   const chipToUser = {};
-  Object.keys(usersData).forEach(uid=>{
-    const user = usersData[uid];
-    if(user.chipUid && user.chipUid !== "-") chipToUser[user.chipUid] = user.name || "(bez mena)";
+  usersSnap.forEach(u=>{
+    const data = u.val();
+    usersData[u.key] = data;
+    if(data.chipUid && data.chipUid !== "-") chipToUser[data.chipUid] = data.name || "(bez mena)";
   });
 
-  onValue(ref(db,type), snap => {
+  onValue(ref(db,type), snap=>{
     let html = "<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>";
     if(snap.exists()){
-      snap.forEach(node => {
+      snap.forEach(node=>{
         const key = node.key;
-
-        node.forEach(log => {
+        node.forEach(log=>{
           const val = log.val();
-          let userName;
+          let userName = "(neznámy používateľ)";
           let chipUid = key;
-
           if(type === "prestavky"){
-            userName = chipToUser[chipUid] || `(bez mena, čip: ${chipUid})`;
+            if(chipToUser[chipUid]) userName = chipToUser[chipUid];
           } else {
-            userName = usersData[key]?.name || `(bez mena, UID: ${key})`;
+            if(usersData[key]) userName = usersData[key].name || "(bez mena)";
+            chipUid = usersData[key]?.chipUid || "-";
           }
-
-          html += `<tr><td>${userName}</td><td>${val.cas || "-"}</td><td>${val.typ || "-"}</td></tr>`;
+          html += `<tr><td>${userName} (čip: ${chipUid})</td><td>${val.cas || "-"}</td><td>${val.typ || "-"}</td></tr>`;
         });
       });
     }
@@ -205,6 +202,7 @@ function loadUsers(){
       }
     });
 
+    // Load attendance after users are loaded
     loadAttendance("dochadzka","dochadzkaTable");
     loadAttendance("prestavky","prestávkyTable");
     loadAttendance("pn","pnTable");
