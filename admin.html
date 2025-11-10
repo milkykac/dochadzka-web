@@ -30,7 +30,9 @@ td button { background:#dc3545; font-size:13px; margin-right:5px; border-radius:
 td button:hover { background:#a71d2a; }
 .export-btn{ margin-top:15px; background:#28a745; border-radius:8px; padding:8px 14px; }
 .export-btn:hover{ background:#1e7e34; }
-
+.new-chip { background:#17a2b8; padding:6px 10px; margin-bottom:5px; display:flex; justify-content:space-between; border-radius:6px; color:white; }
+.new-chip button { background:#ffc107; color:#333; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; }
+.new-chip button:hover { background:#e0a800; }
 /* MODAL */
 .modal { display:none; position:fixed; z-index:100; left:0; top:0; width:100%; height:100%; overflow:auto; background:rgba(0,0,0,0.5); }
 .modal-content{ background:#fff; margin:10% auto; padding:20px; border-radius:8px; width:90%; max-width:400px; position:relative; animation:fadeIn 0.3s; box-shadow:0 5px 15px rgba(0,0,0,0.2);}
@@ -82,18 +84,11 @@ input[type=text], input[type=password], input[type=date]{ width:100%; padding:8p
   <button class="export-btn" onclick="exportTable('usersTable')">Exportovať do CSV</button>
   <button id="newUserBtn" style="background:#17a2b8;">Nový zamestnanec</button>
   <div id="usersTable" class="loader">Načítavam používateľov...</div>
+  <h3>Nepřiradené čipy</h3>
+  <div id="newChipsContainer" class="loader">Načítavam čipy...</div>
 </section>
 
 <!-- MODÁLY -->
-<div id="assignModal" class="modal">
-  <div class="modal-content">
-    <span id="closeModal">&times;</span>
-    <h3>Priradiť čip zamestnancovi</h3>
-    <input type="text" id="chipInput" placeholder="Zadaj UID čipu">
-    <button id="assignChipBtn">Priradiť</button>
-  </div>
-</div>
-
 <div id="newUserModal" class="modal">
   <div class="modal-content">
     <span id="closeNewUserModal">&times;</span>
@@ -116,7 +111,7 @@ input[type=text], input[type=password], input[type=date]{ width:100%; padding:8p
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getDatabase, ref, onValue, set, remove, update, push } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getDatabase, ref, onValue, set, remove, update, push, get } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
 if(localStorage.getItem("isAdmin")!=="true"){ 
   alert("Prístup len pre admina!"); 
@@ -149,7 +144,7 @@ document.querySelectorAll("nav button").forEach(btn => {
   }
 });
 
-// --- Funkcia načítania tabuliek ---
+// --- Načítanie tabuliek ---
 function loadTable(path, elementId) {
   const element = document.getElementById(elementId);
   element.innerHTML = "Načítavam dáta...";
@@ -188,7 +183,6 @@ function loadUsers(){
     html+="</table>";
     el.innerHTML = html;
 
-    // Aktivovanie tlačidiel pre zmenu hesla
     document.querySelectorAll(".changePasswordBtn").forEach(btn=>{
       btn.onclick = () => {
         document.getElementById("changePasswordModal").style.display = "block";
@@ -201,8 +195,6 @@ window.removeUser = async (id) => {
   try { await remove(ref(db,"users/"+id)); loadUsers(); } 
   catch(err){ console.error(err); }
 }
-
-// --- Vytvorenie nového používateľa ---
 async function createNewUser(name, chipUid="-") {
   if(!name) return alert("Zadaj meno používateľa!");
   try {
@@ -216,8 +208,6 @@ document.getElementById("createUserBtn").onclick = () => {
   document.getElementById("newUserName").value = "";
   document.getElementById("newUserModal").style.display = "none";
 }
-
-// --- Zmena hesla ---
 document.getElementById("closeChangePasswordModal").onclick = () => {
   document.getElementById("changePasswordModal").style.display = "none";
 }
@@ -249,8 +239,47 @@ window.exportTable = (id) => {
   a.click();
 };
 
-// --- Načítanie používateľov pri štarte ---
+// --- Nepřiradené čipy ---
+async function loadNewChips() {
+  const container = document.getElementById("newChipsContainer");
+  container.innerHTML = "Načítavam čipy...";
+  onValue(ref(db,"newChips"), snap=>{
+    container.innerHTML = "";
+    if(!snap.exists()) { container.innerHTML="Žiadne nové čipy"; return; }
+    snap.forEach(c=>{
+      const chip = c.key;
+      const div = document.createElement("div");
+      div.className = "new-chip";
+      div.innerHTML = `${chip} <button onclick="assignChip('${chip}')">Priradiť</button>`;
+      container.appendChild(div);
+    });
+  });
+}
+
+async function assignChip(chipUid){
+  const userName = prompt("Zadaj meno používateľa pre tento čip:");
+  if(!userName) return alert("Meno používateľa je povinné!");
+  
+  const usersSnap = await get(ref(db,"users"));
+  let userId = null;
+  usersSnap.forEach(u=>{
+    if(u.val().name === userName) userId = u.key;
+  });
+  if(!userId) return alert("Používateľ nenájdený!");
+  
+  await set(ref(db,"chipToUser/"+chipUid), userId);
+  await remove(ref(db,"newChips/"+chipUid));
+  
+  const logPath = "/dochadzka/" + userId;
+  await push(ref(db,logPath), { cas: new Date().toISOString(), typ:"prichod", manual:false });
+  
+  alert("Čip priradený a prvá dochádzka zaznamenaná!");
+  loadUsers();
+  loadNewChips();
+}
+
 loadUsers();
+loadNewChips();
 </script>
 </body>
 </html>
