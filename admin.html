@@ -45,67 +45,62 @@ input[type=text], input[type=password], input[type=date]{ width:100%; padding:8p
 </head>
 <body>
 
-<header>
-  <h1>Admin panel – Dochádzka</h1>
-  <button id="logoutBtn">Odhlásiť sa</button>
-</header>
+<header>🧭 Admin panel – Dochádzka</header>
 
 <nav>
-  <button data-target="dochadzka" class="active">Dochádzka</button>
+  <button class="active" data-target="dochadzka">Dochádzka</button>
   <button data-target="prestávky">Prestávky</button>
   <button data-target="pn">PN</button>
-  <button data-target="pouzivatelia">Používatelia</button>
+  <button data-target="users">Používatelia</button>
+  <button data-target="newChips">Nové čipy</button>
 </nav>
 
 <section id="dochadzka" class="active">
   <h2>Dochádzka</h2>
-  <button class="export-btn" onclick="exportTable('dochadzkaTable')">Exportovať do CSV</button>
-  <div style="display:flex; gap:10px; margin-top:10px;">
-    <input type="date" id="dateInput" style="flex:1;">
-    <input type="text" id="searchInput" placeholder="Hľadať..." style="flex:2;">
-  </div>
-  <div id="dochadzkaTable" class="loader">Načítavam dáta...</div>
+  <div id="dochadzkaTable">Načítavam...</div>
+  <button onclick="exportTable('dochadzkaTable')">📄 Exportovať CSV</button>
 </section>
 
 <section id="prestávky">
   <h2>Prestávky</h2>
-  <button class="export-btn" onclick="exportTable('prestávkyTable')">Exportovať do CSV</button>
-  <div id="prestávkyTable" class="loader">Načítavam dáta...</div>
+  <div id="prestávkyTable">Načítavam...</div>
+  <button onclick="exportTable('prestávkyTable')">📄 Exportovať CSV</button>
 </section>
 
 <section id="pn">
   <h2>PN</h2>
-  <button class="export-btn" onclick="exportTable('pnTable')">Exportovať do CSV</button>
-  <div id="pnTable" class="loader">Načítavam dáta...</div>
+  <div id="pnTable">Načítavam...</div>
+  <button onclick="exportTable('pnTable')">📄 Exportovať CSV</button>
 </section>
 
-<section id="pouzivatelia">
+<section id="users">
   <h2>Používatelia</h2>
-  <button class="export-btn" onclick="exportTable('usersTable')">Exportovať do CSV</button>
-  <button id="newUserBtn" style="background:#17a2b8;">Nový zamestnanec</button>
-  <div id="usersTable" class="loader">Načítavam používateľov...</div>
-  <h3>Nepřiradené čipy</h3>
-  <div id="newChipsContainer" class="loader">Načítavam čipy...</div>
+  <button id="newUserBtn">+ Nový používateľ</button>
+  <div id="usersTable">Načítavam...</div>
 </section>
 
-<!-- MODÁLY -->
+<section id="newChips">
+  <h2>Nepřiradené čipy</h2>
+  <div id="newChipsContainer">Načítavam...</div>
+</section>
+
+<!-- Modal: nový používateľ -->
 <div id="newUserModal" class="modal">
   <div class="modal-content">
-    <span id="closeNewUserModal">&times;</span>
-    <h3>Nový zamestnanec</h3>
-    <input type="text" id="newUserName" placeholder="Meno zamestnanca">
-    <input type="password" id="newUserPassword" placeholder="Heslo (voliteľné)">
+    <h3>Nový používateľ</h3>
+    <input id="newUserName" placeholder="Meno používateľa">
     <button id="createUserBtn">Vytvoriť</button>
   </div>
 </div>
 
+<!-- Modal: zmena hesla -->
 <div id="changePasswordModal" class="modal">
   <div class="modal-content">
-    <span id="closeChangePasswordModal">&times;</span>
-    <h3>Zmeniť heslo</h3>
-    <input type="text" id="changePasswordUserId" placeholder="UID používateľa">
-    <input type="password" id="changePasswordInput" placeholder="Nové heslo">
+    <h3>Zmena hesla</h3>
+    <input id="changePasswordUserId" placeholder="UID používateľa" readonly>
+    <input id="changePasswordInput" type="password" placeholder="Nové heslo">
     <button id="savePasswordBtn">Uložiť</button>
+    <button id="closeChangePasswordModal">Zavrieť</button>
   </div>
 </div>
 
@@ -140,54 +135,6 @@ document.querySelectorAll("nav button").forEach(btn => {
 // --- Načítanie tabuliek ---
 function loadTable(path, elementId) {
   const el = document.getElementById(elementId);
-  el.innerHTML = "Načítavam dáta...";
-  onValue(ref(db,path), (snap)=>{
-    if(!snap.exists()){ el.innerHTML="Žiadne dáta."; return; }
-    let html="<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>";
-    snap.forEach(user=>{
-      const val = user.val();
-      html += `<tr><td>${val.meno||"-"}</td><td>${val.cas||"-"}</td><td>${val.typ||"-"}</td></tr>`;
-    });
-    html+="</table>";
-    el.innerHTML = html;
-  });
-}
-loadTable("dochadzka","dochadzkaTable");
-loadTable("prestávky","prestávkyTable");
-loadTable("pn","pnTable");
-
-// --- Používatelia ---
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getDatabase, ref, set, push, onValue, update, get } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBsYrbYtP4E5blWbKlrJ6iI9v6YPAYYp0g",
-  authDomain: "maturita-395fd.firebaseapp.com",
-  databaseURL: "https://maturita-395fd-default-rtdb.firebaseio.com",
-  projectId: "maturita-395fd",
-  storageBucket: "maturita-395fd.firebasestorage.app",
-  messagingSenderId: "754745500563",
-  appId: "1:754745500563:web:74fd4d6ab5765ee788be66",
-  measurementId: "G-F6KQQS48GD"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-// --- Prepínanie sekcií ---
-document.querySelectorAll("nav button").forEach(btn => {
-  btn.onclick = () => {
-    document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    document.querySelectorAll("section").forEach(sec => sec.classList.remove("active"));
-    document.getElementById(btn.dataset.target).classList.add("active");
-  }
-});
-
-// --- Funkcie na načítanie dát ---
-function loadTable(path, elementId) {
-  const el = document.getElementById(elementId);
-  el.innerHTML = "Načítavam dáta...";
   onValue(ref(db,path), (snap)=>{
     if(!snap.exists()){ el.innerHTML="Žiadne dáta."; return; }
     let html="<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>";
@@ -225,26 +172,23 @@ function loadUsers(){
 
     document.querySelectorAll(".changePasswordBtn").forEach(btn=>{
       btn.onclick = () => {
-        document.getElementById("changePasswordModal").style.display = "block";
+        document.getElementById("changePasswordModal").style.display = "flex";
         document.getElementById("changePasswordUserId").value = btn.dataset.userid;
       }
     });
   });
 }
 window.removeUser = async (id) => {
-  try { await set(ref(db,"users/"+id), null); loadUsers(); } 
-  catch(err){ console.error(err); }
+  await set(ref(db,"users/"+id), null);
+  loadUsers();
 }
-async function createNewUser(name, chipUid="-") {
-  if(!name) return alert("Zadaj meno používateľa!");
-  try {
-    await push(ref(db, "users"), { name, chipUid });
-    loadUsers();
-  } catch(err){ console.error(err); alert("Nepodarilo sa pridať používateľa."); }
+document.getElementById("newUserBtn").onclick = () => {
+  document.getElementById("newUserModal").style.display = "flex";
 }
-document.getElementById("createUserBtn").onclick = () => {
+document.getElementById("createUserBtn").onclick = async () => {
   const name = document.getElementById("newUserName").value.trim();
-  createNewUser(name);
+  if(!name) return alert("Zadaj meno!");
+  await push(ref(db,"users"), { name });
   document.getElementById("newUserName").value = "";
   document.getElementById("newUserModal").style.display = "none";
 }
@@ -252,121 +196,12 @@ document.getElementById("closeChangePasswordModal").onclick = () => {
   document.getElementById("changePasswordModal").style.display = "none";
 }
 document.getElementById("savePasswordBtn").onclick = async () => {
-  const userId = document.getElementById("changePasswordUserId").value.trim();
+  const userId = document.getElementById("changePasswordUserId").value;
   const newPassword = document.getElementById("changePasswordInput").value.trim();
-  if(!userId || !newPassword) return alert("Vyplň UID a nové heslo!");
-  try {
-    await update(ref(db, "users/" + userId), { password: newPassword });
-    alert("Heslo úspešne zmenené!");
-    document.getElementById("changePasswordModal").style.display = "none";
-    document.getElementById("changePasswordInput").value = "";
-  } catch(err){ console.error(err); alert("Nepodarilo sa zmeniť heslo."); }
-};
-
-// --- Export CSV ---
-window.exportTable = (id) => {
-  const table = document.getElementById(id).querySelector("table");
-  if(!table) return alert("Nie je čo exportovať!");
-  let csv = "";
-  for(const row of table.rows){
-    const cols = [...row.cells].map(td => td.innerText.replace(/,/g," "));
-    csv += cols.join(",") + "\n";
-  }
-  const blob = new Blob([csv], {type:"text/csv"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = id + ".csv";
-  a.click();
-};
-
-// --- Nepřiradené čipy ---
-async function loadNewChips() {
-  const container = document.getElementById("newChipsContainer");
-  container.innerHTML = "Načítavam čipy...";
-  onValue(ref(db,"newChips"), snap=>{
-    container.innerHTML = "";
-    if(!snap.exists()) { container.innerHTML="Žiadne nové čipy"; return; }
-    snap.forEach(c=>{
-      const chip = c.key;
-      const div = document.createElement("div");
-      div.className = "new-chip";
-
-      const span = document.createElement("span");
-      span.textContent = chip;
-      div.appendChild(span);
-
-      const btn = document.createElement("button");
-      btn.textContent = "Priradiť";
-      btn.onclick = () => assignChip(chip);
-      div.appendChild(btn);
-
-      container.appendChild(div);
-    });
-  });
-}
-
-async function assignChip(chipUid){
-  const userName = prompt("Zadaj meno používateľa pre tento čip:");
-  if(!userName) return alert("Meno používateľa je povinné!");
-  
-  const usersSnap = await get(ref(db,"users"));
-  let userId = null;
-  usersSnap.forEach(u=>{
-    if(u.val().name === userName) userId = u.key;
-  });
-  if(!userId) return alert("Používateľ nenájdený!");
-  
-  await set(ref(db,"chipToUser/"+chipUid), userId);
-  await set(ref(db,"newChips/"+chipUid), null);
-  
-  const logPath = "/dochadzka/" + userId;
-  await push(ref(db,logPath), { cas: new Date().toISOString(), typ:"prichod", manual:false });
-  
-  alert("Čip priradený a prvá dochádzka zaznamenaná!");
-  loadUsers();
-  loadNewChips();
-}
-
-loadUsers();
-loadNewChips();
-
-
-// --- Nový používateľ ---
-document.getElementById("newUserBtn").onclick = () => {
-  document.getElementById("newUserModal").style.display = "block";
-}
-document.getElementById("closeNewUserModal").onclick = () => {
-  document.getElementById("newUserModal").style.display = "none";
-}
-document.getElementById("createUserBtn").onclick = async () => {
-  const name = document.getElementById("newUserName").value.trim();
-  if(!name) return alert("Zadaj meno používateľa!");
-  try {
-    await push(ref(db, "users"), { name, chipUid: "-" });
-    document.getElementById("newUserName").value = "";
-    document.getElementById("newUserModal").style.display = "none";
-    loadUsers();
-    loadNewChips();
-  } catch(err){
-    console.error(err); 
-    alert("Nepodarilo sa pridať používateľa.");
-  }
-}
-
-// --- Zmena hesla ---
-document.getElementById("closeChangePasswordModal").onclick = () => {
+  if(!newPassword) return alert("Zadaj nové heslo!");
+  await update(ref(db,"users/"+userId), { password:newPassword });
+  alert("Heslo zmenené!");
   document.getElementById("changePasswordModal").style.display = "none";
-}
-document.getElementById("savePasswordBtn").onclick = async () => {
-  const userId = document.getElementById("changePasswordUserId").value.trim();
-  const newPassword = document.getElementById("changePasswordInput").value.trim();
-  if(!userId || !newPassword) return alert("Vyplň UID a nové heslo!");
-  try {
-    await update(ref(db, "users/" + userId), { password: newPassword });
-    alert("Heslo úspešne zmenené!");
-    document.getElementById("changePasswordModal").style.display = "none";
-    document.getElementById("changePasswordInput").value = "";
-  } catch(err){ console.error(err); alert("Nepodarilo sa zmeniť heslo."); }
 };
 
 // --- Export CSV ---
@@ -385,46 +220,65 @@ window.exportTable = (id) => {
   a.click();
 };
 
-// --- Nepřiradené čipy ---
-async function loadNewChips() {
-  const container = document.getElementById("newChipsContainer");
-  container.innerHTML = "Načítavam čipy...";
-  onValue(ref(db,"newChips"), snap=>{
-    container.innerHTML = "";
-    if(!snap.exists()) { container.innerHTML="Žiadne nové čipy"; return; }
-    snap.forEach(c=>{
-      const chip = c.key;
-      const div = document.createElement("div");
-      div.className = "new-chip";
-      div.innerHTML = `${chip} <button onclick="assignChip('${chip}')">Priradiť</button>`;
-      container.appendChild(div);
+// --- Nové čipy ---
+function loadNewChips(){
+  const c = document.getElementById("newChipsContainer");
+  onValue(ref(db,"newChips"),snap=>{
+    c.innerHTML="";
+    if(!snap.exists()){ c.innerHTML="Žiadne nové čipy"; return; }
+    snap.forEach(s=>{
+      const chip=s.key;
+      const div=document.createElement("div");
+      div.className="new-chip";
+      div.innerHTML=`<span>${chip}</span>`;
+      const btn=document.createElement("button");
+      btn.textContent="Priradiť";
+      btn.onclick=()=>assignChip(chip);
+      div.appendChild(btn);
+      c.appendChild(div);
     });
   });
 }
-async function assignChip(chipUid){
-  const userName = prompt("Zadaj meno používateľa pre tento čip:");
-  if(!userName) return alert("Meno používateľa je povinné!");
-  
-  const usersSnap = await get(ref(db,"users"));
-  let userId = null;
-  usersSnap.forEach(u=>{
-    if(u.val().name === userName) userId = u.key;
-  });
-  if(!userId) return alert("Používateľ nenájdený!");
-  
-  await set(ref(db,"chipToUser/"+chipUid), userId);
-  await set(ref(db,"newChips/"+chipUid), null);
-  
-  const logPath = "/dochadzka/" + userId;
-  await push(ref(db,logPath), { cas: new Date().toISOString(), typ:"prichod", manual:false });
-  
-  alert("Čip priradený a prvá dochádzka zaznamenaná!");
-  loadUsers();
-  loadNewChips();
-}
 
-// --- Inicializácia ---
-loadUsers();
-loadNewChips();
-</script>
+// 🔽 Úpravená funkcia na priradenie čipu
+async function assignChip(chip){
+  const snap = await get(ref(db, "users"));
+  if (!snap.exists()) return alert("Najprv musíš mať vytvorených používateľov!");
+
+  // zobrazí výber používateľa v select okne
+  const select = document.createElement("select");
+  select.style.width = "100%";
+  select.style.marginTop = "10px";
+  snap.forEach(u => {
+    const opt = document.createElement("option");
+    opt.value = u.key;
+    opt.textContent = u.val().name || "(bez mena)";
+    select.appendChild(opt);
+  });
+
+  const modal = document.createElement("div");
+  modal.className = "modal";
+  modal.style.display = "flex";
+  modal.innerHTML = `
+    <div class="modal-content">
+      <h3>Priradiť čip</h3>
+      <p><b>Čip:</b> ${chip}</p>
+    </div>
+  `;
+  const content = modal.querySelector(".modal-content");
+  content.appendChild(select);
+
+  const btn = document.createElement("button");
+  btn.textContent = "Priradiť";
+  btn.onclick = async () => {
+    const userId = select.value;
+    await set(ref(db, "users/" + userId + "/chipUid"), chip);
+    await set(ref(db, "newChips/" + chip), null);
+    modal.remove();
+    alert("Čip úspešne priradený!");
+  };
+  content.appendChild(btn);
+
+  document.body.appendChild(modal);
+}
 
