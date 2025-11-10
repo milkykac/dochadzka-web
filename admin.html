@@ -21,10 +21,6 @@ table { width:100%; border-collapse:collapse; margin-top:15px; border-radius:8px
 th,td { border:1px solid #ddd; padding:10px; text-align:left; font-size:14px; }
 th { background:#007bff; color:white; font-weight:500; cursor:pointer; user-select:none; }
 tr:nth-child(even){ background:#f8f9fa; }
-.prichod { background-color: #28a745; color: white; }
-.odchod { background-color: #dc3545; color: white; }
-.pn { background-color: #ffc107; }
-.prestávky { background-color: #007bff; color: white; }
 .loader{ text-align:center; padding:20px; color:#007bff; font-weight:bold; }
 td button { background:#dc3545; font-size:13px; margin-right:5px; border-radius:6px; padding:5px 8px; }
 td button:hover { background:#a71d2a; }
@@ -126,6 +122,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
+// --- Prepínanie sekcií ---
 document.querySelectorAll("nav button").forEach(btn => {
   btn.onclick = () => {
     document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
@@ -139,42 +136,31 @@ let usersData = {};
 async function loadAttendance(type, elementId) {
   const el = document.getElementById(elementId);
   el.innerHTML = "Načítavam dáta...";
-
   try {
     const usersSnap = await get(ref(db, "users"));
     usersData = {};
     const chipToUser = {};
     usersSnap.forEach(u => {
-      const name = u.val().name || "(bez mena)";
       usersData[u.key] = u.val();
-      if (u.val().chipUid && u.val().chipUid !== "-") chipToUser[u.val().chipUid] = name;
+      if (u.val().chipUid && u.val().chipUid !== "-") chipToUser[u.val().chipUid] = u.val().name || "Martin";
     });
 
     const attendanceSnap = await get(ref(db, type));
     let html = "<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>";
     if (attendanceSnap.exists()) {
       attendanceSnap.forEach(node => {
-        const key = node.key;
+        const userId = node.key;
+        const userName = usersData[userId]?.name || "Martin";
+        const chipUid = usersData[userId]?.chipUid || "-";
         node.forEach(log => {
           const val = log.val();
-          let userName = "(neznámy používateľ)";
-          let chipUid = key;
-
-          if (type === "prestavky") {
-            chipUid = key;
-            userName = chipToUser[chipUid] || "Martin";
-          } else {
-            if (usersData[key]) userName = usersData[key].name || "Martin";
-            chipUid = usersData[key]?.chipUid || "-";
-          }
-
-          html += `<tr><td>${userName} (čip: ${chipUid})</td><td>${val.cas || "-"}</td><td>${val.typ || "-"}</td></tr>`;
+          const display = chipUid !== "-" ? `${userName} (čip: ${chipUid})` : userName;
+          html += `<tr><td>${display}</td><td>${val.cas || "-"}</td><td>${val.typ || "-"}</td></tr>`;
         });
       });
     }
     html += "</table>";
     el.innerHTML = html;
-
   } catch (err) {
     console.error(err);
     el.innerHTML = "Chyba pri načítaní dát.";
@@ -268,6 +254,7 @@ document.getElementById("savePasswordBtn").onclick = async () => {
   }
 };
 
+// Nepřiradené čipy
 async function loadNewChips() {
   const container = document.getElementById("newChipsContainer");
   container.innerHTML = "Načítavam čipy...";
@@ -324,6 +311,7 @@ async function removeChip(chipUid) {
   }
 }
 
+// Export CSV
 window.exportTable = (id) => {
   const table = document.getElementById(id).querySelector("table");
   if (!table) return alert("Nie je čo exportovať!");
@@ -332,20 +320,18 @@ window.exportTable = (id) => {
     const cols = [...row.cells].map(td => td.innerText.replace(/,/g, " "));
     csv += cols.join(",") + "\n";
   }
-  const blob = new Blob([csv], { type: "text/csv" });
-  const a = document.createElement("a");
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = id + ".csv";
   a.click();
-};
-
-document.getElementById("logoutBtn").onclick = () => {
-  window.location.href = "index.html";
 }
 
+// Inicializácia
 loadUsers();
 loadNewChips();
 </script>
 
 </body>
 </html>
+
