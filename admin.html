@@ -21,11 +21,6 @@ table { width:100%; border-collapse:collapse; margin-top:15px; border-radius:8px
 th,td { border:1px solid #ddd; padding:10px; text-align:left; font-size:14px; }
 th { background:#007bff; color:white; font-weight:500; cursor:pointer; user-select:none; }
 tr:nth-child(even){ background:#f8f9fa; }
-.prichod { background-color: #28a745; color: white; }
-.odchod { background-color: #dc3545; color: white; }
-.pn { background-color: #ffc107; }
-.prestávky { background-color: #007bff; color: white; }
-.loader{ text-align:center; padding:20px; color:#007bff; font-weight:bold; }
 td button { background:#dc3545; font-size:13px; margin-right:5px; border-radius:6px; padding:5px 8px; }
 td button:hover { background:#a71d2a; }
 .export-btn{ margin-top:15px; background:#28a745; border-radius:8px; padding:8px 14px; }
@@ -37,26 +32,70 @@ td button:hover { background:#a71d2a; }
 .modal { display:none; position:fixed; z-index:100; left:0; top:0; width:100%; height:100%; overflow:auto; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; }
 .modal-content{ background:#fff; padding:20px; border-radius:8px; width:90%; max-width:400px; position:relative; animation:fadeIn 0.3s; box-shadow:0 5px 15px rgba(0,0,0,0.2);}
 @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
-input[type=text], input[type=password], input[type=date]{ width:100%; padding:8px; margin-top:10px; margin-bottom:10px; border:1px solid #ccc; border-radius:6px; font-size:14px; }
+input[type=text]{ width:100%; padding:8px; margin-top:10px; margin-bottom:10px; border:1px solid #ccc; border-radius:6px; font-size:14px; }
 .modal button{ width:100%; margin-top:10px; border-radius:6px; padding:8px 0; font-weight:500; cursor:pointer; background:#007bff; color:white; transition:0.3s;}
 .modal button:hover{ background:#0056b3;}
 </style>
 </head>
 <body>
 
+<header>
+  <h1>Admin panel – Dochádzka</h1>
+  <button onclick="document.getElementById('newUserModal').style.display='flex'">+ Nový zamestnanec</button>
+</header>
+
+<nav>
+  <button class="active" onclick="showSection('users')">Zamestnanci</button>
+  <button onclick="showSection('dochadzka')">Dochádzka</button>
+  <button onclick="showSection('chips')">Nové čipy</button>
+</nav>
+
+<section id="users" class="active">
+  <h2>Zamestnanci</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Meno</th>
+        <th>Čip</th>
+        <th>Akcie</th>
+      </tr>
+    </thead>
+    <tbody id="usersBody"></tbody>
+  </table>
+</section>
+
+<section id="dochadzka">
+  <h2>Dochádzka</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Meno</th>
+        <th>Čas</th>
+        <th>Typ</th>
+      </tr>
+    </thead>
+    <tbody id="dochadzkaBody"></tbody>
+  </table>
+</section>
+
+<section id="chips">
+  <h2>Nové čipy</h2>
+  <div id="chipsList"></div>
+</section>
+
+<div class="modal" id="newUserModal">
+  <div class="modal-content">
+    <h3>Pridať nového zamestnanca</h3>
+    <input type="text" id="newUserName" placeholder="Meno zamestnanca">
+    <button onclick="addNewUser()">Pridať</button>
+    <button id="closeNewUserModal">Zrušiť</button>
+  </div>
+</div>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import {
-    getDatabase,
-    ref,
-    onValue,
-    push,
-    remove,
-    set,
-    update
-  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+  import { getDatabase, ref, onValue, push, remove, set, update } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
-  // 🔧 Firebase konfigurácia
   const firebaseConfig = {
     apiKey: "AIzaSyBsYrbYtP4E5blWbKlrJ6iI9v6YPAYYp0g",
     authDomain: "maturita-395fd.firebaseapp.com",
@@ -68,112 +107,87 @@ input[type=text], input[type=password], input[type=date]{ width:100%; padding:8p
     measurementId: "G-F6KQQS48GD"
   };
 
-  // 🔥 Inicializácia Firebase
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-  // 📌 Načítanie dochádzky
   const dochadzkaRef = ref(db, "dochadzka");
   onValue(dochadzkaRef, (snapshot) => {
-    const data = snapshot.val();
+    const data = snapshot.val() || {};
     let html = "";
     for (const id in data) {
       const val = data[id];
-      html += `<tr>
-        <td>${val.meno || "-"}</td>
-        <td>${val.cas || "-"}</td>
-        <td>${val.typ || "-"}</td>
-      </tr>`;
+      html += `<tr><td>${val.meno || "-"}</td><td>${val.cas || "-"}</td><td>${val.typ || "-"}</td></tr>`;
     }
     document.getElementById("dochadzkaBody").innerHTML = html;
   });
 
-  // 📋 Načítanie zamestnancov
   const zamestnanciRef = ref(db, "zamestnanci");
   onValue(zamestnanciRef, (snapshot) => {
-    const data = snapshot.val();
+    const data = snapshot.val() || {};
     let html = "";
     for (const u in data) {
       const d = data[u];
-      html += `<tr>
-        <td>${d.name || "(bez mena)"}</td>
-        <td>${d.chipUid || "-"}</td>
-        <td>
-          <button onclick="removeUser('${u}')">🗑️</button>
-          <button class="changePasswordBtn" data-userid="${u}">🔑</button>
-        </td>
-      </tr>`;
+      html += `<tr><td>${d.name || "(bez mena)"}</td><td>${d.chipUid || "-"}</td><td><button onclick="removeUser('${u}')">🗑️</button> <button class="changePasswordBtn" data-userid="${u}">🔑</button></td></tr>`;
     }
     document.getElementById("usersBody").innerHTML = html;
   });
 
-  // 🆕 Pridanie zamestnanca
   window.addNewUser = async () => {
     const name = document.getElementById("newUserName").value.trim();
     if (!name) return alert("Zadaj meno zamestnanca!");
-
     const newUserRef = push(ref(db, "zamestnanci"));
     await set(newUserRef, { name: name, chipUid: "" });
     document.getElementById("newUserModal").style.display = "none";
     document.getElementById("newUserName").value = "";
   };
 
-  // 🗑️ Odstránenie zamestnanca
   window.removeUser = async (id) => {
-    if (confirm("Naozaj chceš odstrániť tohto zamestnanca?")) {
-      await remove(ref(db, "zamestnanci/" + id));
-    }
+    if (confirm("Naozaj chceš odstrániť tohto zamestnanca?")) await remove(ref(db, "zamestnanci/" + id));
   };
 
-  // 🆔 Zobrazenie čakajúcich čipov
   const newChipsRef = ref(db, "newChip");
   onValue(newChipsRef, (snapshot) => {
-    const data = snapshot.val();
+    const data = snapshot.val() || {};
     const chipsDiv = document.getElementById("chipsList");
     chipsDiv.innerHTML = "";
-
     for (const chip in data) {
       const div = document.createElement("div");
-      div.classList.add("chipItem");
+      div.classList.add("new-chip");
       div.innerHTML = `${chip} <button onclick="assignChip('${chip}')">Priradiť</button>`;
       chipsDiv.appendChild(div);
     }
   });
 
-  // 🔗 Priradenie čipu zamestnancovi
   window.assignChip = async (chip) => {
-    const usersSnap = await new Promise((res) =>
-      onValue(zamestnanciRef, (s) => res(s), { onlyOnce: true })
-    );
+    const usersSnap = await new Promise((res) => onValue(zamestnanciRef, (s) => res(s), { onlyOnce: true }));
     const data = usersSnap.val();
-    const userNames = Object.entries(data)
-      .map(([id, val]) => `${id}:${val.name}`)
-      .join("\n");
-
-    const selected = prompt(
-      `Zadaj ID používateľa, ku ktorému chceš priradiť čip:\n\n${userNames}`
-    );
+    const userNames = Object.entries(data).map(([id, val]) => `${id}: ${val.name}`).join("\n");
+    const selected = prompt(`Zadaj ID používateľa, ku ktorému chceš priradiť čip:\n\n${userNames}`);
     if (!selected || !data[selected]) return alert("Neplatný výber!");
-
     await update(ref(db, "zamestnanci/" + selected), { chipUid: chip });
     await remove(ref(db, "newChip/" + chip));
     alert(`Čip ${chip} priradený k ${data[selected].name}`);
   };
 
-  // 🔒 Zmena hesla
   document.addEventListener("click", (e) => {
     if (e.target.classList.contains("changePasswordBtn")) {
       const userId = e.target.getAttribute("data-userid");
       const newPass = prompt("Zadaj nové heslo pre zamestnanca:");
-      if (newPass) {
-        update(ref(db, "zamestnanci/" + userId), { password: newPass });
-        alert("Heslo zmenené!");
-      }
+      if (newPass) update(ref(db, "zamestnanci/" + userId), { password: newPass });
     }
   });
 
-  // ❌ Zavretie modálu pre nového používateľa
   document.getElementById("closeNewUserModal").onclick = () => {
     document.getElementById("newUserModal").style.display = "none";
   };
+
+  window.showSection = (id) => {
+    document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+    document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+    event.target.classList.add("active");
+  };
 </script>
+
+</body>
+</html>
