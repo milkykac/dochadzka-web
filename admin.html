@@ -151,21 +151,25 @@ async function loadAttendance(type, elementId){
     if(u.val().chipUid && u.val().chipUid !== "-") chipToUser[u.val().chipUid] = name;
   });
 
-  onValue(ref(db,type), snap=>{
+  onValue(ref(db,type), snap => {
     let html = "<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>";
     if(snap.exists()){
-      snap.forEach(node=>{
+      snap.forEach(node => {
         const key = node.key;
-        node.forEach(log=>{
+        let userName;
+
+        if(type === "prestavky"){
+          // key je UID používateľa, najskôr zisti jeho priradený čip
+          const chipUid = usersSnap.val()[key]?.chipUid || "-";
+          const name = chipToUser[chipUid] || "(bez mena)";
+          userName = `${name} (čip: ${chipUid})`;
+        } else {
+          userName = users[key] || `(bez mena, UID: ${key})`;
+        }
+
+        node.forEach(log => {
           const val = log.val();
-          let userName;
-          if(type === "prestavky"){
-            // Ak je čip priradený, použije meno, inak UID čipu
-            userName = chipToUser[key] || `(bez mena, čip: ${key})`;
-          } else {
-            userName = users[key] || `(bez mena, UID: ${key})`;
-          }
-          html += `<tr><td>${userName}</td><td>${val.cas||"-"}</td><td>${val.typ||"-"}</td></tr>`;
+          html += `<tr><td>${userName}</td><td>${val.cas || "-"}</td><td>${val.typ || "-"}</td></tr>`;
         });
       });
     }
@@ -299,4 +303,3 @@ loadNewChips();
 </script>
 </body>
 </html>
-
