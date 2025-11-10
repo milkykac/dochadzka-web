@@ -327,6 +327,15 @@ window.exportTable = (id) => {
   a.click();
 }
 
+// --- Event listeners pre modály ---
+document.getElementById("newUserBtn").onclick = () => {
+  document.getElementById("newUserModal").style.display = "block";
+}
+
+document.getElementById("closeNewUserModal").onclick = () => {
+  document.getElementById("newUserModal").style.display = "none";
+}
+
 // Inicializácia
 loadUsers();
 loadNewChips();
