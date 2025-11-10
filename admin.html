@@ -34,9 +34,8 @@ td button:hover { background:#a71d2a; }
 .new-chip button { background:#ffc107; color:#333; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; }
 .new-chip button:hover { background:#e0a800; }
 /* MODAL */
-.modal { display:none; position:fixed; z-index:100; left:0; top:0; width:100%; height:100%; overflow:auto; background:rgba(0,0,0,0.5); }
-.modal-content{ background:#fff; margin:10% auto; padding:20px; border-radius:8px; width:90%; max-width:400px; position:relative; animation:fadeIn 0.3s; box-shadow:0 5px 15px rgba(0,0,0,0.2);}
-#closeModal,#closeNewUserModal,#closeChangePasswordModal{ position:absolute; right:10px; top:5px; font-size:22px; cursor:pointer; color:#333; }
+.modal { display:none; position:fixed; z-index:100; left:0; top:0; width:100%; height:100%; overflow:auto; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; }
+.modal-content{ background:#fff; padding:20px; border-radius:8px; width:90%; max-width:400px; position:relative; animation:fadeIn 0.3s; box-shadow:0 5px 15px rgba(0,0,0,0.2);}
 @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
 input[type=text], input[type=password], input[type=date]{ width:100%; padding:8px; margin-top:10px; margin-bottom:10px; border:1px solid #ccc; border-radius:6px; font-size:14px; }
 .modal button{ width:100%; margin-top:10px; border-radius:6px; padding:8px 0; font-weight:500; cursor:pointer; background:#007bff; color:white; transition:0.3s;}
@@ -240,12 +239,10 @@ function loadNewChips(){
   });
 }
 
-// 🔽 Úpravená funkcia na priradenie čipu
 async function assignChip(chip){
   const snap = await get(ref(db, "users"));
   if (!snap.exists()) return alert("Najprv musíš mať vytvorených používateľov!");
 
-  // zobrazí výber používateľa v select okne
   const select = document.createElement("select");
   select.style.width = "100%";
   select.style.marginTop = "10px";
@@ -282,3 +279,9 @@ async function assignChip(chip){
   document.body.appendChild(modal);
 }
 
+loadUsers();
+loadNewChips();
+</script>
+
+</body>
+</html>
