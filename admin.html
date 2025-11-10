@@ -137,7 +137,7 @@ document.querySelectorAll("nav button").forEach(btn => {
   }
 });
 
-// --- Funkcie na načítanie dát ---
+// --- Načítanie tabuliek ---
 function loadTable(path, elementId) {
   const el = document.getElementById(elementId);
   el.innerHTML = "Načítavam dáta...";
@@ -188,19 +188,30 @@ window.removeUser = async (id) => {
   try { await set(ref(db,"users/"+id), null); loadUsers(); } 
   catch(err){ console.error(err); }
 }
-async function createNewUser(name, chipUid="-") {
-  if(!name) return alert("Zadaj meno používateľa!");
-  try {
-    await push(ref(db, "users"), { name, chipUid });
-    loadUsers();
-  } catch(err){ console.error(err); alert("Nepodarilo sa pridať používateľa."); }
+
+// --- Nový používateľ ---
+document.getElementById("newUserBtn").onclick = () => {
+  document.getElementById("newUserModal").style.display = "block";
 }
-document.getElementById("createUserBtn").onclick = () => {
-  const name = document.getElementById("newUserName").value.trim();
-  createNewUser(name);
-  document.getElementById("newUserName").value = "";
+document.getElementById("closeNewUserModal").onclick = () => {
   document.getElementById("newUserModal").style.display = "none";
 }
+document.getElementById("createUserBtn").onclick = async () => {
+  const name = document.getElementById("newUserName").value.trim();
+  if(!name) return alert("Zadaj meno používateľa!");
+  try {
+    await push(ref(db, "users"), { name, chipUid: "-" });
+    document.getElementById("newUserName").value = "";
+    document.getElementById("newUserModal").style.display = "none";
+    loadUsers();
+    loadNewChips();
+  } catch(err){
+    console.error(err); 
+    alert("Nepodarilo sa pridať používateľa.");
+  }
+}
+
+// --- Zmena hesla ---
 document.getElementById("closeChangePasswordModal").onclick = () => {
   document.getElementById("changePasswordModal").style.display = "none";
 }
@@ -270,8 +281,7 @@ async function assignChip(chipUid){
   loadNewChips();
 }
 
+// --- Inicializácia ---
 loadUsers();
 loadNewChips();
 </script>
-</body>
-</html>
