@@ -30,7 +30,6 @@ body {
   align-items: center;
 }
 
-/* 🔹 Hlavička */
 header {
   width: 100%;
   background: var(--accent);
@@ -49,7 +48,6 @@ header h1 {
   font-weight: 600;
   font-size: 22px;
   margin: 0;
-  letter-spacing: 0.5px;
 }
 
 header button {
@@ -58,7 +56,6 @@ header button {
   border: none;
   border-radius: 8px;
   padding: 8px 14px;
-  margin-left: 10px;
   cursor: pointer;
   font-weight: 600;
   transition: 0.3s;
@@ -69,31 +66,6 @@ header button:hover {
   color: white;
 }
 
-/* 🔹 Navigácia */
-nav {
-  display: flex;
-  gap: 10px;
-  margin: 20px 0 0 0;
-}
-nav button {
-  background: var(--accent);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 16px;
-  cursor: pointer;
-  font-weight: 500;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.15);
-  transition: 0.3s;
-}
-nav button.active {
-  background: var(--pn);
-}
-nav button:hover {
-  background: var(--accent-dark);
-}
-
-/* 🔹 Obsah */
 .container {
   max-width: 850px;
   width: 95%;
@@ -112,14 +84,6 @@ h2 {
   font-weight: 600;
 }
 
-/* 🔹 Sekcie */
-.table-section {
-  display: none;
-  margin-top: 20px;
-}
-.table-section.active { display: block; }
-
-/* 🔹 Tabuľky */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -142,7 +106,6 @@ th {
 tr:nth-child(even) { background: rgba(0,0,0,0.03); }
 tr:hover { background: rgba(0,0,0,0.08); }
 
-/* 🔹 Statusy */
 .status-prichod, .status-odchod, .status-prestavka, .status-pn {
   font-weight: 600;
   padding: 3px 8px;
@@ -168,7 +131,6 @@ tr:hover { background: rgba(0,0,0,0.08); }
   box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
 }
 
-/* 🔹 Tlačidlá */
 button.export-btn {
   margin-top: 10px;
   background: #28a745;
@@ -203,45 +165,21 @@ button.export-btn:hover { background: #218838; }
   <button id="logoutBtn">Odhlásiť sa</button>
 </header>
 
-<nav>
-  <button data-target="attendance" class="active">Dochádzka</button>
-  <button data-target="breaks">Prestávky</button>
-  <button data-target="pn">PN</button>
-</nav>
-
 <div class="container">
   <div id="statusBox" class="status-box">Načítavam stav...</div>
 
-  <div class="table-section active" id="attendance">
-    <h2>Dochádzka</h2>
-    <button class="export-btn" onclick="exportMyData()">Export do Excel</button>
-    <div class="filter">
-      <label for="filterDate">Filtrovať podľa dátumu:</label>
-      <input type="date" id="filterDate">
-    </div>
-    <table>
-      <thead><tr><th>Čas</th><th>Stav</th></tr></thead>
-      <tbody id="myAttendanceBody"><tr><td colspan="2">Načítavam údaje...</td></tr></tbody>
-    </table>
+  <h2>Moja Dochádzka</h2>
+  <button class="export-btn" onclick="exportMyData()">Export do Excel</button>
+  <div class="filter">
+    <label for="filterDate">Filtrovať podľa dátumu:</label>
+    <input type="date" id="filterDate">
   </div>
-
-  <div class="table-section" id="breaks">
-    <h2>Prestávky</h2>
-    <button class="export-btn" onclick="exportMyData()">Export do Excel</button>
-    <table>
-      <thead><tr><th>Čas</th></tr></thead>
-      <tbody id="myBreaksBody"><tr><td>Žiadne prestávky</td></tr></tbody>
-    </table>
-  </div>
-
-  <div class="table-section" id="pn">
-    <h2>PN</h2>
-    <button class="export-btn" onclick="exportMyData()">Export do Excel</button>
-    <table>
-      <thead><tr><th>Čas</th></tr></thead>
-      <tbody id="myPNBody"><tr><td>Žiadne PN</td></tr></tbody>
-    </table>
-  </div>
+  <table>
+    <thead>
+      <tr><th>Čas</th><th>Stav</th></tr>
+    </thead>
+    <tbody id="attendanceBody"><tr><td colspan="2">Načítavam údaje...</td></tr></tbody>
+  </table>
 </div>
 
 <script type="module">
@@ -263,26 +201,13 @@ const db = getDatabase(app);
 
 const userId = localStorage.getItem("uid");
 if (!userId) { alert("Nie si prihlásený!"); window.location.href = "index.html"; }
-else if (userId === "admin") { window.location.href = "admin.html"; }
 
-const myAttendanceBody = document.getElementById("myAttendanceBody");
-const myBreaksBody = document.getElementById("myBreaksBody");
-const myPNBody = document.getElementById("myPNBody");
+const attendanceBody = document.getElementById("attendanceBody");
 const userNameEl = document.getElementById("userName");
 const filterDate = document.getElementById("filterDate");
 const statusBox = document.getElementById("statusBox");
 
 let allRecords = [];
-
-// Prepínanie sekcií
-document.querySelectorAll("nav button").forEach(btn=>{
-  btn.onclick = ()=>{
-    document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
-    btn.classList.add("active");
-    document.querySelectorAll(".table-section").forEach(sec=>sec.classList.remove("active"));
-    document.getElementById(btn.dataset.target).classList.add("active");
-  }
-});
 
 // Načítanie používateľa
 get(ref(db, "users/" + userId)).then(snapshot => {
@@ -291,48 +216,41 @@ get(ref(db, "users/" + userId)).then(snapshot => {
   userNameEl.textContent = userData.name;
   const chipUid = userData.chipUid;
 
+  onValue(ref(db, "dochadzka/" + chipUid), snap => {
+    allRecords = [];
+    attendanceBody.innerHTML = "";
+    if (!snap.exists()) { attendanceBody.innerHTML = "<tr><td colspan='2'>Žiadne záznamy</td></tr>"; return; }
+    snap.forEach(childSnap => {
+      if (childSnap.key !== "posledny_stav") allRecords.push(childSnap.val());
+    });
+    renderTable();
+  });
+
   onValue(ref(db, "dochadzka/" + chipUid + "/posledny_stav"), snap => {
     statusBox.textContent = snap.exists() ? "Posledný stav: " + snap.val() : "Žiadny stav nezaznamenaný.";
   });
-
-  onValue(ref(db, "dochadzka/" + chipUid), snap => {
-    myAttendanceBody.innerHTML = "";
-    myBreaksBody.innerHTML = "";
-    myPNBody.innerHTML = "";
-    allRecords = [];
-    if (!snap.exists()) { myAttendanceBody.innerHTML = "<tr><td colspan='2'>Žiadne záznamy</td></tr>"; return; }
-    snap.forEach(childSnap => { if (childSnap.key!=="posledny_stav") allRecords.push(childSnap.val()); });
-    renderTables();
-  });
 });
 
-function renderTables() {
-  myAttendanceBody.innerHTML = "";
-  myBreaksBody.innerHTML = "";
-  myPNBody.innerHTML = "";
-
+function renderTable() {
+  attendanceBody.innerHTML = "";
   let filtered = allRecords;
   const selectedDate = filterDate.value;
   if (selectedDate) filtered = filtered.filter(r => r.cas.startsWith(selectedDate));
 
-  const attendance = filtered.filter(r => ["PRICHOD","ODCHOD"].includes(r.stav));
-  const breaks = filtered.filter(r => r.stav === "PRESTAVKA");
-  const pn = filtered.filter(r => r.stav === "PN");
-
-  if (!attendance.length) myAttendanceBody.innerHTML = "<tr><td colspan='2'>Žiadne záznamy</td></tr>";
-  else attendance.reverse().forEach(z => {
-    const cls = z.stav==="PRICHOD"?"status-prichod":"status-odchod";
-    myAttendanceBody.innerHTML += `<tr><td>${z.cas}</td><td class="${cls}">${z.stav}</td></tr>`;
+  if (!filtered.length) attendanceBody.innerHTML = "<tr><td colspan='2'>Žiadne záznamy</td></tr>";
+  else filtered.reverse().forEach(z => {
+    let cls = "";
+    switch(z.typ.toLowerCase()) {
+      case "prichod": cls="status-prichod"; break;
+      case "odchod": cls="status-odchod"; break;
+      case "prestavka": cls="status-prestavka"; break;
+      case "pn": cls="status-pn"; break;
+    }
+    attendanceBody.innerHTML += `<tr><td>${z.cas}</td><td class="${cls}">${z.typ}</td></tr>`;
   });
-
-  if (!breaks.length) myBreaksBody.innerHTML = "<tr><td>Žiadne prestávky</td></tr>";
-  else breaks.reverse().forEach(z => myBreaksBody.innerHTML += `<tr><td class="status-prestavka">${z.cas}</td></tr>`);
-
-  if (!pn.length) myPNBody.innerHTML = "<tr><td>Žiadne PN</td></tr>";
-  else pn.reverse().forEach(z => myPNBody.innerHTML += `<tr><td class="status-pn">${z.cas}</td></tr>`);
 }
 
-filterDate.addEventListener("change", renderTables);
+filterDate.addEventListener("change", renderTable);
 
 document.getElementById("logoutBtn").addEventListener("click", () => {
   localStorage.removeItem("uid");
@@ -346,12 +264,8 @@ window.exportMyData = function() {
     ["Zamestnanec", userName],
     ["Posledný stav", statusBox.textContent],
     [],
-    ["Dochádzka (Príchod / Odchod)"], ["Čas","Stav"],
-    ...Array.from(document.querySelectorAll("#myAttendanceBody tr")).map(tr => Array.from(tr.querySelectorAll("td")).map(td=>td.textContent)),
-    [], ["Prestávky"], ["Čas"],
-    ...Array.from(document.querySelectorAll("#myBreaksBody tr")).map(tr => Array.from(tr.querySelectorAll("td")).map(td=>td.textContent)),
-    [], ["PN"], ["Čas"],
-    ...Array.from(document.querySelectorAll("#myPNBody tr")).map(tr => Array.from(tr.querySelectorAll("td")).map(td=>td.textContent))
+    ["Dochádzka"], ["Čas","Stav"],
+    ...allRecords.map(r => [r.cas, r.typ])
   ];
   const ws = XLSX.utils.aoa_to_sheet(data);
   const wb = XLSX.utils.book_new();
@@ -361,5 +275,6 @@ window.exportMyData = function() {
 </script>
 </body>
 </html>
+
 
 
