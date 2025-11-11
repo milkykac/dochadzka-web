@@ -6,7 +6,7 @@
 <title>Dochádzka</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-/* --- Všeobecné a Layout štýly --- */
+/* --- PÔVODNÉ ŠTÝLY (pred agresívnymi opravami) --- */
 body { font-family:'Poppins',sans-serif; margin:0; background:linear-gradient(135deg,#007bff,#6f42c1); min-height:100vh; color:#333; }
 header { background:#fff; padding:15px 25px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 3px 10px rgba(0,0,0,0.1); position:sticky; top:0; z-index:10; }
 h1 { color:#007bff; margin:0; font-size:22px; font-weight:700; }
@@ -15,7 +15,7 @@ button:hover { background:#0056b3; }
 nav { background:#fff; display:flex; justify-content:center; padding:10px; gap:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); position:sticky; top:70px; z-index:5; flex-wrap:wrap; }
 nav button.active { background:#6f42c1; }
 
-/* --- Prihlasovanie --- */
+/* Prihlasovanie */
 .login-container { 
     display: flex; 
     justify-content: center; 
@@ -46,9 +46,9 @@ nav button.active { background:#6f42c1; }
 .login-box button { width: 100%; padding: 12px; font-size: 16px; }
 
 
-/* --- Hlavná Dochádzková Obrazovka --- */
+/* Hlavná Dochádzková Obrazovka */
 .attendance-container {
-    display: none; /* Skryté, kým sa používateľ neprihlási */
+    display: none; 
     padding: 30px;
     background: #fff;
     margin: 25px auto;
@@ -94,47 +94,34 @@ nav button.active { background:#6f42c1; }
     background: #1e7e34; 
 }
 
-/* --- Sekcie pre záložky --- */
+/* Sekcie pre záložky */
 section { display:none; padding:30px 0 0 0; }
 section.active { display:block; }
 h2 { color:#007bff; margin-top:0; border-bottom:2px solid #007bff; padding-bottom:5px; font-weight:600; }
 .loader{ text-align:center; padding:20px; color:#007bff; font-weight:bold; }
 
-/* --- Tabuľky --- */
+/* Tabuľky */
 table { width:100%; border-collapse:collapse; margin-top:15px; border-radius:8px; overflow:hidden; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
 th,td { border:1px solid #ddd; padding:12px; text-align:left; font-size:15px; }
 th { background:#007bff; color:white; font-weight:600; }
 tr:nth-child(even){ background:#f8f9fa; }
 
 
-/* --- VIZUÁLNE ODZNAKY (KONEČNÁ OPRAVA GLITCHU) --- */
+/* PÔVODNÉ VIZUÁLNE ODZNAKY (S GLITCHOM) */
 .status-badge {
-    /* Všeobecné vynútenie */
-    font-weight: 700 !important;
-    padding: 7px 14px !important;  
-    display: inline-block !important;
-    text-align: center !important;
-    min-width: 80px !important; 
-    white-space: nowrap !important; 
-    font-size: 16px !important; 
-    border-radius: 50px !important;
-    line-height: 1.2 !important; 
-    
-    /* KĽÚČOVÁ OPRAVA (Zrušenie všetkých tieňov/glitchov) */
-    text-shadow: none !important; 
-    box-shadow: none !important; 
-    border: none !important;
-    outline: none !important;
-    -webkit-text-stroke: 0px !important; 
-    -webkit-box-shadow: none !important; 
-    -moz-box-shadow: none !important; 
+    font-weight: 700;
+    padding: 7px 14px;
+    border-radius: 50px;
+    display: inline-block;
+    text-align: center;
+    min-width: 80px; 
 }
 
 /* Farby pozadia a textu */
-.status-prichod { background: #198754 !important; color: white !important; } /* Zelená */
-.status-odchod { background: #dc3545 !important; color: white !important; } /* Červená */
-.status-prestavka { background: #ffc107 !important; color: #000000 !important; } /* Žltá, Čierny text pre dobrý kontrast */
-.status-pn { background: #6f42c1 !important; color: white !important; } /* Fialová */
+.status-prichod { background: #198754; color: white; } /* Zelená */
+.status-odchod { background: #dc3545; color: white; } /* Červená */
+.status-prestavka { background: #ffc107; color: #000000; } /* Žltá, Čierny text pre dobrý kontrast */
+.status-pn { background: #6f42c1; color: white; } /* Fialová */
 
 @media(max-width:768px){ 
     header{flex-direction:column; text-align:center; gap:10px;} 
@@ -209,6 +196,7 @@ tr:nth-child(even){ background:#f8f9fa; }
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
 import { getDatabase, ref, get, child, push, set } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
+// !!! PÔVODNÉ FIREBASE CONFIG (ak sa zmenilo, nahraďte ho) !!!
 const firebaseConfig = {
     apiKey: "AIzaSyBsYrbYtP4E5blWbKlrJ6iI9v6YPAYYp0g",
     authDomain: "maturita-395fd.firebaseapp.com",
@@ -228,10 +216,9 @@ let currentUserName = localStorage.getItem("name");
 
 // --- Inicializácia pri načítaní DOM ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Ak je UID v localStorage, preskočíme na hlavnú obrazovku
     if (currentUserId && currentUserId !== "admin") {
         showMainView(currentUserName);
-        loadUserLogs("dochadzka"); // Predvolené načítanie dochádzky
+        loadUserLogs("dochadzka"); 
     }
 
     // Nastavenie prepínania záložiek
@@ -247,13 +234,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- Funkcie pre zobrazenie/prepínanie ---
-
-window.showAdminLogin = function() {
-    // Prečistí lokálne úložisko pre zamestnanca a presmeruje na admina
-    localStorage.removeItem("uid");
-    localStorage.removeItem("name");
-    window.location.href = "admin.html";
-}
 
 function showMainView(name) {
     document.getElementById("loginView").style.display = "none";
@@ -279,7 +259,7 @@ window.login = async function() {
     }
 
     if (nameInput.toLowerCase() === 'admin') {
-        return window.location.href = "admin.html"; // Presmerovať na admin prihlásenie
+        return window.location.href = "admin.html"; 
     }
     
     try {
@@ -327,7 +307,7 @@ window.recordLog = async function(type, typ) {
         await push(ref(db, path), {
             cas: timestamp,
             typ: typ,
-            manual: false, // Zaznamenané používateľom cez aplikáciu
+            manual: false, 
         });
 
         alert(`Stav ${typ.toUpperCase()} zaznamenaný o ${timestamp}.`);
@@ -365,7 +345,7 @@ async function loadLastStatus() {
             if (normalizedType === 'prichod') statusClass = 'status-prichod';
             else if (normalizedType === 'odchod') statusClass = 'status-odchod';
             
-            // Nastavenie textu a farby v status boxe
+            // PÔVODNÉ NASTAVENIE
             lastStatusEl.innerHTML = `<span class="status-badge ${statusClass}">${rawType.toUpperCase()}</span>`;
             statusBox.style.display = "block";
         } else {
@@ -381,7 +361,7 @@ async function loadLastStatus() {
 
 // --- Funkcia načítania logov pre danú sekciu (dochadzka, prestavky, pn) ---
 window.loadUserLogs = async function(type){
-    if (!currentUserId) return; // Ak nie je prihlásený, nerobíme nič
+    if (!currentUserId) return; 
 
     const tableId = type + "Table";
     const dateId = "date" + type.charAt(0).toUpperCase() + type.slice(1);
@@ -400,7 +380,6 @@ window.loadUserLogs = async function(type){
             const logs = [];
             snapshot.forEach(logSnap => logs.push(logSnap.val()));
 
-            // Triedenie logov od najnovšieho
             logs.sort((a, b) => new Date(b.cas) - new Date(a.cas));
             
             logs.forEach(log => {
@@ -418,7 +397,6 @@ window.loadUserLogs = async function(type){
                 const isDateMatch = !dateFilter || logDate === dateFilter;
 
                 if (isDateMatch) {
-                    // Ak je to dochadzka, chceme vidieť aj typ. Ak je to prestavka/pn, vidíme len cas
                     const typeCell = (type === 'dochadzka') ? 
                         `<td><span class="status-badge ${statusClass}">${rawType.toUpperCase()}</span></td>` : 
                         '';
@@ -432,7 +410,6 @@ window.loadUserLogs = async function(type){
             });
         }
 
-        // Hlavička tabuľky
         let finalHtml = `<table><tr><th>Čas</th>${(type === 'dochadzka') ? '<th>Typ</th>' : ''}</tr>`;
         
         if (found) {
@@ -448,7 +425,7 @@ window.loadUserLogs = async function(type){
         el.innerHTML = "Chyba pri načítaní dát. Viac info v konzole (F12).";
         console.error(e);
     }
-    loadLastStatus(); // Znova načítame posledný stav po aktualizácii
+    loadLastStatus(); 
 }
 
 window.exportTable = function(id){
