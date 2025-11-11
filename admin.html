@@ -36,7 +36,7 @@ tr:nth-child(even){ background:#f8f9fa; }
 @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
 @media(max-width:768px){ header{flex-direction:column; text-align:center; gap:10px;} table{display:block; overflow-x:auto; white-space:nowrap;} }
 
-/* --- VIZUÁLNE ŠTÝLY PRE STAVY (Dochádzka) --- */
+/* --- OPRAVENÉ A VYLEPŠENÉ VIZUÁLNE ŠTÝLY PRE STAVY (Dochádzka) --- */
 .status-badge {
     font-weight: 700 !important; /* Ešte tučnejšie */
     padding: 7px 14px !important; /* Väčší padding pre viac priestoru */
@@ -45,41 +45,40 @@ tr:nth-child(even){ background:#f8f9fa; }
     text-align: center;
     min-width: 80px; /* Trochu širšie */
     white-space: nowrap;
-    text-shadow: none !important; /* KĽÚČ: Odstránenie glitchu s modrým tieňom */
+    text-shadow: none !important; /* KĽÚČ: Odstránenie modrého glitch tieňa */
     font-size: 16px !important;
 }
 
 /* PRÍCHOD: Zelená s bielym textom */
 .status-prichod { 
-    background: #198754 !important; /* Zelená */
+    background: #198754 !important; /* Zelená (Bootstrap úspech) */
     color: white !important; /* BIELA FARBA TEXTU */
 } 
 
 /* ODCHOD: Červená s bielym textom */
 .status-odchod { 
-    background: #dc3545 !important; /* Červená */
+    background: #dc3545 !important; /* Červená (Bootstrap nebezpečenstvo) */
     color: white !important; /* BIELA FARBA TEXTU */
 } 
 
 /* PRESTÁVKA: Žltá s tmavým textom */
 .status-prestávka { 
-    background: #ffc107 !important; /* Sýta žltá */
+    background: #ffc107 !important; /* Sýta žltá (Bootstrap varovanie) */
     color: #212529 !important; /* TMAVÁ FARBA TEXTU */
 }
 
 /* PN: Fialová s bielym textom */
 .status-pn { 
     background: #6f42c1 !important; /* Fialová */
-    color: white !important; /* BIELA FARBA TEXTU */
+    color: white !important;
 } 
 
-/* --- Štýly pre CHIP STATUS (Používatelia) --- */
+/* --- NOVÉ ŠTÝLY PRE POUŽÍVATEĽOV (ČIPY) --- */
 /* Aplikujeme rovnaké vizuálne vylepšenia aj na odznaky používateľov */
 .chip-status-assigned, .chip-status-unassigned {
     font-weight: 700 !important;
     padding: 7px 14px !important;
     border-radius: 50px !important;
-    display: inline-block;
     color: white !important;
     text-align: center;
     min-width: 80px;
@@ -353,7 +352,7 @@ async function loadUsers(){
           <button onclick="removeUser('${u.key}')">🗑️</button>
           <button onclick="openChangePassword('${u.key}')">🔑 Heslo</button>
         </td>
-        </tr>`;
+      </tr>`;
     });
     html+="</table>";
     el.innerHTML=html;
