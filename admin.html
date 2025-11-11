@@ -38,23 +38,57 @@ tr:nth-child(even){ background:#f8f9fa; }
 
 /* --- VIZUÁLNE ŠTÝLY PRE STAVY (Dochádzka) --- */
 .status-badge {
-    font-weight: 600;
-    padding: 3px 8px;
-    border-radius: 12px;
+    font-weight: 700 !important; /* Ešte tučnejšie */
+    padding: 7px 14px !important; /* Väčší padding pre viac priestoru */
+    border-radius: 50px !important; /* Oveľa oblejší tvar - pilulka */
     display: inline-block;
-    color: white;
     text-align: center;
-    min-width: 60px;
+    min-width: 80px; /* Trochu širšie */
     white-space: nowrap;
+    text-shadow: none !important; /* KĽÚČ: Odstránenie glitchu s modrým tieňom */
+    font-size: 16px !important;
 }
-.status-prichod { background: #28a745; } /* Zelená */
-.status-odchod { background: #dc3545; } /* Červená */
-.status-prestávka { background: #ffc107; color: #333; } /* Žltá */
-.status-pn { background: #6f42c1; } /* Fialová */
 
-/* --- NOVÉ ŠTÝLY PRE POUŽÍVATEĽOV --- */
-.chip-status-assigned { background: #28a745; } /* Zelená pre priradený čip */
-.chip-status-unassigned { background: #6c757d; } /* Šedá pre nepriradený čip */
+/* PRÍCHOD: Zelená s bielym textom */
+.status-prichod { 
+    background: #198754 !important; /* Zelená */
+    color: white !important; /* BIELA FARBA TEXTU */
+} 
+
+/* ODCHOD: Červená s bielym textom */
+.status-odchod { 
+    background: #dc3545 !important; /* Červená */
+    color: white !important; /* BIELA FARBA TEXTU */
+} 
+
+/* PRESTÁVKA: Žltá s tmavým textom */
+.status-prestávka { 
+    background: #ffc107 !important; /* Sýta žltá */
+    color: #212529 !important; /* TMAVÁ FARBA TEXTU */
+}
+
+/* PN: Fialová s bielym textom */
+.status-pn { 
+    background: #6f42c1 !important; /* Fialová */
+    color: white !important; /* BIELA FARBA TEXTU */
+} 
+
+/* --- Štýly pre CHIP STATUS (Používatelia) --- */
+/* Aplikujeme rovnaké vizuálne vylepšenia aj na odznaky používateľov */
+.chip-status-assigned, .chip-status-unassigned {
+    font-weight: 700 !important;
+    padding: 7px 14px !important;
+    border-radius: 50px !important;
+    display: inline-block;
+    color: white !important;
+    text-align: center;
+    min-width: 80px;
+    white-space: nowrap;
+    text-shadow: none !important;
+    font-size: 16px !important;
+}
+.chip-status-assigned { background: #198754 !important; } /* Zelená pre priradený čip */
+.chip-status-unassigned { background: #6c757d !important; } /* Šedá pre nepriradený čip */
 .user-actions button { 
     background: transparent; 
     border: 1px solid #ddd;
@@ -242,7 +276,7 @@ async function loadAttendance(type, tableId, dateId, searchId){
     let html="<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>";
     if(snap.exists()){
       let allLogs = [];
-      
+      
       snap.forEach(userSnap=>{
         const user = userSnap.val();
         const logsObj = user[type] || {};
@@ -263,7 +297,7 @@ async function loadAttendance(type, tableId, dateId, searchId){
           });
         }
       });
-      
+      
       // Triedenie záznamov podľa času (najnovšie prvé)
       allLogs.sort((a, b) => b.time - a.time);
 
@@ -311,7 +345,7 @@ async function loadUsers(){
       const chip = d.chipUid;
       const statusClass = chip ? 'chip-status-assigned' : 'chip-status-unassigned';
       const statusText = chip ? `Priradený (${chip})` : 'Nepriradený';
-      
+      
       html+=`<tr>
         <td>${d.name||"(bez mena)"}</td>
         <td><span class="status-badge ${statusClass}">${statusText}</span></td>
@@ -319,7 +353,7 @@ async function loadUsers(){
           <button onclick="removeUser('${u.key}')">🗑️</button>
           <button onclick="openChangePassword('${u.key}')">🔑 Heslo</button>
         </td>
-      </tr>`;
+        </tr>`;
     });
     html+="</table>";
     el.innerHTML=html;
@@ -351,8 +385,8 @@ window.assignChip = async function(chipUid){
   try{
     const snap = await get(ref(db,"users"));
     let uid=null;
-    snap.forEach(u=>{ 
-      if((u.val().name||"").toLowerCase()===name.toLowerCase()) uid=u.key; 
+    snap.forEach(u=>{ 
+      if((u.val().name||"").toLowerCase()===name.toLowerCase()) uid=u.key; 
     });
     if(!uid) return alert("Používateľ nenájdený. Musí presne sedieť s menom.");
     await set(ref(db, `users/${uid}/chipUid`), chipUid);
@@ -375,12 +409,12 @@ window.removeUser = async function(id){
     // Získanie UID čipu, ak existuje, aby sme ho mohli odstrániť z chipToUser
     const userSnap = await get(ref(db, `users/${id}`));
     const chipUid = userSnap.val()?.chipUid;
-    
+    
     await set(ref(db, `users/${id}`), null);
     if (chipUid) {
         await set(ref(db, `chipToUser/${chipUid}`), null);
     }
-    
+    
     alert("Používateľ odstránený.");
     loadUsers();
   }
@@ -389,7 +423,7 @@ window.removeUser = async function(id){
 window.openChangePassword = function(id){
   document.getElementById("changePasswordModal").style.display="flex";
   document.getElementById("changePasswordUserId").value=id;
-  document.getElementById("newPassword").value = ''; 
+  document.getElementById("newPassword").value = ''; 
 };
 
 window.closeModal = function(){ document.getElementById("changePasswordModal").style.display="none"; };
@@ -399,10 +433,10 @@ window.saveNewPassword = async function(){
   const pass=document.getElementById("newPassword").value.trim();
   if(!pass) return alert("Zadaj nové heslo.");
   if(pass.length < 4) return alert("Heslo musí mať aspoň 4 znaky.");
-  try{ 
-    await set(ref(db, `users/${id}/password`), pass); 
-    alert("Heslo zmenené."); 
-    closeModal(); 
+  try{ 
+    await set(ref(db, `users/${id}/password`), pass); 
+    alert("Heslo zmenené."); 
+    closeModal(); 
   }
   catch(e){ alert("Chyba pri zmene hesla."); console.error(e); }
 };
