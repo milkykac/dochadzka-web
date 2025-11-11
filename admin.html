@@ -38,14 +38,14 @@ tr:nth-child(even){ background:#f8f9fa; }
 
 /* --- NOVÉ/UPRAVENÉ VIZUÁLNE ŠTÝLY PRE STAVY --- */
 .status-badge {
-    font-weight: 600;
-    padding: 3px 8px;
-    border-radius: 12px;
-    display: inline-block;
-    color: white;
-    text-align: center;
-    min-width: 60px;
-    white-space: nowrap; /* Zabezpečí, že sa nezlomí */
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 12px;
+    display: inline-block;
+    color: white;
+    text-align: center;
+    min-width: 60px;
+    white-space: nowrap; /* Zabezpečí, že sa nezlomí */
 }
 .status-prichod { background: #28a745; } /* Zelená */
 .status-odchod { background: #dc3545; } /* Červená */
@@ -77,8 +77,8 @@ tr:nth-child(even){ background:#f8f9fa; }
   </div>
   <button class="export-btn" onclick="exportTable('dochadzkaTable')">Exportovať do CSV</button>
   <div style="display:flex; gap:10px; margin-top:10px;">
-    <input type="date" id="dateDochadzka" style="flex:1;">
-    <input type="text" id="searchDochadzka" placeholder="Hľadať podľa mena..." style="flex:2;">
+    <input type="date" id="dateDochadzka" style="flex:1;" onchange="loadSection('dochadzka')">
+    <input type="text" id="searchDochadzka" placeholder="Hľadať podľa mena..." style="flex:2;" oninput="loadSection('dochadzka')">
   </div>
   <div id="dochadzkaTable" class="loader">Načítavam dáta...</div>
 </section>
@@ -87,8 +87,8 @@ tr:nth-child(even){ background:#f8f9fa; }
   <h2>Prestávky</h2>
   <button class="export-btn" onclick="exportTable('prestavkyTable')">Exportovať do CSV</button>
   <div style="display:flex; gap:10px; margin-top:10px;">
-    <input type="date" id="datePrestavky" style="flex:1;">
-    <input type="text" id="searchPrestavky" placeholder="Hľadať podľa mena..." style="flex:2;">
+    <input type="date" id="datePrestavky" style="flex:1;" onchange="loadSection('prestavky')">
+    <input type="text" id="searchPrestavky" placeholder="Hľadať podľa mena..." style="flex:2;" oninput="loadSection('prestavky')">
   </div>
   <div id="prestavkyTable" class="loader">Načítavam dáta...</div>
 </section>
@@ -97,8 +97,8 @@ tr:nth-child(even){ background:#f8f9fa; }
   <h2>PN</h2>
   <button class="export-btn" onclick="exportTable('pnTable')">Exportovať do CSV</button>
   <div style="display:flex; gap:10px; margin-top:10px;">
-    <input type="date" id="datePN" style="flex:1;">
-    <input type="text" id="searchPN" placeholder="Hľadať podľa mena..." style="flex:2;">
+    <input type="date" id="datePN" style="flex:1;" onchange="loadSection('pn')">
+    <input type="text" id="searchPN" placeholder="Hľadať podľa mena..." style="flex:2;" oninput="loadSection('pn')">
   </div>
   <div id="pnTable" class="loader">Načítavam dáta...</div>
 </section>
@@ -206,12 +206,13 @@ window.addLog = async function(type, typ){
   }
 };
 
-// ----- načítanie dochádzky / prestávok / pn (UPRAVENÉ PRE FAREBNÉ ROZLÍŠENIE) -----
+// ----- načítanie dochádzky / prestávok / pn (OPRAVENÉ FILTROVANIE) -----
 async function loadAttendance(type, tableId, dateId, searchId){
   const el = document.getElementById(tableId);
   el.innerHTML="Načítavam dáta...";
   const dateFilter = document.getElementById(dateId)?.value;
-  const search = document.getElementById(searchId)?.value.toLowerCase()||"";
+  // Zabezpečenie, že search je prázdny reťazec, ak sa nič nezadalo
+  const search = document.getElementById(searchId)?.value.toLowerCase().trim() || ""; 
 
   try{
     const snap = await get(ref(db, "users"));
@@ -222,7 +223,7 @@ async function loadAttendance(type, tableId, dateId, searchId){
         const user = userSnap.val();
         // Získanie záznamov pre daný typ (dochadzka, prestavky, pn)
         const logsObj = user[type] || {};
-        
+        
         // Iterácia cez záznamy (Zachovávam pôvodný spôsob iterácie)
         Object.keys(logsObj).sort().forEach(key=>{
           const log = logsObj[key];
@@ -230,15 +231,19 @@ async function loadAttendance(type, tableId, dateId, searchId){
           const name = user.name || "(bez mena)";
           const logTyp = (log.typ||type).toLowerCase(); // Získanie typu, napr. prichod, prestávka, pn
 
-          if((!dateFilter || logDate===dateFilter) && (!search || name.toLowerCase().includes(search))){
-            
+            // OPRAVA FILTROVANIA: Filter sa aplikuje len vtedy, ak je hodnota nastavená
+            const isDateMatch = !dateFilter || logDate === dateFilter;
+            const isNameMatch = !search || name.toLowerCase().includes(search);
+            
+            if(isDateMatch && isNameMatch){ 
+            
             // Určenie CSS triedy na základe typu
             let statusClass = '';
             if (logTyp === 'prichod') statusClass = 'status-prichod';
             else if (logTyp === 'odchod') statusClass = 'status-odchod';
             else if (logTyp === 'prestávka') statusClass = 'status-prestávka';
             else if (logTyp === 'pn') statusClass = 'status-pn';
-            
+            
             // Vytvorenie HTML s farebným odznakom
             html += `<tr>
                 <td>${name}</td>
@@ -249,8 +254,8 @@ async function loadAttendance(type, tableId, dateId, searchId){
           }
         });
       });
-      if(!found) html+="<tr><td colspan='3'>Žiadne záznamy</td></tr>";
-    } else html+="<tr><td colspan='3'>Žiadne záznamy</td></tr>";
+      if(!found) html+="<tr><td colspan='3'>Žiadne záznamy podľa filtra.</td></tr>";
+    } else html+="<tr><td colspan='3'>Žiadne záznamy.</td></tr>";
     html+="</table>";
     el.innerHTML=html;
   } catch(e){ el.innerHTML="Chyba pri načítaní dát."; console.error(e); }
@@ -373,10 +378,21 @@ window.addUser = async function() {
 
 function loadSection(id){
   if(id==="dochadzka") loadAttendance("dochadzka","dochadzkaTable","dateDochadzka","searchDochadzka");
-  if(id==="prestavky") loadAttendance("prestavky","prestavkyTable","datePrestavky","searchPrestavky");
-  if(id==="pn") loadAttendance("pn","pnTable","datePN","searchPN");
-  if(id==="pouzivatelia"){ loadUsers(); loadNewChips(); }
+  else if(id==="prestavky") loadAttendance("prestavky","prestavkyTable","datePrestavky","searchPrestavky");
+  else if(id==="pn") loadAttendance("pn","pnTable","datePN","searchPN");
+  else if(id==="pouzivatelia"){ loadUsers(); loadNewChips(); }
 }
+
+// Pridanie listenerov pre vyhľadávacie a dátumové polia (pre automatické obnovenie)
+document.getElementById("dateDochadzka").addEventListener("change", () => loadSection('dochadzka'));
+document.getElementById("searchDochadzka").addEventListener("input", () => loadSection('dochadzka'));
+
+document.getElementById("datePrestavky").addEventListener("change", () => loadSection('prestavky'));
+document.getElementById("searchPrestavky").addEventListener("input", () => loadSection('prestavky'));
+
+document.getElementById("datePN").addEventListener("change", () => loadSection('pn'));
+document.getElementById("searchPN").addEventListener("input", () => loadSection('pn'));
+
 
 loadSection("dochadzka");
 </script>
