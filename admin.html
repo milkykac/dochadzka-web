@@ -72,24 +72,27 @@
         th { background:#6f42c1; color:white; font-weight:600; }
         tr:nth-child(even){ background:#f8f9fa; }
 
-        /* --- VIZUÁLNE ODZNAKY (OPRAVA GLITCHU) --- */
+        /* --- VIZUÁLNE ODZNAKY (KONEČNÁ OPRAVA GLITCHU) --- */
         .status-badge {
             /* Všeobecné vynútenie */
             font-weight: 700 !important;
-            padding: 7px 14px !important; 
+            padding: 7px 14px !important;  
             display: inline-block !important;
             text-align: center !important;
-            min-width: 80px !important; 
-            white-space: nowrap !important; 
-            font-size: 16px !important; 
+            min-width: 80px !important; 
+            white-space: nowrap !important; 
+            font-size: 16px !important; 
             border-radius: 50px !important;
-            line-height: 1.2 !important; 
-
-            /* KĽÚČOVÁ ZÁRUKA OPRAVY GLITCHU */
-            text-shadow: none !important;  
-            box-shadow: none !important;  
-            border: none !important; 
-            -webkit-text-stroke: 0px !important; /* Pre Chrome/Safari */
+            line-height: 1.2 !important; 
+            
+            /* KĽÚČOVÁ OPRAVA (Zrušenie všetkých tieňov/glitchov) */
+            text-shadow: none !important; 
+            box-shadow: none !important; 
+            border: none !important;
+            outline: none !important;
+            -webkit-text-stroke: 0px !important; 
+            -webkit-box-shadow: none !important; 
+            -moz-box-shadow: none !important; 
         }
 
         /* Farby pozadia a textu */
@@ -195,6 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadAllUsers(); // Načítanie všetkých používateľov pre select boxy
         loadAllLogs();  // Predvolené načítanie všetkých logov
     } else {
+        // Ak nie je prihlásený, zobrazí login formulár
         document.getElementById("loginView").style.display = "flex";
     }
 });
@@ -555,4 +559,3 @@ window.exportAllLogs = function(){
 
 </body>
 </html>
-
