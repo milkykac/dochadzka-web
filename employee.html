@@ -106,11 +106,12 @@ th,td { border:1px solid #ddd; padding:12px; text-align:left; font-size:15px; }
 th { background:#007bff; color:white; font-weight:600; }
 tr:nth-child(even){ background:#f8f9fa; }
 
-/* --- VIZUÁLNE ODZNAKY (OPRAVA GLITCHU) --- */
+
+/* --- VIZUÁLNE ODZNAKY (KONEČNÁ OPRAVA GLITCHU) --- */
 .status-badge {
     /* Všeobecné vynútenie */
     font-weight: 700 !important;
-    padding: 7px 14px !important; 
+    padding: 7px 14px !important;  
     display: inline-block !important;
     text-align: center !important;
     min-width: 80px !important; 
@@ -118,12 +119,15 @@ tr:nth-child(even){ background:#f8f9fa; }
     font-size: 16px !important; 
     border-radius: 50px !important;
     line-height: 1.2 !important; 
-
-    /* KĽÚČOVÁ ZÁRUKA OPRAVY GLITCHU */
-    text-shadow: none !important;  
-    box-shadow: none !important;  
-    border: none !important; 
-    -webkit-text-stroke: 0px !important; /* Pre Chrome/Safari */
+    
+    /* KĽÚČOVÁ OPRAVA (Zrušenie všetkých tieňov/glitchov) */
+    text-shadow: none !important; 
+    box-shadow: none !important; 
+    border: none !important;
+    outline: none !important;
+    -webkit-text-stroke: 0px !important; 
+    -webkit-box-shadow: none !important; 
+    -moz-box-shadow: none !important; 
 }
 
 /* Farby pozadia a textu */
@@ -149,7 +153,7 @@ tr:nth-child(even){ background:#f8f9fa; }
         <input type="password" id="loginPassword" placeholder="Heslo">
         <button onclick="login()">Prihlásiť sa</button>
         <div style="margin-top: 15px;">
-            <a href="#" onclick="showAdminLogin()" style="color: #007bff; text-decoration: none;">Prihlásiť sa ako Admin</a>
+            <a href="admin.html" style="color: #007bff; text-decoration: none;">Prihlásiť sa ako Admin</a>
         </div>
     </div>
 </div>
@@ -245,7 +249,9 @@ document.addEventListener('DOMContentLoaded', () => {
 // --- Funkcie pre zobrazenie/prepínanie ---
 
 window.showAdminLogin = function() {
-    // Navigácia na admin panel (ak existuje)
+    // Prečistí lokálne úložisko pre zamestnanca a presmeruje na admina
+    localStorage.removeItem("uid");
+    localStorage.removeItem("name");
     window.location.href = "admin.html";
 }
 
@@ -273,7 +279,7 @@ window.login = async function() {
     }
 
     if (nameInput.toLowerCase() === 'admin') {
-        return alert("Pre admin prihlásenie klikni na 'Prihlásiť sa ako Admin' dole.");
+        return window.location.href = "admin.html"; // Presmerovať na admin prihlásenie
     }
     
     try {
@@ -363,7 +369,7 @@ async function loadLastStatus() {
             lastStatusEl.innerHTML = `<span class="status-badge ${statusClass}">${rawType.toUpperCase()}</span>`;
             statusBox.style.display = "block";
         } else {
-             lastStatusEl.innerHTML = `Žiadny stav nezaznamenaný.`;
+             lastStatusEl.innerHTML = `<span class="status-badge status-pn">ŽIADNY STAV</span>`;
              statusBox.style.display = "block";
         }
 
@@ -412,9 +418,14 @@ window.loadUserLogs = async function(type){
                 const isDateMatch = !dateFilter || logDate === dateFilter;
 
                 if (isDateMatch) {
+                    // Ak je to dochadzka, chceme vidieť aj typ. Ak je to prestavka/pn, vidíme len cas
+                    const typeCell = (type === 'dochadzka') ? 
+                        `<td><span class="status-badge ${statusClass}">${rawType.toUpperCase()}</span></td>` : 
+                        '';
+
                     tableBodyHtml += `<tr>
                         <td>${logTime}</td>
-                        <td><span class="status-badge ${statusClass}">${rawType.toUpperCase()}</span></td>
+                        ${typeCell}
                     </tr>`;
                     found = true;
                 }
@@ -422,12 +433,12 @@ window.loadUserLogs = async function(type){
         }
 
         // Hlavička tabuľky
-        let finalHtml = "<table><tr><th>Čas</th><th>Typ</th></tr>";
+        let finalHtml = `<table><tr><th>Čas</th>${(type === 'dochadzka') ? '<th>Typ</th>' : ''}</tr>`;
         
         if (found) {
             finalHtml += tableBodyHtml;
         } else {
-            finalHtml += "<tr><td colspan='2'>Žiadne záznamy v tomto filtri.</td></tr>";
+            finalHtml += `<tr><td colspan='${(type === 'dochadzka') ? 2 : 1}'>Žiadne záznamy v tomto filtri.</td></tr>`;
         }
         finalHtml += "</table>";
         
@@ -448,7 +459,7 @@ window.exportTable = function(id){
     if(!table) return alert("Žiadne dáta na export.");
     let csv=[];
     table.querySelectorAll("tr").forEach(row=>{
-        const cols=[...row.querySelectorAll("th,td")].map(td=>`"${td.innerText.trim()}"`); 
+        const cols=[...row.querySelectorAll("th,td")].map(td=>`"${td.innerText.trim().replace(/(\r\n|\n|\r)/gm, "")}"`); 
         csv.push(cols.join(","));
     });
     const blob=new Blob([csv.join("\n")],{type:"text/csv;charset=utf-8;"}); 
@@ -462,4 +473,3 @@ window.exportTable = function(id){
 
 </body>
 </html>
-
