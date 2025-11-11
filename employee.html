@@ -43,29 +43,21 @@ header {
   z-index: 100;
   box-shadow: 0 4px 15px rgba(0,0,0,0.15);
 }
-header h1 { font-weight: 600; font-size: 22px; margin: 0; letter-spacing: 0.5px; }
+
+header h1 { font-weight: 600; font-size: 22px; margin: 0; }
 header button {
   background: #fff;
   color: var(--accent);
   border: none;
   border-radius: 8px;
   padding: 8px 14px;
-  margin-left: 10px;
   cursor: pointer;
   font-weight: 600;
   transition: 0.3s;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.15);
 }
-header button:hover {
-  background: var(--accent-dark);
-  color: white;
-}
+header button:hover { background: var(--accent-dark); color: white; }
 
-nav {
-  display: flex;
-  gap: 10px;
-  margin: 20px 0 0 0;
-}
+nav { display: flex; gap: 10px; margin: 20px 0 0 0; }
 nav button {
   background: var(--accent);
   color: white;
@@ -90,13 +82,7 @@ nav button:hover { background: var(--accent-dark); }
   box-shadow: 0 6px 25px rgba(0,0,0,0.1);
 }
 
-h2 {
-  color: var(--accent);
-  border-bottom: 3px solid var(--accent);
-  padding-bottom: 6px;
-  margin-top: 0;
-  font-weight: 600;
-}
+h2 { color: var(--accent); border-bottom: 3px solid var(--accent); padding-bottom: 6px; margin-top: 0; font-weight: 600; }
 
 .table-section { display: none; margin-top: 20px; }
 .table-section.active { display: block; }
@@ -157,8 +143,6 @@ button.export-btn:hover { background: #218838; }
 .filter { margin: 10px 0 0 0; }
 .filter input { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); width: 160px; }
 </style>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -178,7 +162,7 @@ button.export-btn:hover { background: #218838; }
 
   <div class="table-section active" id="attendance">
     <h2>Dochádzka</h2>
-    <button class="export-btn" onclick="exportMyData()">Export do Excel</button>
+    <button class="export-btn" onclick="exportMyData()">Export do CSV</button>
     <div class="filter">
       <label for="filterDate">Filtrovať podľa dátumu:</label>
       <input type="date" id="filterDate">
@@ -191,7 +175,7 @@ button.export-btn:hover { background: #218838; }
 
   <div class="table-section" id="breaks">
     <h2>Prestávky</h2>
-    <button class="export-btn" onclick="exportMyData()">Export do Excel</button>
+    <button class="export-btn" onclick="exportMyData()">Export do CSV</button>
     <table>
       <thead><tr><th>Čas</th></tr></thead>
       <tbody id="myBreaksBody"><tr><td>Žiadne prestávky</td></tr></tbody>
@@ -200,7 +184,7 @@ button.export-btn:hover { background: #218838; }
 
   <div class="table-section" id="pn">
     <h2>PN</h2>
-    <button class="export-btn" onclick="exportMyData()">Export do Excel</button>
+    <button class="export-btn" onclick="exportMyData()">Export do CSV</button>
     <table>
       <thead><tr><th>Čas</th></tr></thead>
       <tbody id="myPNBody"><tr><td>Žiadne PN</td></tr></tbody>
@@ -210,7 +194,7 @@ button.export-btn:hover { background: #218838; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBsYrbYtP4E5blWbKlrJ6iI9v6YPAYp0g",
@@ -238,7 +222,6 @@ const statusBox = document.getElementById("statusBox");
 
 let allRecords = [];
 
-// Prepínanie sekcií
 document.querySelectorAll("nav button").forEach(btn=>{
   btn.onclick = ()=>{
     document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
@@ -248,32 +231,24 @@ document.querySelectorAll("nav button").forEach(btn=>{
   }
 });
 
-// Načítanie používateľa
-get(ref(db, "users/" + userId)).then(snapshot => {
-  if (!snapshot.exists()) { alert("Používateľ nenájdený!"); window.location.href = "index.html"; return; }
-  const userData = snapshot.val();
+onValue(ref(db, "users/" + userId), snap => {
+  if (!snap.exists()) { alert("Používateľ nenájdený!"); window.location.href = "index.html"; return; }
+  const userData = snap.val();
   userNameEl.textContent = userData.name;
   const chipUid = userData.chipUid;
 
-  onValue(ref(db, "dochadzka/" + chipUid), snap => {
-    myAttendanceBody.innerHTML = "";
-    myBreaksBody.innerHTML = "";
-    myPNBody.innerHTML = "";
+  onValue(ref(db, "dochadzka"), snapshot => {
     allRecords = [];
-
-    if (!snap.exists()) {
-      myAttendanceBody.innerHTML = "<tr><td colspan='2'>Žiadne záznamy</td></tr>";
-      statusBox.textContent = "Žiadny stav nezaznamenaný.";
-      return;
-    }
-
-    snap.forEach(childSnap => {
-      if (childSnap.key !== "posledny_stav") allRecords.push(childSnap.val());
+    snapshot.forEach(childSnap => {
+      const val = childSnap.val();
+      if ((val.meno && val.meno === userData.name) || (val.chipUid && val.chipUid === chipUid)) {
+        allRecords.push(val);
+      }
     });
 
     if (allRecords.length) {
       const latest = allRecords.reduce((prev, curr) => (prev.cas > curr.cas ? prev : curr));
-      statusBox.textContent = "Posledný stav: " + latest.typ.toUpperCase();
+      statusBox.textContent = "Posledný stav: " + (latest.typ ? latest.typ.toUpperCase() : "NEZNÁMY");
     } else {
       statusBox.textContent = "Žiadny stav nezaznamenaný.";
     }
@@ -298,7 +273,7 @@ function renderTables() {
   if (!attendance.length) myAttendanceBody.innerHTML = "<tr><td colspan='2'>Žiadne záznamy</td></tr>";
   else attendance.reverse().forEach(z => {
     const cls = z.typ==="prichod"?"status-prichod":"status-odchod";
-    myAttendanceBody.innerHTML += `<tr><td>${z.cas}</td><td class="${cls}">${z.typ}</td></tr>`;
+    myAttendanceBody.innerHTML += `<tr><td>${z.cas}</td><td class="${cls}">${z.typ.toUpperCase()}</td></tr>`;
   });
 
   if (!breaks.length) myBreaksBody.innerHTML = "<tr><td>Žiadne prestávky</td></tr>";
@@ -315,25 +290,36 @@ document.getElementById("logoutBtn").addEventListener("click", () => {
   window.location.href = "index.html";
 });
 
-// Export do Excelu
 window.exportMyData = function() {
-  const userName = userNameEl.textContent;
-  const data = [
-    ["Zamestnanec", userName],
-    ["Posledný stav", statusBox.textContent],
-    [],
-    ["Dochádzka (Príchod / Odchod)"], ["Čas","Stav"],
-    ...Array.from(document.querySelectorAll("#myAttendanceBody tr")).map(tr => Array.from(tr.querySelectorAll("td")).map(td=>td.textContent)),
-    [], ["Prestávky"], ["Čas"],
-    ...Array.from(document.querySelectorAll("#myBreaksBody tr")).map(tr => Array.from(tr.querySelectorAll("td")).map(td=>td.textContent)),
-    [], ["PN"], ["Čas"],
-    ...Array.from(document.querySelectorAll("#myPNBody tr")).map(tr => Array.from(tr.querySelectorAll("td")).map(td=>td.textContent))
+  let csvContent = "data:text/csv;charset=utf-8,";
+  csvContent += `Zamestnanec,${userNameEl.textContent}\r\n`;
+  csvContent += `Posledný stav,${statusBox.textContent}\r\n\r\n`;
+
+  const sections = [
+    { name: "Dochádzka", rows: document.querySelectorAll("#myAttendanceBody tr") },
+    { name: "Prestávky", rows: document.querySelectorAll("#myBreaksBody tr") },
+    { name: "PN", rows: document.querySelectorAll("#myPNBody tr") }
   ];
-  const ws = XLSX.utils.aoa_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Moja Dochádzka");
-  XLSX.writeFile(wb, `Dochadzka_${userName}.xlsx`);
+
+  sections.forEach(sec => {
+    csvContent += `\r\n${sec.name}\r\n`;
+    sec.rows.forEach(tr => {
+      const row = Array.from(tr.querySelectorAll("td")).map(td => `"${td.textContent}"`).join(",");
+      csvContent += row + "\r\n";
+    });
+  });
+
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", `Dochadzka_${userNameEl.textContent}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 </script>
+
 </body>
 </html>
+
+
