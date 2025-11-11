@@ -43,14 +43,7 @@ header {
   z-index: 100;
   box-shadow: 0 4px 15px rgba(0,0,0,0.15);
 }
-
-header h1 {
-  font-weight: 600;
-  font-size: 22px;
-  margin: 0;
-  letter-spacing: 0.5px;
-}
-
+header h1 { font-weight: 600; font-size: 22px; margin: 0; letter-spacing: 0.5px; }
 header button {
   background: #fff;
   color: var(--accent);
@@ -84,12 +77,8 @@ nav button {
   box-shadow: 0 3px 6px rgba(0,0,0,0.15);
   transition: 0.3s;
 }
-nav button.active {
-  background: var(--pn);
-}
-nav button:hover {
-  background: var(--accent-dark);
-}
+nav button.active { background: var(--pn); }
+nav button:hover { background: var(--accent-dark); }
 
 .container {
   max-width: 850px;
@@ -109,10 +98,7 @@ h2 {
   font-weight: 600;
 }
 
-.table-section {
-  display: none;
-  margin-top: 20px;
-}
+.table-section { display: none; margin-top: 20px; }
 .table-section.active { display: block; }
 
 table {
@@ -124,16 +110,8 @@ table {
   overflow: hidden;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
-th, td {
-  border: 1px solid var(--border);
-  padding: 10px;
-  text-align: center;
-}
-th {
-  background: var(--accent);
-  color: white;
-  font-weight: 500;
-}
+th, td { border: 1px solid var(--border); padding: 10px; text-align: center; }
+th { background: var(--accent); color: white; font-weight: 500; }
 tr:nth-child(even) { background: rgba(0,0,0,0.03); }
 tr:hover { background: rgba(0,0,0,0.08); }
 
@@ -176,15 +154,8 @@ button.export-btn {
 }
 button.export-btn:hover { background: #218838; }
 
-.filter {
-  margin: 10px 0 0 0;
-}
-.filter input {
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  width: 160px;
-}
+.filter { margin: 10px 0 0 0; }
+.filter input { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); width: 160px; }
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -203,7 +174,7 @@ button.export-btn:hover { background: #218838; }
 </nav>
 
 <div class="container">
-  <div class="status-box" id="statusBox">Načítavam stav...</div>
+  <div id="statusBox" class="status-box">Načítavam stav...</div>
 
   <div class="table-section active" id="attendance">
     <h2>Dochádzka</h2>
@@ -251,7 +222,6 @@ const firebaseConfig = {
   appId: "1:754745500563:web:74fd4d6ab5765ee788be66",
   measurementId: "G-F6KQQS48GD"
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
@@ -268,6 +238,7 @@ const statusBox = document.getElementById("statusBox");
 
 let allRecords = [];
 
+// Prepínanie sekcií
 document.querySelectorAll("nav button").forEach(btn=>{
   btn.onclick = ()=>{
     document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
@@ -277,32 +248,37 @@ document.querySelectorAll("nav button").forEach(btn=>{
   }
 });
 
-// Načítanie používateľa a záznamov
-get(ref(db, "users/" + userId)).then(userSnap => {
-  if (!userSnap.exists()) { alert("Používateľ nenájdený!"); window.location.href = "index.html"; return; }
-  const userData = userSnap.val();
-  const chipUid = userData.chipUid;
+// Načítanie používateľa
+get(ref(db, "users/" + userId)).then(snapshot => {
+  if (!snapshot.exists()) { alert("Používateľ nenájdený!"); window.location.href = "index.html"; return; }
+  const userData = snapshot.val();
   userNameEl.textContent = userData.name;
+  const chipUid = userData.chipUid;
 
-  onValue(ref(db, "dochadzka"), snap => {
+  onValue(ref(db, "dochadzka/" + chipUid), snap => {
+    myAttendanceBody.innerHTML = "";
+    myBreaksBody.innerHTML = "";
+    myPNBody.innerHTML = "";
     allRecords = [];
+
+    if (!snap.exists()) {
+      myAttendanceBody.innerHTML = "<tr><td colspan='2'>Žiadne záznamy</td></tr>";
+      statusBox.textContent = "Žiadny stav nezaznamenaný.";
+      return;
+    }
+
     snap.forEach(childSnap => {
-      const record = childSnap.val();
-      if (record.chipUid === chipUid) {
-        allRecords.push(record);
-      }
+      if (childSnap.key !== "posledny_stav") allRecords.push(childSnap.val());
     });
 
-    if (!allRecords.length) {
-      myAttendanceBody.innerHTML = "<tr><td colspan='2'>Žiadne záznamy</td></tr>";
-      myBreaksBody.innerHTML = "<tr><td>Žiadne prestávky</td></tr>";
-      myPNBody.innerHTML = "<tr><td>Žiadne PN</td></tr>";
-      statusBox.textContent = "Žiadny stav nezaznamenaný.";
+    if (allRecords.length) {
+      const latest = allRecords.reduce((prev, curr) => (prev.cas > curr.cas ? prev : curr));
+      statusBox.textContent = "Posledný stav: " + latest.typ.toUpperCase();
     } else {
-      renderTables();
-      const last = allRecords[allRecords.length-1];
-      statusBox.textContent = "Posledný stav: " + (last.typ.toUpperCase() || "Neznámy");
+      statusBox.textContent = "Žiadny stav nezaznamenaný.";
     }
+
+    renderTables();
   });
 });
 
@@ -315,13 +291,13 @@ function renderTables() {
   const selectedDate = filterDate.value;
   if (selectedDate) filtered = filtered.filter(r => r.cas.startsWith(selectedDate));
 
-  const attendance = filtered.filter(r => ["prichod","odchod"].includes(r.typ.toLowerCase()));
-  const breaks = filtered.filter(r => r.typ.toLowerCase() === "prestavka");
-  const pn = filtered.filter(r => r.typ.toLowerCase() === "pn");
+  const attendance = filtered.filter(r => ["prichod","odchod"].includes(r.typ));
+  const breaks = filtered.filter(r => r.typ === "prestavka");
+  const pn = filtered.filter(r => r.typ === "pn");
 
   if (!attendance.length) myAttendanceBody.innerHTML = "<tr><td colspan='2'>Žiadne záznamy</td></tr>";
   else attendance.reverse().forEach(z => {
-    const cls = z.typ.toLowerCase()==="prichod"?"status-prichod":"status-odchod";
+    const cls = z.typ==="prichod"?"status-prichod":"status-odchod";
     myAttendanceBody.innerHTML += `<tr><td>${z.cas}</td><td class="${cls}">${z.typ}</td></tr>`;
   });
 
@@ -339,6 +315,7 @@ document.getElementById("logoutBtn").addEventListener("click", () => {
   window.location.href = "index.html";
 });
 
+// Export do Excelu
 window.exportMyData = function() {
   const userName = userNameEl.textContent;
   const data = [
