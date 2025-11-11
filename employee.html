@@ -18,7 +18,6 @@
   --prestavka: #ffc107;
   --pn: #6f42c1;
 }
-
 body {
   font-family: 'Poppins', sans-serif;
   margin: 0;
@@ -29,8 +28,6 @@ body {
   flex-direction: column;
   align-items: center;
 }
-
-/* Hlavička */
 header {
   width: 100%;
   background: var(--accent);
@@ -56,8 +53,6 @@ header button {
   transition: 0.3s;
 }
 header button:hover { background: var(--accent-dark); color: white; }
-
-/* Navigácia */
 nav { display: flex; gap: 10px; margin: 20px 0 0 0; }
 nav button {
   background: var(--accent);
@@ -72,8 +67,6 @@ nav button {
 }
 nav button.active { background: var(--pn); }
 nav button:hover { background: var(--accent-dark); }
-
-/* Obsah */
 .container {
   max-width: 850px;
   width: 95%;
@@ -83,7 +76,6 @@ nav button:hover { background: var(--accent-dark); }
   border-radius: 16px;
   box-shadow: 0 6px 25px rgba(0,0,0,0.1);
 }
-
 h2 {
   color: var(--accent);
   border-bottom: 3px solid var(--accent);
@@ -91,12 +83,8 @@ h2 {
   margin-top: 0;
   font-weight: 600;
 }
-
-/* Sekcie */
 .table-section { display: none; margin-top: 20px; }
 .table-section.active { display: block; }
-
-/* Tabuľky */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -110,8 +98,6 @@ th, td { border: 1px solid var(--border); padding: 10px; text-align: center; }
 th { background: var(--accent); color: white; font-weight: 500; }
 tr:nth-child(even) { background: rgba(0,0,0,0.03); }
 tr:hover { background: rgba(0,0,0,0.08); }
-
-/* Statusy */
 .status-prichod, .status-odchod, .status-prestavka, .status-pn {
   font-weight: 600;
   padding: 3px 8px;
@@ -123,7 +109,6 @@ tr:hover { background: rgba(0,0,0,0.08); }
 .status-odchod { background: var(--odchod); }
 .status-prestavka { background: var(--prestavka); }
 .status-pn { background: var(--pn); }
-
 .status-box {
   margin: 10px 0 20px;
   font-weight: 600;
@@ -136,8 +121,6 @@ tr:hover { background: rgba(0,0,0,0.08); }
   border: 1px solid var(--accent);
   box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
 }
-
-/* Tlačidlá */
 button.export-btn {
   margin-top: 10px;
   background: #28a745;
@@ -151,11 +134,9 @@ button.export-btn {
   transition: 0.3s;
 }
 button.export-btn:hover { background: #218838; }
-
 .filter { margin: 10px 0 0 0; }
 .filter input { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); width: 160px; }
 </style>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -225,8 +206,8 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 const userId = localStorage.getItem("uid");
-if (!userId) { alert("Nie si prihlásený!"); window.location.href = "index.html"; }
-else if (userId === "admin") { window.location.href = "admin.html"; }
+if(!userId) { alert("Nie si prihlásený!"); window.location.href="index.html"; }
+else if(userId === "admin") { window.location.href="admin.html"; }
 
 const myAttendanceBody = document.getElementById("myAttendanceBody");
 const myBreaksBody = document.getElementById("myBreaksBody");
@@ -247,22 +228,23 @@ document.querySelectorAll("nav button").forEach(btn=>{
   }
 });
 
-// Načítanie používateľa
-get(ref(db, "users/" + userId)).then(snapshot => {
-  if (!snapshot.exists()) { alert("Používateľ nenájdený!"); window.location.href = "index.html"; return; }
+// Načítanie používateľa a jeho UID čipu
+get(ref(db, "users/" + userId)).then(snapshot=>{
+  if(!snapshot.exists()){ alert("Používateľ nenájdený!"); window.location.href="index.html"; return; }
   const userData = snapshot.val();
   userNameEl.textContent = userData.name;
+  const chipUid = userData.chipUid;
 
-  // Načítanie všetkých záznamov dochádzky a filtrovanie podľa mena
-  get(ref(db, "dochadzka")).then(snap => {
+  // Načítanie záznamov podľa chipUid
+  get(ref(db, "dochadzka/" + chipUid)).then(snap=>{
     allRecords = [];
-    snap.forEach(childSnap => {
+    snap.forEach(childSnap=>{
       const rec = childSnap.val();
-      if(rec.meno === userData.name) {
+      if(childSnap.key !== "posledny_stav") {
         allRecords.push({cas: rec.cas, stav: rec.typ.toUpperCase()});
       }
     });
-    allRecords.sort((a,b)=> new Date(b.cas) - new Date(a.cas));
+    allRecords.sort((a,b)=> new Date(b.cas)-new Date(a.cas));
     if(allRecords.length>0) statusBox.textContent = "Posledný stav: " + allRecords[0].stav;
     else statusBox.textContent = "Žiadny stav nezaznamenaný.";
     renderTables();
@@ -289,17 +271,17 @@ function renderTables() {
   });
 
   if(!breaks.length) myBreaksBody.innerHTML="<tr><td>Žiadne prestávky</td></tr>";
-  else breaks.reverse().forEach(z=> myBreaksBody.innerHTML += `<tr><td class="status-prestavka">${z.cas}</td></tr>`);
+  else breaks.reverse().forEach(z=>myBreaksBody.innerHTML += `<tr><td class="status-prestavka">${z.cas}</td></tr>`);
 
   if(!pn.length) myPNBody.innerHTML="<tr><td>Žiadne PN</td></tr>";
-  else pn.reverse().forEach(z=> myPNBody.innerHTML += `<tr><td class="status-pn">${z.cas}</td></tr>`);
+  else pn.reverse().forEach(z=>myPNBody.innerHTML += `<tr><td class="status-pn">${z.cas}</td></tr>`);
 }
 
 filterDate.addEventListener("change", renderTables);
 
 document.getElementById("logoutBtn").addEventListener("click", ()=>{
   localStorage.removeItem("uid");
-  window.location.href = "index.html";
+  window.location.href="index.html";
 });
 
 // Export do Excelu
@@ -324,8 +306,3 @@ window.exportMyData = function() {
 </script>
 </body>
 </html>
-
-
-
-
-
