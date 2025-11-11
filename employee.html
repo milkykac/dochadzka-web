@@ -3,449 +3,379 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dochádzka</title>
+<title>Dochádzka – Zamestnanec</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-/* --- PÔVODNÉ ŠTÝLY --- */
-body { font-family:'Poppins',sans-serif; margin:0; background:linear-gradient(135deg,#007bff,#6f42c1); min-height:100vh; color:#333; }
-header { background:#fff; padding:15px 25px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 3px 10px rgba(0,0,0,0.1); position:sticky; top:0; z-index:10; }
-h1 { color:#007bff; margin:0; font-size:22px; font-weight:700; }
-button { background:#007bff; border:none; color:white; padding:10px 16px; border-radius:8px; cursor:pointer; font-size:15px; font-weight:600; transition:0.3s; }
-button:hover { background:#0056b3; }
-nav { background:#fff; display:flex; justify-content:center; padding:10px; gap:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); position:sticky; top:70px; z-index:5; flex-wrap:wrap; }
+/* --- Štýly --- */
+body { font-family:'Poppins',sans-serif; margin:0; background:linear-gradient(135deg,#f4f5f7,#e0e0e0); min-height:100vh; color:#333; display:flex; flex-direction:column; align-items:center;}
+header { background:#007bff; padding:15px 25px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 3px 10px rgba(0,0,0,0.1); width:100%; color:white; position:sticky; top:0; z-index:10; }
+h1 { margin:0; font-size:22px; font-weight:700; }
+header button { background:#fff; border:none; color:#007bff; padding:8px 14px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; transition:0.3s; }
+header button:hover { background:#e2e6ea; }
+
+nav { background:#fff; display:flex; justify-content:center; padding:10px; gap:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); position:sticky; top:65px; z-index:5; flex-wrap:wrap; width:100%; max-width:1100px; border-radius:0 0 12px 12px; }
+nav button { background:#007bff; border:none; color:white; padding:8px 14px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; transition:0.3s; }
 nav button.active { background:#6f42c1; }
+nav button:hover { background:#0056b3; }
 
-/* Prihlasovanie */
-.login-container { 
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    min-height: 90vh; 
-    padding: 20px;
-}
-.login-box {
-    background: #fff;
-    padding: 40px;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    max-width: 400px;
-    width: 100%;
-    text-align: center;
-}
-.login-box h2 { color: #007bff; margin-bottom: 25px; font-weight: 600; border: none; }
-.login-box input[type="text"], 
-.login-box input[type="password"] {
-    width: 100%;
-    padding: 12px;
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    box-sizing: border-box;
-    font-size: 16px;
-}
-.login-box button { width: 100%; padding: 12px; font-size: 16px; }
-
-
-/* Hlavná Dochádzková Obrazovka */
-.attendance-container {
-    display: none; 
-    padding: 30px;
-    background: #fff;
-    margin: 25px auto;
-    border-radius: 12px;
-    max-width: 1100px;
-    width: 95%;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-}
-.attendance-actions {
-    display: flex;
-    justify-content: space-around;
-    gap: 15px;
-    margin: 20px 0;
-}
-.attendance-actions button {
-    flex: 1;
-    padding: 20px 10px;
-    font-size: 18px;
-    font-weight: 700;
-}
-#statusBox {
-    background: #e9ecef;
-    padding: 15px;
-    margin-bottom: 20px;
-    border-radius: 8px;
-    text-align: center;
-    font-size: 16px;
-    font-weight: 600;
-    color: #333;
-    display: none;
-}
-#lastStatus {
-    font-weight: 700;
-    margin-left: 10px;
-}
-.export-btn { 
-    margin-top: 15px; 
-    background: #28a745; 
-    border-radius: 8px; 
-    padding: 10px 16px; 
-}
-.export-btn:hover { 
-    background: #1e7e34; 
-}
-
-/* Sekcie pre záložky */
-section { display:none; padding:30px 0 0 0; }
+section { display:none; padding:25px; background:#fff; margin:25px auto; border-radius:12px; max-width:1100px; width:95%; box-shadow:0 4px 20px rgba(0,0,0,0.1); transition:0.3s; }
 section.active { display:block; }
 h2 { color:#007bff; margin-top:0; border-bottom:2px solid #007bff; padding-bottom:5px; font-weight:600; }
-.loader{ text-align:center; padding:20px; color:#007bff; font-weight:bold; }
 
-/* Tabuľky */
 table { width:100%; border-collapse:collapse; margin-top:15px; border-radius:8px; overflow:hidden; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
-th,td { border:1px solid #ddd; padding:12px; text-align:left; font-size:15px; }
+th,td { border:1px solid #ddd; padding:10px; text-align:center; font-size:14px; }
 th { background:#007bff; color:white; font-weight:600; }
 tr:nth-child(even){ background:#f8f9fa; }
 
+.export-btn{ margin-top:15px; background:#28a745; border:none; color:white; border-radius:8px; padding:8px 14px; cursor:pointer; font-weight:600; }
+.export-btn:hover{ background:#1e7e34; }
 
-/* PÔVODNÉ VIZUÁLNE ODZNAKY (S GLITCHOM) */
+.status-box { background:#e9f2ff; color:#007bff; font-weight:600; padding:15px; border-radius:8px; text-align:center; margin-bottom:20px; border:1px solid #007bff;}
+
+/* --- VIZUÁLNE ODZNAKY (EXTRÉMNE VYČISTENÉ A OPRAVENÉ) --- */
 .status-badge {
-    font-weight: 700;
-    padding: 7px 14px;
-    border-radius: 50px;
-    display: inline-block;
-    text-align: center;
-    min-width: 80px; 
+    font-weight: 700 !important;
+    padding: 5px 10px !important;
+    border-radius: 50px !important;
+    display: inline-block !important;
+    text-align: center !important;
+    min-width: 70px !important;
+    white-space: nowrap !important;
+    
+    /* KĽÚČOVÉ OPRAVY GLITCHU - AGRESÍVNE VYPNUTIE VIZUÁLNYCH EFEKTOV */
+    text-shadow: none !important;
+    box-shadow: none !important;
+    filter: none !important; 
+    -webkit-text-stroke: 0px transparent !important; /* WebKit */
+    
+    /* VYNÚTENIE ČISTÉHO RENDERU */
+    -webkit-font-smoothing: antialiased !important; /* Chrome, Safari */
+    -moz-osx-font-smoothing: grayscale !important; /* Firefox */
+    transform: translateZ(0); /* Zruší potenciálnu hardvérovú akceleráciu */
 }
+.status-prichod { background: #198754 !important; color: white !important; }
+.status-odchod { background: #dc3545 !important; color: white !important; }
+.status-prestavka { background: #ffc107 !important; color: #333 !important; }
+.status-pn { background: #6f42c1 !important; color: white !important; }
 
-/* Farby pozadia a textu */
-.status-prichod { background: #198754; color: white; } /* Zelená */
-.status-odchod { background: #dc3545; color: white; } /* Červená */
-.status-prestavka { background: #ffc107; color: #000000; } /* Žltá, Čierny text pre dobrý kontrast */
-.status-pn { background: #6f42c1; color: white; } /* Fialová */
+.filter { margin-top: 10px; }
+.filter input { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; }
 
-@media(max-width:768px){ 
-    header{flex-direction:column; text-align:center; gap:10px;} 
-    .attendance-actions { flex-direction: column; }
-    .attendance-actions button { padding: 15px 10px; }
-    table{display:block; overflow-x:auto; white-space:nowrap;} 
-}
+/* DEBUG BOX - NA OVERENIE NAČÍTANÉHO UID */
+#debugUid { background:#d1ecf1;color:#0c5460;padding:5px;text-align:center;font-size:12px;margin-bottom:10px; border-radius: 4px;}
 </style>
 </head>
 <body>
 
-<div id="loginView" class="login-container">
-    <div class="login-box">
-        <h2>Prihlásenie</h2>
-        <input type="text" id="loginName" placeholder="Meno">
-        <input type="password" id="loginPassword" placeholder="Heslo">
-        <button onclick="login()">Prihlásiť sa</button>
-        <div style="margin-top: 15px;">
-            <a href="admin.html" style="color: #007bff; text-decoration: none;">Prihlásiť sa ako Admin</a>
-        </div>
-    </div>
-</div>
+<header>
+  <h1>👋 Vitaj, <span id="userName">Zamestnanec</span></h1>
+  <button id="logoutBtn">Odhlásiť sa</button>
+</header>
 
+<div id="debugUid">Načítavam UID...</div>
 
-<div id="mainView" class="attendance-container">
-    <header style="background:none; box-shadow:none; padding: 0 0 20px 0; position:static;">
-        <h1 id="welcomeText" style="font-size: 28px;">Vitaj, Používateľ</h1>
-        <button onclick="logout()">Odhlásiť sa</button>
-    </header>
+<nav>
+  <button data-target="dochadzka" class="active">Dochádzka</button>
+  <button data-target="prestavky">Prestávky</button>
+  <button data-target="pn">PN</button>
+</nav>
 
-    <div id="statusBox">
-        Posledný stav: <span id="lastStatus">Žiadny stav nezaznamenaný.</span>
-    </div>
+<section id="dochadzka" class="active">
+  <div id="statusBox" class="status-box">Načítavam stav...</div>
+  <h2>Dochádzka (Príchod/Odchod)</h2>
+  <button class="export-btn" data-export-table="dochadzka">Exportovať do CSV</button>
+  <div class="filter">
+    <label for="dateDochadzka">Filtrovať podľa dátumu:</label>
+    <input type="date" id="dateDochadzka">
+  </div>
+  <table>
+    <thead><tr><th>Čas</th><th>Typ</th></tr></thead>
+    <tbody id="dochadzkaTable"><tr><td colspan="2">Načítavam dáta...</td></tr></tbody>
+  </table>
+</section>
 
-    <div class="attendance-actions">
-        <button id="btnPrichod" style="background:#198754;" onclick="recordLog('dochadzka', 'prichod')">PRÍCHOD</button>
-        <button id="btnOdchod" style="background:#dc3545;" onclick="recordLog('dochadzka', 'odchod')">ODCHOD</button>
-        <button id="btnPrestavka" style="background:#ffc107; color:#000000;" onclick="recordLog('prestavky', 'prestavka')">PRESTÁVKA</button>
-        <button id="btnPn" style="background:#6f42c1;" onclick="recordLog('pn', 'pn')">PN</button>
-    </div>
-    
-    <nav style="position:static; box-shadow:none;">
-        <button data-target="dochadzka" class="active">Dochádzka</button>
-        <button data-target="prestavky">Prestávky</button>
-        <button data-target="pn">PN</button>
-    </nav>
-    
-    <section id="dochadzka" class="active">
-        <h2>Dochádzka (Príchod/Odchod)</h2>
-        <button class="export-btn" onclick="exportTable('dochadzkaTable')">Exportovať do CSV</button>
-        <input type="date" id="dateDochadzka" style="padding:10px; border-radius:8px; border:1px solid #ccc; margin-top:10px;" onchange="loadUserLogs('dochadzka')">
-        <div id="dochadzkaTable" class="loader">Načítavam dáta...</div>
-    </section>
+<section id="prestavky">
+  <h2>Prestávky</h2>
+  <button class="export-btn" data-export-table="prestavky">Exportovať do CSV</button>
+  <div class="filter">
+    <label for="datePrestavky">Filtrovať podľa dátumu:</label>
+    <input type="date" id="datePrestavky">
+  </div>
+  <table>
+    <thead><tr><th>Čas</th></tr></thead>
+    <tbody id="prestavkyTable"><tr><td colspan="1">Načítavam dáta...</td></tr></tbody>
+  </table>
+</section>
 
-    <section id="prestavky">
-        <h2>Prestávky</h2>
-        <button class="export-btn" onclick="exportTable('prestavkyTable')">Exportovať do CSV</button>
-        <input type="date" id="datePrestavky" style="padding:10px; border-radius:8px; border:1px solid #ccc; margin-top:10px;" onchange="loadUserLogs('prestavky')">
-        <div id="prestavkyTable" class="loader">Načítavam dáta...</div>
-    </section>
-
-    <section id="pn">
-        <h2>PN</h2>
-        <button class="export-btn" onclick="exportTable('pnTable')">Exportovať do CSV</button>
-        <input type="date" id="datePN" style="padding:10px; border-radius:8px; border:1px solid #ccc; margin-top:10px;" onchange="loadUserLogs('pn')">
-        <div id="pnTable" class="loader">Načítavam dáta...</div>
-    </section>
-
-</div>
+<section id="pn">
+  <h2>PN</h2>
+  <button class="export-btn" data-export-table="pn">Exportovať do CSV</button>
+  <div class="filter">
+    <label for="datePN">Filtrovať podľa dátumu:</label>
+    <input type="date" id="datePN">
+  </div>
+  <table>
+    <thead><tr><th>Čas</th></tr></thead>
+    <tbody id="pnTable"><tr><td colspan="1">Načítavam dáta...</td></tr></tbody>
+  </table>
+</section>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-import { getDatabase, ref, get, child, push, set } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
-// !!! PÔVODNÉ FIREBASE CONFIG (ak sa zmenilo, nahraďte ho) !!!
 const firebaseConfig = {
-    apiKey: "AIzaSyBsYrbYtP4E5blWbKlrJ6iI9v6YPAYYp0g",
-    authDomain: "maturita-395fd.firebaseapp.com",
-    databaseURL: "https://maturita-395fd-default-rtdb.firebaseio.com",
-    projectId: "maturita-395fd",
-    storageBucket: "maturita-395fd.firebasestorage.app",
-    messagingSenderId: "754745500563",
-    appId: "1:754745500563:web:74fd4d6ab5765ee788be66",
-    measurementId: "G-F6KQQS48GD"
+  apiKey: "AIzaSyBsYrbYtP4E5blWbKlrJ6iI9v6YPAYYp0g",
+  authDomain: "maturita-395fd.firebaseapp.com",
+  databaseURL: "https://maturita-395fd-default-rtdb.firebaseio.com",
+  projectId: "maturita-395fd",
+  storageBucket: "maturita-395fd.firebasestorage.app",
+  messagingSenderId: "754745500563",
+  appId: "1:754745500563:web:74fd4d6ab5765ee788be66",
+  measurementId: "G-F6KQQS48GD"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-let currentUserId = localStorage.getItem("uid");
-let currentUserName = localStorage.getItem("name");
+// Globálne premenné
+const userId = localStorage.getItem("uid");
+const userNameEl = document.getElementById("userName");
+const statusBox = document.getElementById("statusBox");
+const debugUidEl = document.getElementById("debugUid"); 
+let allRecordsCache = [];
 
-// --- Inicializácia pri načítaní DOM ---
-document.addEventListener('DOMContentLoaded', () => {
-    if (currentUserId && currentUserId !== "admin") {
-        showMainView(currentUserName);
-        loadUserLogs("dochadzka"); 
-    }
+// --- Overenie a presmerovanie ---
+if (!userId) {
+  alert("Nie si prihlásený!");
+  window.location.href = "index.html";
+} else if (userId === "admin") {
+  window.location.href = "admin.html";
+} else {
+    debugUidEl.textContent = `Aktuálne načítané UID: ${userId}`;
+}
 
-    // Nastavenie prepínania záložiek
-    document.querySelectorAll("nav button").forEach(btn=>{
-        btn.addEventListener("click",()=>{
-            document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
-            btn.classList.add("active");
-            document.querySelectorAll("section").forEach(sec=>sec.classList.remove("active"));
-            document.getElementById(btn.dataset.target).classList.add("active");
-            loadUserLogs(btn.dataset.target);
-        });
-    });
+// --- Načítanie dát používateľa z Firebase (S OPRAVOU PARSOVANIA DÁTUMU) ---
+async function loadUserData() {
+    try {
+        const userSnap = await get(ref(db, `users/${userId}`));
+        
+        if (!userSnap.exists()) {
+            console.error(`Chyba: Dáta pre UID "${userId}" neboli vo Firebase nájdené!`);
+            userNameEl.textContent = "(Neznámy)";
+            debugUidEl.style.backgroundColor = '#dc3545';
+            debugUidEl.style.color = 'white';
+            debugUidEl.textContent = `CHYBA: Dáta pre UID ${userId} neexistujú!`;
+            renderTables([]);
+            return;
+        }
+
+        const userData = userSnap.val();
+        userNameEl.textContent = userData.name || "(bez mena)";
+
+        const records = [];
+        const allPossibleLogs = [];
+        
+        // 1. Zber záznamov z OČAKÁVANÝCH PODUZLOV
+        ["dochadzka", "prestavky", "pn"].forEach(type => {
+            const logsObj = userData[type] || {};
+            Object.values(logsObj).forEach(log => allPossibleLogs.push(log));
+        });
+        
+        // 2. Zber záznamov z PLOCHÝCH/NEŠTANDARDNÝCH uzlov
+        Object.values(userData).forEach(prop => {
+            if (prop && prop.cas && prop.typ) {
+                allPossibleLogs.push(prop); 
+            }
+        });
+        
+        // 3. Spracovanie, Normalizácia a Filtrácia VŠETKÝCH NÁJDENÝCH LOGOV
+        allPossibleLogs.forEach(log => {
+            if (!log || !log.cas || !log.typ) return;
+
+            let cleanTime = String(log.cas);
+            let validIsoTime = cleanTime;
+
+            // ⭐ KĽÚČOVÁ OPRAVA: Konverzia D.M.YYYY na YYYY-MM-DD
+            const dateRegex = /(\d{1,2})\.(\d{1,2})\.(\d{4}) (\d{1,2}:\d{1,2})/;
+            const match = cleanTime.match(dateRegex);
+
+            if (match) {
+                const [full, day, month, year, time] = match;
+                // Sformátovanie do ISO YYYY-MM-DD HH:MM
+                validIsoTime = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')} ${time}`;
+            } else if (cleanTime.includes('T') && cleanTime.includes('-')) {
+                // Je to už ISO formát (napr. pridané cez admina), použijeme ho priamo
+                validIsoTime = cleanTime.replace('T', ' ');
+            } else {
+                // Nepoznaný formát, preskočíme
+                return;
+            }
+            // Koniec KĽÚČOVEJ OPRAVY
+            
+            // Normalizácia typu
+            const cleanType = String(log.typ)
+                .normalize("NFD").replace(/[\u0300-\u036f]/g, "") 
+                .toLowerCase();
+
+            let recordType = null;
+            if (cleanType.includes('prichod')) recordType = 'prichod';
+            else if (cleanType.includes('odchod')) recordType = 'odchod';
+            else if (cleanType.includes('prestavka')) recordType = 'prestavka';
+            else if (cleanType.includes('pn')) recordType = 'pn';
+            
+            if (recordType) {
+                 const isDuplicate = records.some(r => r.cas === validIsoTime && r.stav === recordType);
+                 if (!isDuplicate) {
+                     records.push({
+                         cas: validIsoTime, // Používame ISO formát pre triedenie a filtrovanie
+                         stav: recordType,
+                     });
+                 }
+            }
+        });
+
+        // 4. Triedenie
+        records.sort((a, b) => new Date(b.cas) - new Date(a.cas));
+        allRecordsCache = records;
+        
+        // 5. AKTUALIZÁCIA STAVU
+        const mainStatusRecord = records.find(r => r.stav !== 'prestavka' && r.stav !== 'pn');
+        
+        const lastStatus = mainStatusRecord ? mainStatusRecord.stav.toUpperCase() : "Žiadny stav nezaznamenaný.";
+        const lastStatusClass = mainStatusRecord ? `status-${mainStatusRecord.stav}` : 'status-prichod'; 
+        
+        statusBox.innerHTML = `Posledný stav: <span class="status-badge ${lastStatusClass}">${lastStatus}</span>`;
+
+        // 6. Vykreslenie všetkých sekcií
+        renderTables(allRecordsCache);
+
+    } catch (e) {
+        console.error("Kritická chyba pri načítaní dát:", e);
+        statusBox.textContent = "Kritická chyba pri načítaní dát!";
+        renderTables([]);
+    }
+}
+
+// --- Vykreslenie tabuliek (Opravená logika z predošlej opravy) ---
+function renderTables(records) {
+  const dochadzkaTable = document.getElementById("dochadzkaTable");
+  const prestavkyTable = document.getElementById("prestavkyTable");
+  const pnTable = document.getElementById("pnTable");
+
+  const filterDochadzka = document.getElementById("dateDochadzka").value;
+  const filterPrestavky = document.getElementById("datePrestavky").value;
+  const filterPN = document.getElementById("datePN").value;
+
+  const renderSection = (bodyEl, type, filterDate, expectedStav, colCount) => {
+    let filtered = records;
+    
+    if(filterDate) {
+      // Filtrujeme presne podľa dátumu (ISO YYYY-MM-DD)
+      filtered = filtered.filter(r => r.cas.substring(0, 10) === filterDate);
+    }
+    
+    const sectionRecords = filtered.filter(r => expectedStav.includes(r.stav));
+    
+    if (!sectionRecords.length) {
+      bodyEl.innerHTML = `<tr><td colspan="${colCount}">Žiadne záznamy</td></tr>`;
+    } else {
+      bodyEl.innerHTML = sectionRecords.map(z => {
+        // Formátujeme späť na D.M.RRRR HH:MM pre zobrazenie
+        const datePart = z.cas.substring(0, 10).split('-');
+        const timePart = z.cas.substring(11, 16);
+        // YYYY-MM-DD -> DD.MM.YYYY
+        const visibleTime = `${datePart[2]}.${datePart[1]}.${datePart[0]} ${timePart}`; 
+
+        const cls = `status-${z.stav}`;
+        
+        if (type === 'dochadzka') {
+          // Dochádzka: 2 stĺpce
+          return `<tr><td>${visibleTime}</td><td><span class="status-badge ${cls}">${z.stav.toUpperCase()}</span></td></tr>`;
+        } else {
+          // Prestávky a PN: 1 stĺpec (Len čas, aby sa nerozbila tabuľka)
+          return `<tr><td>${visibleTime}</td></tr>`;
+        }
+      }).join("");
+    }
+  };
+
+  // Zavolanie funkcie s explicitným počtom stĺpcov
+  renderSection(dochadzkaTable, 'dochadzka', filterDochadzka, ["prichod", "odchod"], 2);
+  renderSection(prestavkyTable, 'prestavky', filterPrestavky, ["prestavka"], 1);
+  renderSection(pnTable, 'pn', filterPN, ["pn"], 1);
+}
+
+
+// --- Export do CSV (Robustná verzia) ---
+window.exportTable = function(sectionNameId) {
+    const sectionEl = document.getElementById(sectionNameId); 
+    const table = sectionEl ? sectionEl.querySelector('table') : null;
+    
+    if(!table) return alert("Žiadne dáta na export alebo tabuľka nebola nájdená.");
+    
+    const userName = userNameEl.textContent;
+    const sectionTitle = sectionEl.querySelector('h2').textContent.trim(); 
+    
+    let csv = [];
+    
+    csv.push(`"Typ záznamu","${sectionTitle.split('(')[0].trim()}"`);
+    csv.push(`"Používateľ","${userName}"`);
+    csv.push("");
+    
+    const header = Array.from(table.querySelectorAll("thead th")).map(th => `"${th.innerText.trim()}"`);
+    csv.push(header.join(","));
+    
+    table.querySelectorAll("tbody tr").forEach(row => {
+        const cols = Array.from(row.querySelectorAll("td")).map(td => {
+            // Odstránime neviditeľné znaky z textu odznaku
+            const text = td.textContent.trim().replace(/\s\s+/g, ' '); 
+            return `"${text}"`;
+        });
+        
+        if (cols.length > 0 && cols[0].includes("Žiadne záznamy") === false) {
+            csv.push(cols.join(","));
+        }
+    });
+    
+    const blob = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${sectionTitle.replace(/[^a-zA-Z0-9]/g, '_')}_${userName}.csv`;
+    a.click();
+};
+
+// --- Listenery ---
+
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  localStorage.removeItem("uid");
+  window.location.href = "index.html";
 });
 
-// --- Funkcie pre zobrazenie/prepínanie ---
+document.querySelectorAll("nav button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    document.querySelectorAll("section").forEach(sec => sec.classList.remove("active"));
+    document.getElementById(btn.dataset.target).classList.add("active");
+    // Zabezpečí opätovné načítanie pre prípad zmeny
+    renderTables(allRecordsCache);
+  });
+});
 
-function showMainView(name) {
-    document.getElementById("loginView").style.display = "none";
-    document.getElementById("mainView").style.display = "block";
-    document.getElementById("welcomeText").textContent = `Vitaj, ${name}`;
-    loadLastStatus();
-}
+document.getElementById("dateDochadzka").addEventListener("change", () => renderTables(allRecordsCache));
+document.getElementById("datePrestavky").addEventListener("change", () => renderTables(allRecordsCache));
+document.getElementById("datePN").addEventListener("change", () => renderTables(allRecordsCache));
 
-window.logout = function() {
-    localStorage.removeItem("uid");
-    localStorage.removeItem("name");
-    window.location.reload();
-}
+document.querySelectorAll(".export-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    exportTable(btn.dataset.exportTable);
+  });
+});
 
-// --- Funkcie pre prihlásenie/zaznamenávanie ---
-
-window.login = async function() {
-    const nameInput = document.getElementById("loginName").value.trim();
-    const passInput = document.getElementById("loginPassword").value.trim();
-
-    if (!nameInput || !passInput) {
-        return alert("Vyplňte meno a heslo.");
-    }
-
-    if (nameInput.toLowerCase() === 'admin') {
-        return window.location.href = "admin.html"; 
-    }
-    
-    try {
-        const usersRef = ref(db, "users");
-        const snapshot = await get(usersRef);
-        let loggedInUser = null;
-
-        snapshot.forEach(userSnap => {
-            const user = userSnap.val();
-            if (user.name === nameInput && user.password === passInput) {
-                loggedInUser = { uid: userSnap.key, name: user.name };
-            }
-        });
-
-        if (loggedInUser) {
-            localStorage.setItem("uid", loggedInUser.uid);
-            localStorage.setItem("name", loggedInUser.name);
-            currentUserId = loggedInUser.uid;
-            currentUserName = loggedInUser.name;
-            showMainView(loggedInUser.name);
-            loadUserLogs("dochadzka");
-        } else {
-            alert("Nesprávne meno alebo heslo.");
-        }
-    } catch (e) {
-        alert("Chyba pri prihlásení. Skontrolujte konzolu.");
-        console.error("Login error:", e);
-    }
-}
-
-window.recordLog = async function(type, typ) {
-    if (!currentUserId) {
-        alert("Nie ste prihlásený. Prihláste sa prosím.");
-        return;
-    }
-    
-    try {
-        const now = new Date();
-        const timestamp = now.toISOString().slice(0,10) + " " +
-                              now.getHours().toString().padStart(2,"0") + ":" +
-                              now.getMinutes().toString().padStart(2,"0");
-
-        const path = `users/${currentUserId}/${type}`;
-
-        await push(ref(db, path), {
-            cas: timestamp,
-            typ: typ,
-            manual: false, 
-        });
-
-        alert(`Stav ${typ.toUpperCase()} zaznamenaný o ${timestamp}.`);
-        loadUserLogs(type);
-        loadLastStatus();
-    } catch(e) {
-        alert("Chyba pri zaznamenávaní. Skontrolujte konzolu pre detaily.");
-        console.error(e);
-    }
-}
-
-async function loadLastStatus() {
-    const statusBox = document.getElementById("statusBox");
-    const lastStatusEl = document.getElementById("lastStatus");
-
-    try {
-        const logsRef = ref(db, `users/${currentUserId}/dochadzka`);
-        const snapshot = await get(logsRef);
-        let lastLog = null;
-        
-        if (snapshot.exists()) {
-            snapshot.forEach(logSnap => {
-                const log = logSnap.val();
-                if (!lastLog || new Date(log.cas) > new Date(lastLog.cas)) {
-                    lastLog = log;
-                }
-            });
-        }
-        
-        if (lastLog) {
-            const rawType = lastLog.typ.toLowerCase();
-            const normalizedType = rawType.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); 
-            let statusClass = '';
-
-            if (normalizedType === 'prichod') statusClass = 'status-prichod';
-            else if (normalizedType === 'odchod') statusClass = 'status-odchod';
-            
-            lastStatusEl.innerHTML = `<span class="status-badge ${statusClass}">${rawType.toUpperCase()}</span>`;
-            statusBox.style.display = "block";
-        } else {
-             lastStatusEl.innerHTML = `<span class="status-badge status-pn">ŽIADNY STAV</span>`;
-             statusBox.style.display = "block";
-        }
-
-    } catch (e) {
-        console.error("Chyba pri načítaní posledného stavu:", e);
-    }
-}
-
-
-// --- Funkcia načítania logov pre danú sekciu (dochadzka, prestavky, pn) ---
-window.loadUserLogs = async function(type){
-    if (!currentUserId) return; 
-
-    const tableId = type + "Table";
-    const dateId = "date" + type.charAt(0).toUpperCase() + type.slice(1);
-    const el = document.getElementById(tableId);
-    el.innerHTML='<div class="loader">Načítavam dáta...</div>'; 
-
-    const dateFilter = document.getElementById(dateId)?.value;
-    
-    try {
-        const logsRef = ref(db, `users/${currentUserId}/${type}`);
-        const snapshot = await get(logsRef);
-        let tableBodyHtml = "";
-        let found = false;
-        
-        if (snapshot.exists()) {
-            const logs = [];
-            snapshot.forEach(logSnap => logs.push(logSnap.val()));
-
-            logs.sort((a, b) => new Date(b.cas) - new Date(a.cas));
-            
-            logs.forEach(log => {
-                const logTime = log.cas || "-";
-                const logDate = logTime.slice(0,10); 
-                const rawType = (log.typ||type).toLowerCase();
-                const normalizedType = rawType.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                
-                let statusClass = '';
-                if (normalizedType === 'prichod') statusClass = 'status-prichod';
-                else if (normalizedType === 'odchod') statusClass = 'status-odchod';
-                else if (normalizedType === 'prestavka') statusClass = 'status-prestavka';
-                else if (normalizedType === 'pn') statusClass = 'status-pn';
-                
-                const isDateMatch = !dateFilter || logDate === dateFilter;
-
-                if (isDateMatch) {
-                    const typeCell = (type === 'dochadzka') ? 
-                        `<td><span class="status-badge ${statusClass}">${rawType.toUpperCase()}</span></td>` : 
-                        '';
-
-                    tableBodyHtml += `<tr>
-                        <td>${logTime}</td>
-                        ${typeCell}
-                    </tr>`;
-                    found = true;
-                }
-            });
-        }
-
-        let finalHtml = `<table><tr><th>Čas</th>${(type === 'dochadzka') ? '<th>Typ</th>' : ''}</tr>`;
-        
-        if (found) {
-            finalHtml += tableBodyHtml;
-        } else {
-            finalHtml += `<tr><td colspan='${(type === 'dochadzka') ? 2 : 1}'>Žiadne záznamy v tomto filtri.</td></tr>`;
-        }
-        finalHtml += "</table>";
-        
-        el.innerHTML = finalHtml;
-        
-    } catch (e) {
-        el.innerHTML = "Chyba pri načítaní dát.";
-        console.error(e);
-    }
-    loadLastStatus(); 
-}
-
-window.exportTable = function(id){
-    const container = document.getElementById(id);
-    if (!container) return alert("Kontajner tabuľky nebol nájdený.");
-    const table = container.querySelector("table");
-    
-    if(!table) return alert("Žiadne dáta na export.");
-    let csv=[];
-    table.querySelectorAll("tr").forEach(row=>{
-        const cols=[...row.querySelectorAll("th,td")].map(td=>`"${td.innerText.trim().replace(/(\r\n|\n|\r)/gm, "")}"`); 
-        csv.push(cols.join(","));
-    });
-    const blob=new Blob([csv.join("\n")],{type:"text/csv;charset=utf-8;"}); 
-    const a=document.createElement("a");
-    a.href=URL.createObjectURL(blob);
-    a.download=`${id}_${currentUserName}.csv`;
-    a.click();
-};
+// --- Spustenie aplikácie ---
+loadUserData();
 </script>
-
-
 </body>
 </html>
