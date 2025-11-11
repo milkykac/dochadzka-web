@@ -6,34 +6,7 @@
 <title>Admin panel – Dochádzka</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 <style>
-body { font-family:'Poppins',sans-serif; margin:0; background:linear-gradient(135deg,#007bff,#6f42c1); min-height:100vh; color:#333; }
-header { background:#fff; padding:15px 25px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 3px 10px rgba(0,0,0,0.1); position:sticky; top:0; z-index:10; }
-h1 { color:#007bff; margin:0; font-size:22px; font-weight:600; }
-button { background:#007bff; border:none; color:white; padding:8px 14px; border-radius:8px; cursor:pointer; font-size:14px; transition:0.3s; }
-button:hover { background:#0056b3; }
-nav { background:#fff; display:flex; justify-content:center; padding:10px; gap:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); position:sticky; top:70px; z-index:5; flex-wrap:wrap; }
-nav button.active { background:#6f42c1; }
-section { display:none; padding:25px; background:#fff; margin:25px auto; border-radius:12px; max-width:1100px; box-shadow:0 4px 20px rgba(0,0,0,0.1); transition:0.3s; }
-section.active { display:block; }
-h2 { color:#007bff; margin-top:0; border-bottom:2px solid #007bff; padding-bottom:5px; }
-table { width:100%; border-collapse:collapse; margin-top:15px; border-radius:8px; overflow:hidden; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
-th,td { border:1px solid #ddd; padding:10px; text-align:left; font-size:14px; }
-th { background:#007bff; color:white; font-weight:500; }
-tr:nth-child(even){ background:#f8f9fa; }
-.loader{ text-align:center; padding:20px; color:#007bff; font-weight:bold; }
-.export-btn{ margin-top:15px; background:#28a745; border-radius:8px; padding:8px 14px; }
-.export-btn:hover{ background:#1e7e34; }
-.new-chip { background:#17a2b8; padding:8px 10px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border-radius:6px; color:white; font-size:14px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
-.new-chip button { background:#007bff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-size:13px; }
-.new-chip button:hover { background:#0056b3; }
-.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; }
-.modal-content{ background:#fff; padding:20px; border-radius:8px; width:90%; max-width:400px; position:relative; animation:fadeIn 0.3s; box-shadow:0 5px 15px rgba(0,0,0,0.2);}
-.modal-content input{ width:100%; margin-top:10px; padding:8px; border:1px solid #ccc; border-radius:6px; font-size:14px; }
-.modal-content button{ width:100%; margin-top:10px; border-radius:6px; padding:8px 0; font-weight:500; background:#007bff; color:white; transition:0.3s;}
-.modal-content button:hover{ background:#0056b3; }
-#closeModal{ position:absolute; right:10px; top:5px; font-size:22px; cursor:pointer; color:#333; }
-@keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
-@media(max-width:768px){ header{flex-direction:column; text-align:center; gap:10px;} table{display:block; overflow-x:auto; white-space:nowrap;} }
+/* … tu môžeš ponechať celý CSS štýl zo starého admin.html … */
 </style>
 </head>
 <body>
@@ -100,7 +73,7 @@ tr:nth-child(even){ background:#f8f9fa; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-import { getDatabase } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+import { getDatabase, ref, get, child, set } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-analytics.js";
 
 const firebaseConfig = {
@@ -151,14 +124,20 @@ async function loadAttendance(type, tableId, dateId, searchId){
   el.innerHTML="Načítavam dáta...";
   const dateFilter=document.getElementById(dateId)?.value;
   const search=document.getElementById(searchId)?.value.toLowerCase()||"";
+
   try{
-    const snap=await db.ref("users").get();
+    const dbRef = ref(db);
+    const snap = await get(child(dbRef, "users"));
+    if(!snap.exists()){ el.innerHTML="Žiadni používatelia"; return; }
+
     let html="<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>";
-    snap.forEach(userSnap=>{
-      const user = userSnap.val();
+    const users = snap.val();
+
+    Object.keys(users).forEach(uid=>{
+      const user = users[uid];
       const logsObj = user[type] || {};
-      Object.keys(logsObj).forEach(key=>{
-        const log = logsObj[key];
+      Object.keys(logsObj).forEach(logKey=>{
+        const log = logsObj[logKey];
         const logDate = (log.cas || "").slice(0,10);
         const name = user.name || "(bez mena)";
         if((!dateFilter || logDate===dateFilter) && (!search || name.toLowerCase().includes(search))){
@@ -166,6 +145,7 @@ async function loadAttendance(type, tableId, dateId, searchId){
         }
       });
     });
+
     html += "</table>";
     el.innerHTML = html;
   } catch(e){
@@ -179,14 +159,17 @@ async function loadUsers(){
   const el=document.getElementById("usersTable");
   el.innerHTML="Načítavam používateľov...";
   try{
-    const snap=await db.ref("users").get();
+    const dbRef = ref(db);
+    const snap = await get(child(dbRef, "users"));
     if(!snap.exists()){el.innerHTML="Žiadni používatelia"; return;}
+    const users = snap.val();
+
     let html="<table><tr><th>Meno</th><th>Čip</th><th>Akcie</th></tr>";
-    snap.forEach(u=>{
-      const d=u.val();
-      html+=`<tr><td>${d.name||"(bez mena)"}</td><td>${d.chipUid||"-"}</td>
-      <td><button onclick="removeUser('${u.key}')">🗑️</button>
-      <button onclick="openChangePassword('${u.key}')">🔑</button></td></tr>`;
+    Object.keys(users).forEach(uid=>{
+      const d = users[uid];
+      html += `<tr><td>${d.name||"(bez mena)"}</td><td>${d.chipUid||"-"}</td>
+      <td><button onclick="removeUser('${uid}')">🗑️</button>
+      <button onclick="openChangePassword('${uid}')">🔑</button></td></tr>`;
     });
     html+="</table>";
     el.innerHTML=html;
@@ -198,10 +181,12 @@ async function loadNewChips(){
   const el=document.getElementById("newChipsContainer");
   el.innerHTML="Načítavam čipy...";
   try{
-    const snap=await db.ref("newChips").get();
+    const dbRef = ref(db);
+    const snap = await get(child(dbRef, "newChips"));
     el.innerHTML="";
     if(!snap.exists()){el.innerHTML="Žiadne nové čipy"; return;}
-    Object.keys(snap.val()).forEach(chip=>{
+    const chips = snap.val();
+    Object.keys(chips).forEach(chip=>{
       const div=document.createElement("div");
       div.className="new-chip";
       div.innerHTML=`${chip} <button onclick="assignChip('${chip}')">Priradiť</button> <button onclick="removeChip('${chip}')">Odstrániť</button>`;
@@ -214,31 +199,39 @@ async function loadNewChips(){
 async function assignChip(chipUid){
   const name=prompt("Zadaj meno používateľa:");
   if(!name) return;
-  const snap=await db.ref("users").get();
+  const dbRef = ref(db);
+  const snap = await get(child(dbRef, "users"));
+  const users = snap.val();
   let uid=null;
-  snap.forEach(u=>{if(u.val().name===name) uid=u.key;});
+  Object.keys(users).forEach(key=>{ if(users[key].name===name) uid=key; });
   if(!uid) return alert("Používateľ nenájdený!");
-  await db.ref(`users/${uid}/chipUid`).set(chipUid);
-  await db.ref(`newChips/${chipUid}`).remove();
+  await set(ref(db, `users/${uid}/chipUid`), chipUid);
+  await set(ref(db, `newChips/${chipUid}`), null);
   loadUsers(); loadNewChips();
 }
+
 async function removeChip(chipUid){
-  if(confirm("Naozaj odstrániť čip?")){await db.ref(`newChips/${chipUid}`).remove(); loadNewChips();}
+  if(confirm("Naozaj odstrániť čip?")){
+    await set(ref(db, `newChips/${chipUid}`), null);
+    loadNewChips();
+  }
 }
+
 async function removeUser(id){
-  if(confirm("Odstrániť používateľa?")){await db.ref(`users/${id}`).remove(); loadUsers();}
+  if(confirm("Odstrániť používateľa?")){
+    await set(ref(db, `users/${id}`), null);
+    loadUsers();
+  }
 }
+
 function logout(){alert("Odhlásenie");}
-function openChangePassword(id){
-  document.getElementById("changePasswordModal").style.display="flex";
-  document.getElementById("changePasswordUserId").value=id;
-}
-function closeModal(){document.getElementById("changePasswordModal").style.display="none";}
+function openChangePassword(id){ document.getElementById("changePasswordModal").style.display="flex"; document.getElementById("changePasswordUserId").value=id; }
+function closeModal(){ document.getElementById("changePasswordModal").style.display="none"; }
 async function saveNewPassword(){
   const id=document.getElementById("changePasswordUserId").value;
   const pass=document.getElementById("newPassword").value.trim();
   if(!pass)return alert("Zadaj nové heslo.");
-  await db.ref(`users/${id}/password`).set(pass);
+  await set(ref(db, `users/${id}/password`), pass);
   alert("Heslo zmenené.");
   closeModal();
 }
@@ -259,6 +252,5 @@ loadSection("dochadzka");
 </script>
 </body>
 </html>
-
 
 
