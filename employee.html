@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="sk">
 <head>
 <meta charset="UTF-8">
@@ -33,21 +34,24 @@ tr:nth-child(even){ background:#f8f9fa; }
 
 .status-box { background:#e9f2ff; color:#007bff; font-weight:600; padding:15px; border-radius:8px; text-align:center; margin-bottom:20px; border:1px solid #007bff;}
 
-/* --- VIZUÁLNE ODZNAKY --- */
+/* --- VIZUÁLNE ODZNAKY (OPRAVENÉ CSS) --- */
 .status-badge {
-    font-weight: 700;
-    padding: 5px 10px; /* Zväčšený padding */
-    border-radius: 50px; /* Pilulkový tvar */
-    display: inline-block;
-    color: white;
-    text-align: center;
-    min-width: 70px; /* Zväčšená minimálna šírka */
-    white-space: nowrap;
+    font-weight: 700 !important;
+    padding: 5px 10px !important;
+    border-radius: 50px !important;
+    display: inline-block !important;
+    text-align: center !important;
+    min-width: 70px !important;
+    white-space: nowrap !important;
+    /* KĽÚČOVÁ OPRAVA GLITCHU: ODSTRÁNI FAREBNÉ OBVRY */
+    text-shadow: none !important;
+    filter: none !important; 
+    -webkit-text-stroke: 0px transparent !important;
 }
-.status-prichod { background: #198754; } /* Ostrejšia zelená */
-.status-odchod { background: #dc3545; } /* Ostrejšia červená */
-.status-prestavka { background: #ffc107; color: #333; } /* Sýta žltá */
-.status-pn { background: #6f42c1; } /* Fialová */
+.status-prichod { background: #198754 !important; color: white !important; }
+.status-odchod { background: #dc3545 !important; color: white !important; }
+.status-prestavka { background: #ffc107 !important; color: #333 !important; }
+.status-pn { background: #6f42c1 !important; color: white !important; }
 
 .filter { margin-top: 10px; }
 .filter input { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; }
@@ -345,6 +349,8 @@ document.querySelectorAll("nav button").forEach(btn => {
     btn.classList.add("active");
     document.querySelectorAll("section").forEach(sec => sec.classList.remove("active"));
     document.getElementById(btn.dataset.target).classList.add("active");
+    // Zabezpečí opätovné načítanie pre prípad zmeny
+    renderTables(allRecordsCache);
   });
 });
 
