@@ -128,21 +128,19 @@ const db = getDatabase(app);
 const userId = localStorage.getItem("uid");
 const userNameEl = document.getElementById("userName");
 const statusBox = document.getElementById("statusBox");
-let allRecordsCache = []; // Cache pre všetky záznamy používateľa
+let allRecordsCache = [];
 
 // --- Overenie a presmerovanie ---
 if (!userId) {
   alert("Nie si prihlásený!");
   window.location.href = "index.html";
 } else if (userId === "admin") {
-  // Ak by sa náhodou admin prihlásil sem (zvyčajne index.html by mal presmerovať)
   window.location.href = "admin.html";
 }
 
 // --- Načítanie dát používateľa z Firebase (Hlavná funkcia) ---
 async function loadUserData() {
   try {
-    // 1. Načítanie mena
     const userSnap = await get(ref(db, `users/${userId}`));
     if (!userSnap.exists()) {
       userNameEl.textContent = "(Neznámy)";
@@ -152,7 +150,6 @@ async function loadUserData() {
     const userData = userSnap.val();
     userNameEl.textContent = userData.name || "(bez mena)";
 
-    // 2. Získanie všetkých dochádzkových záznamov tohto používateľa (dochadzka, prestavky, pn)
     const records = [];
     const logTypes = ["dochadzka", "prestavky", "pn"];
 
@@ -169,10 +166,8 @@ async function loadUserData() {
       });
     });
 
-    // 3. Triedenie (od najnovšieho)
     records.sort((a, b) => new Date(b.cas) - new Date(a.cas));
 
-    // 4. Uloženie do cache a aktualizácia stavu (s farebným odznakom)
     allRecordsCache = records;
     const lastStatus = records.length ? records[0].stav.toUpperCase() : "Žiadny stav nezaznamenaný.";
     const lastStatusClass = records.length ? `status-${records[0].stav}` : '';
@@ -180,7 +175,6 @@ async function loadUserData() {
     statusBox.innerHTML = `Posledný stav: <span class="status-badge ${lastStatusClass}">${lastStatus}</span>`;
 
 
-    // 5. Vykreslenie všetkých sekcií
     renderTables(allRecordsCache);
 
   } catch (e) {
@@ -196,17 +190,17 @@ function renderTables(records) {
   const prestavkyTable = document.getElementById("prestavkyTable");
   const pnTable = document.getElementById("pnTable");
 
-  // Filtrovanie podľa aktuálne nastaveného dátumu v každej sekcii
   const filterDochadzka = document.getElementById("dateDochadzka").value;
   const filterPrestavky = document.getElementById("datePrestavky").value;
   const filterPN = document.getElementById("datePN").value;
 
-  // Pomocná funkcia pre renderovanie jednej sekcie
+  // Pomocná funkcia pre renderovanie jednej sekcie (FINÁLNA VERZIA)
   const renderSection = (bodyEl, type, filterDate, expectedStav) => {
     let filtered = records;
     
     if(filterDate) {
-      filtered = filtered.filter(r => r.cas.startsWith(filterDate));
+      // Filtrujeme presne podľa dátumu (YYYY-MM-DD)
+      filtered = filtered.filter(r => r.cas.substring(0, 10) === filterDate);
     }
     
     const sectionRecords = filtered.filter(r => expectedStav.includes(r.stav));
@@ -215,11 +209,10 @@ function renderTables(records) {
       bodyEl.innerHTML = `<tr><td colspan="${type === 'dochadzka' ? 2 : 1}">Žiadne záznamy</td></tr>`;
     } else {
       bodyEl.innerHTML = sectionRecords.map(z => {
-        const visibleTime = z.cas.replace('T', ' '); // Formát pre zobrazenie (2025-11-11 18:00)
+        const visibleTime = z.cas.replace('T', ' '); 
         const cls = `status-${z.stav}`;
         
         if (type === 'dochadzka') {
-          // Dochádzka má 2 stĺpce
           return `<tr><td>${visibleTime}</td><td><span class="status-badge ${cls}">${z.stav.toUpperCase()}</span></td></tr>`;
         } else {
           // Prestávky a PN majú 1 stĺpec, čas je vo farebnom odznaku
@@ -245,9 +238,7 @@ window.exportTable = function(sectionNameId) {
     
     if(!table) return alert("Žiadne dáta na export alebo tabuľka nebola nájdená.");
     
-    // Získanie mena používateľa a názvu sekcie
     const userName = userNameEl.textContent;
-    // Získa H2 názov sekcie a odstráni veci v zátvorkách (napr. "(Príchod/Odchod)")
     const sectionTitle = sectionEl.querySelector('h2').textContent.trim(); 
     
     let csv = [];
@@ -263,10 +254,9 @@ window.exportTable = function(sectionNameId) {
     
     // Dáta riadkov
     table.querySelectorAll("tbody tr").forEach(row => {
-        // Použijeme textContent z bunky. Ak bunka obsahuje span (odznak), zoberie len text.
+        // Použijeme textContent z bunky.
         const cols = Array.from(row.querySelectorAll("td")).map(td => `"${td.textContent.trim()}"`);
         
-        // Ak bunka obsahuje len 'Žiadne záznamy', riadok sa neexportuje.
         if (cols.length > 0 && cols[0].includes("Žiadne záznamy") === false) {
             csv.push(cols.join(","));
         }
@@ -282,13 +272,11 @@ window.exportTable = function(sectionNameId) {
 
 // --- Listenery ---
 
-// Odhlásenie
 document.getElementById("logoutBtn").addEventListener("click", () => {
   localStorage.removeItem("uid");
   window.location.href = "index.html";
 });
 
-// Navigačná logika
 document.querySelectorAll("nav button").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
@@ -298,12 +286,12 @@ document.querySelectorAll("nav button").forEach(btn => {
   });
 });
 
-// Filtre (pri zmene akéhokoľvek filtra opätovne vykresliť dáta z cache)
+// Filtre
 document.getElementById("dateDochadzka").addEventListener("change", () => renderTables(allRecordsCache));
 document.getElementById("datePrestavky").addEventListener("change", () => renderTables(allRecordsCache));
 document.getElementById("datePN").addEventListener("change", () => renderTables(allRecordsCache));
 
-// Handler pre export (viazaný na data-export-table atribút)
+// Export
 document.querySelectorAll(".export-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     exportTable(btn.dataset.exportTable);
