@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-/* --- Štýly (upravené pre lepšiu konzistentnosť a odznaky) --- */
+/* --- Štýly (z predchádzajúcich verzií) --- */
 body { font-family:'Poppins',sans-serif; margin:0; background:linear-gradient(135deg,#f4f5f7,#e0e0e0); min-height:100vh; color:#333; display:flex; flex-direction:column; align-items:center;}
 header { background:#007bff; padding:15px 25px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 3px 10px rgba(0,0,0,0.1); width:100%; color:white; position:sticky; top:0; z-index:10; }
 h1 { margin:0; font-size:22px; font-weight:600; }
@@ -51,6 +51,9 @@ tr:nth-child(even){ background:#f8f9fa; }
 
 .filter { margin-top: 10px; }
 .filter input { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; }
+
+/* DEBUG BOX - NA OVERENIE NAČÍTANÉHO UID */
+#debugUid { background:#f8d7da;color:#721c24;padding:5px;text-align:center;font-size:12px;margin-bottom:10px; }
 </style>
 </head>
 <body>
@@ -59,6 +62,8 @@ tr:nth-child(even){ background:#f8f9fa; }
   <h1>👋 Vitaj, <span id="userName">Zamestnanec</span></h1>
   <button id="logoutBtn">Odhlásiť sa</button>
 </header>
+
+<div id="debugUid" style="background:#f8d7da;color:#721c24;padding:5px;text-align:center;font-size:12px;margin-bottom:10px;">Načítavam UID...</div>
 
 <nav>
   <button data-target="dochadzka" class="active">Dochádzka</button>
@@ -128,6 +133,7 @@ const db = getDatabase(app);
 const userId = localStorage.getItem("uid");
 const userNameEl = document.getElementById("userName");
 const statusBox = document.getElementById("statusBox");
+const debugUidEl = document.getElementById("debugUid"); 
 let allRecordsCache = [];
 
 // --- Overenie a presmerovanie ---
@@ -136,62 +142,82 @@ if (!userId) {
   window.location.href = "index.html";
 } else if (userId === "admin") {
   window.location.href = "admin.html";
+} else {
+    // Okamžité zobrazenie UID
+    debugUidEl.textContent = `Aktuálne načítané UID: ${userId}`;
+    console.log("AKTÍVNE UID:", userId);
 }
 
-// --- Načítanie dát používateľa z Firebase ---
+// --- Načítanie dát používateľa z Firebase (ROBUSTNÁ VERZIA) ---
 async function loadUserData() {
-  try {
-    const userSnap = await get(ref(db, `users/${userId}`));
-    if (!userSnap.exists()) {
-      userNameEl.textContent = "(Neznámy)";
-      renderTables([]);
-      return;
-    }
+    try {
+        const userSnap = await get(ref(db, `users/${userId}`));
+        
+        if (!userSnap.exists()) {
+            console.error(`Chyba: Dáta pre UID "${userId}" neboli vo Firebase nájdené!`);
+            userNameEl.textContent = "(Neznámy)";
+            debugUidEl.style.backgroundColor = '#dc3545';
+            debugUidEl.style.color = 'white';
+            debugUidEl.textContent = `CHYBA: Dáta pre UID ${userId} neexistujú!`;
+            renderTables([]);
+            return;
+        }
 
-    const userData = userSnap.val();
-    userNameEl.textContent = userData.name || "(bez mena)";
+        const userData = userSnap.val();
+        userNameEl.textContent = userData.name || "(bez mena)";
 
-    const records = [];
-    const logTypes = ["dochadzka", "prestavky", "pn"];
+        const records = [];
 
-    logTypes.forEach(type => {
-      // Zabezpečíme, že pracujeme iba s pod-objektom (napr. userData.prestavky)
-      const logsObj = userData[type] || {};
-      
-      Object.values(logsObj).forEach(log => {
-        if (log && log.cas && log.typ) {
-          let cleanTime = log.cas.replace(' ', 'T');
-          // Ak čas nemá ISO formát (napr. "11.11.2025 12:44"), ignorujeme ho.
-          if (!cleanTime.includes('-')) return; 
+        // Rekurzívna funkcia na nájdenie záznamov v chaotickej (plochej) štruktúre
+        function collectRecords(data) {
+            if (typeof data !== 'object' || data === null) return;
 
-          records.push({
-            cas: cleanTime, 
-            stav: log.typ.toLowerCase(),
-          });
-        }
-      });
-    });
+            // Kľúčová podmienka: ak objekt obsahuje polia 'cas' a 'typ', je to dochádzkový záznam.
+            if (data.cas && data.typ) {
+                let cleanTime = String(data.cas).replace(' ', 'T');
+                
+                // Kontrola pre formát dátumu (ignorujeme nekompatibilné formáty)
+                if (!cleanTime.includes('-')) return;
 
-    records.sort((a, b) => new Date(b.cas) - new Date(a.cas));
+                const recordType = String(data.typ).toLowerCase();
+                
+                // Zbierame len relevantné typy
+                if (["prichod", "odchod", "prestavka", "pn"].includes(recordType)) {
+                    records.push({
+                        cas: cleanTime,
+                        stav: recordType,
+                    });
+                }
+                return; // Ak je to záznam, nepokračujeme hlbšie v tomto uzle
+            }
 
-    allRecordsCache = records;
-    
-    // Aktualizácia stavu
-    const lastStatus = records.length ? records[0].stav.toUpperCase() : "Žiadny stav nezaznamenaný.";
-    const lastStatusClass = records.length ? `status-${records[0].stav}` : '';
-    statusBox.innerHTML = `Posledný stav: <span class="status-badge ${lastStatusClass}">${lastStatus}</span>`;
+            // Rekurzívne volanie pre všetky pod-objekty (prehľadá dochadzka, prestavky, pn, atď.)
+            Object.values(data).forEach(collectRecords);
+        }
 
-    // Vykreslenie všetkých sekcií
-    renderTables(allRecordsCache);
+        // Spustíme zber dát z hlavného uzla používateľa
+        collectRecords(userData);
+        
+        // 3. Triedenie (od najnovšieho)
+        records.sort((a, b) => new Date(b.cas) - new Date(a.cas));
+        allRecordsCache = records;
+        
+        // 4. Aktualizácia stavu
+        const lastStatus = records.length ? records[0].stav.toUpperCase() : "Žiadny stav nezaznamenaný.";
+        const lastStatusClass = records.length ? `status-${records[0].stav}` : '';
+        statusBox.innerHTML = `Posledný stav: <span class="status-badge ${lastStatusClass}">${lastStatus}</span>`;
 
-  } catch (e) {
-    console.error("Kritická chyba pri načítaní dát:", e);
-    statusBox.textContent = "Kritická chyba pri načítaní dát!";
-    renderTables([]);
-  }
+        // 5. Vykreslenie všetkých sekcií
+        renderTables(allRecordsCache);
+
+    } catch (e) {
+        console.error("Kritická chyba pri načítaní dát:", e);
+        statusBox.textContent = "Kritická chyba pri načítaní dát!";
+        renderTables([]);
+    }
 }
 
-// --- Vykreslenie tabuliek (Finálne upravená) ---
+// --- Vykreslenie tabuliek (Používa explicitný počet stĺpcov) ---
 function renderTables(records) {
   const dochadzkaTable = document.getElementById("dochadzkaTable");
   const prestavkyTable = document.getElementById("prestavkyTable");
@@ -213,11 +239,11 @@ function renderTables(records) {
     const sectionRecords = filtered.filter(r => expectedStav.includes(r.stav));
     
     if (!sectionRecords.length) {
-      // Ak nie sú žiadne záznamy, použijeme colspan na základe colCount
+      // Colspan na základe colCount
       bodyEl.innerHTML = `<tr><td colspan="${colCount}">Žiadne záznamy</td></tr>`;
     } else {
       bodyEl.innerHTML = sectionRecords.map(z => {
-        // Odstránime 'T', milisekundy (.XXX) a prípadné 'Z' na konci
+        // Úprava času pre zobrazenie (odstránenie T, milisekúnd a Z)
         let visibleTime = z.cas.replace('T', ' ').split('.')[0]; 
         visibleTime = visibleTime.endsWith('Z') ? visibleTime.slice(0, -1) : visibleTime;
 
@@ -227,7 +253,7 @@ function renderTables(records) {
           // Dochádzka: 2 stĺpce
           return `<tr><td>${visibleTime}</td><td><span class="status-badge ${cls}">${z.stav.toUpperCase()}</span></td></tr>`;
         } else {
-          // Prestávky a PN: 1 stĺpec (čas je v odznaku)
+          // Prestávky a PN: 1 stĺpec
           return `<tr><td><span class="status-badge ${cls}">${visibleTime}</span></td></tr>`;
         }
       }).join("");
@@ -253,16 +279,13 @@ window.exportTable = function(sectionNameId) {
     
     let csv = [];
     
-    // Hlavička súboru
     csv.push(`"Typ záznamu","${sectionTitle.split('(')[0].trim()}"`);
     csv.push(`"Používateľ","${userName}"`);
     csv.push("");
     
-    // Hlavičky tabuľky
     const header = Array.from(table.querySelectorAll("thead th")).map(th => `"${th.innerText.trim()}"`);
     csv.push(header.join(","));
     
-    // Dáta riadkov
     table.querySelectorAll("tbody tr").forEach(row => {
         const cols = Array.from(row.querySelectorAll("td")).map(td => `"${td.textContent.trim()}"`);
         
@@ -271,7 +294,6 @@ window.exportTable = function(sectionNameId) {
         }
     });
     
-    // Stiahnutie súboru
     const blob = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
