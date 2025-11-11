@@ -32,20 +32,20 @@ th,td { border:1px solid #ddd; padding:10px; text-align:left; font-size:14px; }
 th { background:#007bff; color:white; font-weight:500; }
 tr:nth-child(even){ background:#f8f9fa; }
 
-/* --- VIZUÁLNE ODZNAKY (Opravené, bez diakritiky pre JS triedy) --- */
+/* --- VIZUÁLNE ODZNAKY (Opravená farba pre PRICHOD) --- */
 .status-badge {
     font-weight: 600;
     padding: 3px 8px;
     border-radius: 12px;
     display: inline-block;
-    color: white;
+    color: white; /* Biela farba písma pre tmavé pozadia */
     text-align: center;
     min-width: 60px;
     white-space: nowrap; 
 }
-.status-prichod { background: #28a745; } 
+.status-prichod { background: #198754; } /* TMavšia zelená pre lepší kontrast s bielym písmom */
 .status-odchod { background: #dc3545; } 
-.status-prestavka { background: #ffc107; color: #333; } /* Opravené na 'prestavka' bez diakritiky */
+.status-prestavka { background: #ffc107; color: #333; } /* Žltá s tmavým písmom */
 .status-pn { background: #6f42c1; } 
 
 /* --- Modálne okno --- */
@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loadSection(btn.dataset.target);
         });
     });
-    // Predvolené načítanie dochádzky pri štarte (Musí byť za všetkými listenermi!)
+    // Predvolené načítanie dochádzky pri štarte
     loadSection("dochadzka"); 
 });
 
@@ -255,18 +255,18 @@ async function loadAttendance(type, tableId, dateId, searchId){
           const rawType = (log.typ||type).toLowerCase();
           const logTyp = rawType.replace('á', 'a'); // Zabezpečí prestávka -> prestavka
             
+          // Priradenie CSS triedy
+          let statusClass = '';
+          if (logTyp === 'prichod') statusClass = 'status-prichod';
+          else if (logTyp === 'odchod') statusClass = 'status-odchod';
+          else if (logTyp === 'prestavka') statusClass = 'status-prestavka';
+          else if (logTyp === 'pn') statusClass = 'status-pn';
+          
           // Filtrácia
           const isDateMatch = !dateFilter || logDate === dateFilter;
           const isNameMatch = !search || userName.toLowerCase().includes(search);
           
           if(isDateMatch && isNameMatch){ 
-            
-            let statusClass = '';
-            if (logTyp === 'prichod') statusClass = 'status-prichod';
-            else if (logTyp === 'odchod') statusClass = 'status-odchod';
-            else if (logTyp === 'prestavka') statusClass = 'status-prestavka'; // Toto sa spáruje s CSS
-            else if (logTyp === 'pn') statusClass = 'status-pn';
-            
             // Vykreslenie s 3 stĺpcami (Meno, Čas, Typ)
             tableBodyHtml += `<tr>
                 <td>${userName}</td> 
@@ -278,18 +278,17 @@ async function loadAttendance(type, tableId, dateId, searchId){
         });
       });
       
-      // Hlavička tabuľky pre 3 stĺpce je rovnaká pre Dochádzku, Prestávky aj PN
+      // Hlavička tabuľky pre 3 stĺpce je rovnaká
       let finalHtml = "<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>";
       
       if (found) {
           finalHtml += tableBodyHtml;
       } else {
-          // Dôležité: colspan='3' pre 3-stĺpcovú tabuľku, aby sa vizuál nerozbil.
+          // colspan='3' pre 3-stĺpcovú tabuľku
           finalHtml += "<tr><td colspan='3'>Žiadne záznamy podľa filtra.</td></tr>"; 
       }
       finalHtml += "</table>";
       
-      // Vložíme hotovú tabuľku
       el.innerHTML = finalHtml;
 
     } else {
@@ -422,4 +421,3 @@ function loadSection(id){
 
 </body>
 </html>
-
