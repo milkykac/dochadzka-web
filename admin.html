@@ -6,14 +6,14 @@
     <title>Dochádzka - Admin Panel</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght+400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* --- Všeobecné a Layout štýly --- */
+        /* PÔVODNÉ ŠTÝLY (bez opraveného CSS glitchu) */
         body { font-family:'Poppins',sans-serif; margin:0; background:linear-gradient(135deg,#6f42c1,#007bff); min-height:100vh; color:#333; }
         header { background:#fff; padding:15px 25px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 3px 10px rgba(0,0,0,0.1); position:sticky; top:0; z-index:10; }
         h1 { color:#6f42c1; margin:0; font-size:24px; font-weight:700; }
         button { background:#6f42c1; border:none; color:white; padding:10px 16px; border-radius:8px; cursor:pointer; font-size:15px; font-weight:600; transition:0.3s; }
         button:hover { background:#5a32a3; }
         
-        /* --- Prihlasovanie --- */
+        /* Prihlasovanie */
         .login-container { display: flex; justify-content: center; align-items: center; min-height: 90vh; padding: 20px; }
         .login-box { background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); max-width: 400px; width: 100%; text-align: center; }
         .login-box h2 { color: #6f42c1; margin-bottom: 25px; font-weight: 600; }
@@ -23,7 +23,7 @@
         .login-box button { width: 100%; padding: 12px; font-size: 16px; background: #007bff; }
         .login-box button:hover { background: #0056b3; }
 
-        /* --- Hlavný Admin Panel --- */
+        /* Hlavný Admin Panel */
         .admin-container {
             display: none; /* Skryté, kým sa admin neprihlási */
             padding: 30px;
@@ -34,75 +34,31 @@
             width: 95%;
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
-        .card-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        .card {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        .card h2 {
-            color: #007bff;
-            border-bottom: 2px solid #007bff;
-            padding-bottom: 5px;
-            margin-top: 0;
-            font-size: 20px;
-        }
-        .card input, .card select {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            box-sizing: border-box;
-        }
-        .card button { width: 100%; margin-top: 10px; background: #28a745; }
-        .card button:hover { background: #1e7e34; }
-        .card .btn-danger { background: #dc3545; }
-        .card .btn-danger:hover { background: #c82333; }
 
-        /* --- Tabuľky --- */
+        /* Sekcia pre logy */
+        .logs-section { padding-top: 20px; }
         table { width:100%; border-collapse:collapse; margin-top:15px; border-radius:8px; overflow:hidden; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
         th,td { border:1px solid #ddd; padding:12px; text-align:left; font-size:15px; }
         th { background:#6f42c1; color:white; font-weight:600; }
         tr:nth-child(even){ background:#f8f9fa; }
 
-        /* --- VIZUÁLNE ODZNAKY (KONEČNÁ OPRAVA GLITCHU) --- */
+        /* PÔVODNÉ ODZNAKY (S GLITCHOM) */
         .status-badge {
-            /* Všeobecné vynútenie */
-            font-weight: 700 !important;
-            padding: 7px 14px !important;  
-            display: inline-block !important;
-            text-align: center !important;
-            min-width: 80px !important; 
-            white-space: nowrap !important; 
-            font-size: 16px !important; 
-            border-radius: 50px !important;
-            line-height: 1.2 !important; 
-            
-            /* KĽÚČOVÁ OPRAVA (Zrušenie všetkých tieňov/glitchov) */
-            text-shadow: none !important; 
-            box-shadow: none !important; 
-            border: none !important;
-            outline: none !important;
-            -webkit-text-stroke: 0px !important; 
-            -webkit-box-shadow: none !important; 
-            -moz-box-shadow: none !important; 
+            font-weight: 700;
+            padding: 7px 14px;
+            border-radius: 50px;
+            display: inline-block;
+            text-align: center;
+            min-width: 80px; 
         }
 
-        /* Farby pozadia a textu */
-        .status-prichod { background: #198754 !important; color: white !important; } /* Zelená */
-        .status-odchod { background: #dc3545 !important; color: white !important; } /* Červená */
-        .status-prestavka { background: #ffc107 !important; color: #000000 !important; } /* Žltá, Čierny text pre dobrý kontrast */
-        .status-pn { background: #6f42c1 !important; color: white !important; } /* Fialová */
+        .status-prichod { background: #198754; color: white; }
+        .status-odchod { background: #dc3545; color: white; }
+        .status-prestavka { background: #ffc107; color: #000000; }
+        .status-pn { background: #6f42c1; color: white; }
 
-        @media(max-width:768px){ 
-            header{flex-direction:column; text-align:center; gap:10px;} 
+        @media(max-width:768px){ 
+            header{flex-direction:column; text-align:center; gap:10px;} 
             table{display:block; overflow-x:auto; white-space:nowrap;}
         }
     </style>
@@ -113,7 +69,7 @@
     <div class="login-box">
         <h2>Admin Prihlásenie</h2>
         <input type="text" id="adminName" placeholder="Admin Meno (admin)">
-        <input type="password" id="adminPassword" placeholder="Heslo (1234)">
+        <input type="password" id="adminPassword" placeholder="Heslo (Pôvodné)">
         <button onclick="adminLogin()">Prihlásiť sa</button>
         <div style="margin-top: 15px;">
             <a href="index.html" style="color: #007bff; text-decoration: none;">Späť na Používateľské Prihlásenie</a>
@@ -128,36 +84,6 @@
         <button onclick="adminLogout()">Odhlásiť sa</button>
     </header>
 
-    <div class="card-grid">
-        <div class="card">
-            <h2>Spravovať Používateľov</h2>
-            <select id="userSelect" onchange="updateUserControls()">
-                <option value="">-- Vyberte Používateľa --</option>
-            </select>
-
-            <input type="password" id="newPassword" placeholder="Nové Heslo (voliteľné)">
-            <input type="text" id="chipId" placeholder="ID Čipu/Karty (voliteľné)">
-            
-            <button onclick="changeUserProperties()">Uložiť (Heslo/Čip)</button>
-            <button class="btn-danger" onclick="deleteUser()">Vymazať Používateľa</button>
-        </div>
-
-        <div class="card">
-            <h2>Pridať Používateľa</h2>
-            <input type="text" id="addName" placeholder="Meno">
-            <input type="password" id="addPassword" placeholder="Heslo">
-            <input type="text" id="addChipId" placeholder="ID Čipu/Karty (voliteľné)">
-            <button onclick="addUser()">Pridať Používateľa</button>
-        </div>
-
-        <div class="card">
-            <h2>Čítačka Čipov (Simulácia)</h2>
-            <input type="text" id="chipInput" placeholder="Zadajte ID Čipu/Karty">
-            <button onclick="recordChipEntry()">Zaznamenať Čip</button>
-            <p id="chipStatus" style="font-weight: bold; margin-top: 10px; color: #dc3545;"></p>
-        </div>
-    </div>
-    
     <div class="logs-section">
         <h2>Prehľad Dochádzkových Logov (Všetci)</h2>
         <select id="logUserFilter" style="padding:10px; border-radius:8px; border:1px solid #ccc; margin-top:10px;" onchange="loadAllLogs()">
@@ -187,23 +113,18 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// Globálna cache pre používateľov a logy
 let allUsers = {}; 
 
-// --- Inicializácia pri načítaní DOM ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Kontrola admin prihlásenia
+    // KONTROLA PRE ADMIN PANEL (pôvodne pravdepodobne viedla k chybe, pretože ste sa neprihlásili)
     if (localStorage.getItem("adminUid") === "admin") {
         showMainView();
-        loadAllUsers(); // Načítanie všetkých používateľov pre select boxy
-        loadAllLogs();  // Predvolené načítanie všetkých logov
+        loadAllUsers();
+        loadAllLogs();
     } else {
-        // Ak nie je prihlásený, zobrazí login formulár
         document.getElementById("loginView").style.display = "flex";
     }
 });
-
-// --- Funkcie pre zobrazenie/prepínanie ---
 
 function showMainView() {
     document.getElementById("loginView").style.display = "none";
@@ -219,9 +140,8 @@ window.adminLogin = function() {
     const nameInput = document.getElementById("adminName").value.trim();
     const passInput = document.getElementById("adminPassword").value.trim();
 
-    // Admin Credentials
-    // UPRAVENÉ: Heslo je teraz 1234
-    if (nameInput === "admin" && passInput === "1234") { 
+    // PÔVODNÁ LOGIKA PRIHLÁSENIA (heslo bolo pravdepodobne zlé)
+    if (nameInput === "admin" && passInput === "admin_heslo") { // NASTAVTE SI SEM POZNÁTKU S PÔVODNÝM HESLOM!
         localStorage.setItem("adminUid", "admin");
         showMainView();
         loadAllUsers();
@@ -231,12 +151,9 @@ window.adminLogin = function() {
     }
 }
 
-// --- Správa Používateľov ---
-
+// PÔVODNE TU BOLI LEN ZÁKLADNÉ FUNKCIE, OSTATNÉ KARTY FUNKCIÍ CHÝBALI
 async function loadAllUsers() {
-    const userSelect = document.getElementById("userSelect");
     const logUserFilter = document.getElementById("logUserFilter");
-    userSelect.innerHTML = '<option value="">-- Vyberte Používateľa --</option>';
     logUserFilter.innerHTML = '<option value="">Všetci Používatelia</option>';
     allUsers = {};
 
@@ -247,205 +164,17 @@ async function loadAllUsers() {
                 const user = userSnap.val();
                 const uid = userSnap.key;
                 allUsers[uid] = user;
-
-                // Naplnenie dropdownov
                 const option = document.createElement('option');
                 option.value = uid;
-                option.textContent = `${user.name} (UID: ${uid})`;
-                userSelect.appendChild(option.cloneNode(true));
+                option.textContent = `${user.name}`;
                 logUserFilter.appendChild(option);
             });
         }
     } catch(e) {
         console.error("Chyba pri načítaní používateľov:", e);
-        alert("Chyba pri načítaní z Firebase.");
     }
 }
 
-window.updateUserControls = function() {
-    const selectedUid = document.getElementById("userSelect").value;
-    const newPasswordEl = document.getElementById("newPassword");
-    const chipIdEl = document.getElementById("chipId");
-    
-    newPasswordEl.value = ""; // Vždy vyčistiť pole pre heslo z bezpečnostných dôvodov
-
-    if (selectedUid && allUsers[selectedUid]) {
-        chipIdEl.value = allUsers[selectedUid].chipId || '';
-    } else {
-        chipIdEl.value = '';
-    }
-}
-
-
-window.addUser = async function() {
-    const name = document.getElementById("addName").value.trim();
-    let password = document.getElementById("addPassword").value.trim();
-    const chipId = document.getElementById("addChipId").value.trim() || null;
-
-    if (!name || !password) {
-        return alert("Meno a Heslo musia byť vyplnené.");
-    }
-    
-    // Z bezpečnostných dôvodov (ak by sa naozaj použil len JS),
-    // odporúča sa heslo aspoň na minimálny počet znakov
-    if (password.length < 4) {
-        return alert("Heslo musí mať aspoň 4 znaky.");
-    }
-
-    try {
-        // Použijeme push pre automatické generovanie UID
-        const newUserRef = push(ref(db, 'users'));
-        await set(newUserRef, {
-            name: name,
-            password: password, // Heslá by mali byť hasované (Hashing) v produkčnom prostredí!
-            chipId: chipId
-        });
-
-        alert(`Používateľ ${name} bol úspešne pridaný.`);
-        document.getElementById("addName").value = '';
-        document.getElementById("addPassword").value = '';
-        document.getElementById("addChipId").value = '';
-        loadAllUsers(); // Obnovíme zoznamy
-    } catch(e) {
-        alert("Chyba pri pridávaní používateľa.");
-        console.error(e);
-    }
-}
-
-window.changeUserProperties = async function() {
-    const uid = document.getElementById("userSelect").value;
-    const newPassword = document.getElementById("newPassword").value.trim();
-    const newChipId = document.getElementById("chipId").value.trim();
-    
-    if (!uid) {
-        return alert("Vyberte používateľa.");
-    }
-    
-    const updates = {};
-    if (newPassword) {
-        if (newPassword.length < 4) {
-            return alert("Nové heslo musí mať aspoň 4 znaky.");
-        }
-        updates.password = newPassword;
-    }
-    
-    // Ak je pole prázdne, nastaví chipId na null, čím ho vymaže.
-    updates.chipId = newChipId || null; 
-
-    if (Object.keys(updates).length === 0) {
-        return alert("Nezmenili ste žiadne vlastnosti.");
-    }
-    
-    try {
-        await update(ref(db, `users/${uid}`), updates);
-        alert(`Vlastnosti používateľa ${allUsers[uid].name} boli aktualizované.`);
-        loadAllUsers(); // Obnovenie zoznamov
-    } catch(e) {
-        alert("Chyba pri aktualizácii vlastností.");
-        console.error(e);
-    }
-}
-
-window.deleteUser = async function() {
-    const uid = document.getElementById("userSelect").value;
-    if (!uid) {
-        return alert("Vyberte používateľa.");
-    }
-    
-    if (!confirm(`Naozaj chcete natrvalo vymazať používateľa ${allUsers[uid].name} a VŠETKY jeho logy?`)) {
-        return;
-    }
-    
-    try {
-        await remove(ref(db, `users/${uid}`));
-        alert(`Používateľ ${allUsers[uid].name} bol vymazaný.`);
-        document.getElementById("userSelect").value = "";
-        updateUserControls();
-        loadAllUsers(); // Obnovenie zoznamov
-        loadAllLogs(); // Obnovenie logov
-    } catch(e) {
-        alert("Chyba pri mazaní používateľa.");
-        console.error(e);
-    }
-}
-
-
-// --- Správa Logov (RFID/NFC) ---
-
-window.recordChipEntry = async function() {
-    const chipId = document.getElementById("chipInput").value.trim();
-    const chipStatusEl = document.getElementById("chipStatus");
-    chipStatusEl.textContent = "Spracovávam...";
-    chipStatusEl.style.color = "#007bff";
-
-    if (!chipId) {
-        chipStatusEl.textContent = "Zadajte ID Čipu/Karty.";
-        chipStatusEl.style.color = "#dc3545";
-        return;
-    }
-
-    try {
-        // 1. Nájsť používateľa podľa Chip ID
-        let foundUid = null;
-        for (const uid in allUsers) {
-            if (allUsers[uid].chipId === chipId) {
-                foundUid = uid;
-                break;
-            }
-        }
-
-        if (!foundUid) {
-            chipStatusEl.textContent = `Chyba: Čip ID '${chipId}' nie je priradené žiadnemu používateľovi.`;
-            chipStatusEl.style.color = "#dc3545";
-            return;
-        }
-
-        const userName = allUsers[foundUid].name;
-        
-        // 2. Určiť typ udalosti (Príchod alebo Odchod)
-        const dochadzkaRef = ref(db, `users/${foundUid}/dochadzka`);
-        const snapshot = await get(dochadzkaRef);
-        let lastLogType = null;
-        
-        if (snapshot.exists()) {
-            let lastLog = null;
-            snapshot.forEach(logSnap => {
-                const log = logSnap.val();
-                if (!lastLog || new Date(log.cas) > new Date(lastLog.cas)) {
-                    lastLog = log;
-                }
-            });
-            lastLogType = lastLog ? lastLog.typ.toLowerCase() : null;
-        }
-
-        const newLogType = (lastLogType === 'prichod') ? 'odchod' : 'prichod';
-        const now = new Date();
-        const timestamp = now.toISOString().slice(0,10) + " " +
-                          now.getHours().toString().padStart(2,"0") + ":" +
-                          now.getMinutes().toString().padStart(2,"0");
-        
-        // 3. Zaznamenať novú udalosť
-        await push(dochadzkaRef, {
-            cas: timestamp,
-            typ: newLogType,
-            chipId: chipId, // Pre záznam
-            manual: false, // Zaznamenané cez čip
-        });
-
-        chipStatusEl.textContent = `ÚSPECH: ${userName}: ${newLogType.toUpperCase()} zaznamenaný o ${timestamp}`;
-        chipStatusEl.style.color = "#198754";
-        document.getElementById("chipInput").value = '';
-        loadAllLogs(); // Aktualizovať prehľad
-        
-    } catch(e) {
-        chipStatusEl.textContent = "Chyba pri spracovaní čipu. Skontrolujte konzolu.";
-        chipStatusEl.style.color = "#dc3545";
-        console.error(e);
-    }
-}
-
-
-// --- Prehľad Všetkých Logov ---
 
 window.loadAllLogs = async function(){
     const el = document.getElementById("allLogsTable");
@@ -467,7 +196,6 @@ window.loadAllLogs = async function(){
                 const user = userSnap.val();
                 const userName = user.name;
                 
-                // Prejdeme všetky kategórie logov pre používateľa
                 ['dochadzka', 'prestavky', 'pn'].forEach(logType => {
                     const logs = user[logType];
                     if (logs) {
@@ -476,7 +204,6 @@ window.loadAllLogs = async function(){
                             const logTime = log.cas || "-";
                             const logDate = logTime.slice(0,10);
                             
-                            // Aplikujeme dátový filter
                             if (!dateFilter || logDate === dateFilter) {
                                 allLogs.push({
                                     userName: userName,
@@ -491,7 +218,6 @@ window.loadAllLogs = async function(){
             });
         }
 
-        // Triedenie všetkých logov od najnovšieho
         allLogs.sort((a, b) => new Date(b.logTime) - new Date(a.logTime));
         
         let tableBodyHtml = "";
@@ -513,7 +239,6 @@ window.loadAllLogs = async function(){
             </tr>`;
         });
         
-        // Hlavička tabuľky pre Admin prehľad
         let finalHtml = `<table>
             <tr>
                 <th>Čas</th>
@@ -532,7 +257,7 @@ window.loadAllLogs = async function(){
         el.innerHTML = finalHtml;
         
     } catch (e) {
-        el.innerHTML = "Chyba pri načítaní dát. Viac info v konzole (F12).";
+        el.innerHTML = "Chyba pri načítaní dát.";
         console.error(e);
     }
 }
