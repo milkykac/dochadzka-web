@@ -206,46 +206,53 @@ window.addLog = async function(type, typ){
   }
 };
 
-// ----- načítanie dochádzky / prestávok / pn (OPRAVENÉ FILTROVANIE) -----
+// ----- načítanie dochádzky / prestávok / pn (OPRAVENÉ FILTROVANIE DÁTUMU) -----
 async function loadAttendance(type, tableId, dateId, searchId){
   const el = document.getElementById(tableId);
-  el.innerHTML="Načítavam dáta...";
+  el.innerHTML='<div class="loader">Načítavam dáta...</div>'; // Dočasný loader
+  
   const dateFilter = document.getElementById(dateId)?.value;
-  // Zabezpečenie, že search je prázdny reťazec, ak sa nič nezadalo
   const search = document.getElementById(searchId)?.value.toLowerCase().trim() || ""; 
 
   try{
     const snap = await get(ref(db, "users"));
-    let html="<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>";
+    let tableBodyHtml = ""; // Tu budeme zbierať <tr> riadky
+    let found=false;
+
     if(snap.exists()){
-      let found=false;
       snap.forEach(userSnap=>{
         const user = userSnap.val();
-        // Získanie záznamov pre daný typ (dochadzka, prestavky, pn)
         const logsObj = user[type] || {};
         
-        // Iterácia cez záznamy (Zachovávam pôvodný spôsob iterácie)
-        Object.keys(logsObj).sort().forEach(key=>{
-          const log = logsObj[key];
-          const logDate = (log.cas||"").slice(0,10);
-          const name = user.name || "(bez mena)";
-          const logTyp = (log.typ||type).toLowerCase(); // Získanie typu, napr. prichod, prestávka, pn
+        // Získanie kľúčov záznamov a ich zoradenie (novšie záznamy prvé)
+        const sortedKeys = Object.keys(logsObj).sort((a, b) => {
+          const logA = logsObj[a];
+          const logB = logsObj[b];
+          // Porovnávanie ako dátumy pre správne zoradenie
+          return new Date(logB.cas) - new Date(logA.cas); 
+        });
 
-            // OPRAVA FILTROVANIA: Filter sa aplikuje len vtedy, ak je hodnota nastavená
-            const isDateMatch = !dateFilter || logDate === dateFilter;
-            const isNameMatch = !search || name.toLowerCase().includes(search);
-            
-            if(isDateMatch && isNameMatch){ 
+        sortedKeys.forEach(key=>{
+          const log = logsObj[key];
+          // OPRAVA: Extrahovanie iba dátumovej časti (YYYY-MM-DD) pre presné porovnanie
+          const logDate = (log.cas||"").slice(0,10); 
+          const name = user.name || "(bez mena)";
+          const logTyp = (log.typ||type).toLowerCase();
+
+          // OPRAVENÁ FILTRÁCIA DÁTUMU: Porovnáva YYYY-MM-DD reťazce
+          const isDateMatch = !dateFilter || logDate === dateFilter;
+          const isNameMatch = !search || name.toLowerCase().includes(search);
+          
+          if(isDateMatch && isNameMatch){ 
             
-            // Určenie CSS triedy na základe typu
             let statusClass = '';
             if (logTyp === 'prichod') statusClass = 'status-prichod';
             else if (logTyp === 'odchod') statusClass = 'status-odchod';
             else if (logTyp === 'prestávka') statusClass = 'status-prestávka';
             else if (logTyp === 'pn') statusClass = 'status-pn';
             
-            // Vytvorenie HTML s farebným odznakom
-            html += `<tr>
+            // SPRÁVNE VYKRESLENIE RIADKU DOCHÁDZKY
+            tableBodyHtml += `<tr>
                 <td>${name}</td>
                 <td>${log.cas||"-"}</td>
                 <td><span class="status-badge ${statusClass}">${logTyp.toUpperCase()}</span></td>
@@ -254,14 +261,25 @@ async function loadAttendance(type, tableId, dateId, searchId){
           }
         });
       });
-      if(!found) html+="<tr><td colspan='3'>Žiadne záznamy podľa filtra.</td></tr>";
-    } else html+="<tr><td colspan='3'>Žiadne záznamy.</td></tr>";
-    html+="</table>";
-    el.innerHTML=html;
+      
+      // Zostavenie kompletnej tabuľky
+      let finalHtml = "<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>";
+      if (found) {
+          finalHtml += tableBodyHtml;
+      } else {
+          finalHtml += "<tr><td colspan='3'>Žiadne záznamy podľa filtra.</td></tr>";
+      }
+      finalHtml += "</table>";
+      
+      el.innerHTML = finalHtml;
+
+    } else {
+      el.innerHTML = "<table><tr><td colspan='3'>Žiadni používatelia alebo žiadne záznamy.</td></tr></table>";
+    }
   } catch(e){ el.innerHTML="Chyba pri načítaní dát."; console.error(e); }
 }
 
-// ----- načítanie používateľov -----
+// ----- načítanie používateľov (Kód nezmenený, len pre kompletnosť) -----
 async function loadUsers(){
   const el = document.getElementById("usersTable");
   el.innerHTML="Načítavam používateľov...";
@@ -289,7 +307,7 @@ async function loadUsers(){
   } catch(e){ el.innerHTML="Chyba pri načítaní používateľov."; console.error(e); }
 }
 
-// ----- nové čipy -----
+// ----- Nové čipy, priradenie, modálne okná (Kód nezmenený, len pre kompletnosť) -----
 async function loadNewChips(){
   const el = document.getElementById("newChipsContainer");
   el.innerHTML="Načítavam čipy...";
@@ -383,7 +401,7 @@ function loadSection(id){
   else if(id==="pouzivatelia"){ loadUsers(); loadNewChips(); }
 }
 
-// Pridanie listenerov pre vyhľadávacie a dátumové polia (pre automatické obnovenie)
+// Pridanie listenerov pre vyhľadávacie a dátumové polia
 document.getElementById("dateDochadzka").addEventListener("change", () => loadSection('dochadzka'));
 document.getElementById("searchDochadzka").addEventListener("input", () => loadSection('dochadzka'));
 
