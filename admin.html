@@ -121,7 +121,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// Prepínanie sekcií
+// --- Prepínanie sekcií ---
 document.querySelectorAll("nav button").forEach(btn=>{
   btn.addEventListener("click",()=>{
     document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
@@ -132,7 +132,7 @@ document.querySelectorAll("nav button").forEach(btn=>{
   });
 });
 
-// Export CSV
+// --- Export CSV ---
 function exportTable(id){
   const table=document.getElementById(id).querySelector("table");
   if(!table)return alert("Žiadne dáta na export.");
@@ -148,7 +148,7 @@ function exportTable(id){
   a.click();
 }
 
-// Funkcia pridania logu (príchod/odchod/prestavka)
+// --- Pridanie logu ---
 async function addLog(type){
   const chipUid = prompt("Zadaj čip používateľa:");
   if(!chipUid) return;
@@ -160,8 +160,7 @@ async function addLog(type){
     const timestamp = new Date().toISOString();
     let path = `users/${uid}/dochadzka`;
     if(type==="prestávka") path = `users/${uid}/prestavky`;
-    const newLogRef = ref(db, `${path}/${Date.now()}`);
-    await set(newLogRef, { cas: timestamp, typ: type, manual: true });
+    await set(ref(db, `${path}/${Date.now()}`), { cas: timestamp, typ: type, manual: true });
     alert(`Zaznamenané: ${type} o ${timestamp}`);
     loadSection("dochadzka");
     if(type==="prestávka") loadSection("prestavky");
@@ -175,7 +174,7 @@ async function addLog(type){
   }
 }
 
-// Načítanie logov
+// --- Načítanie logov ---
 async function loadAttendance(type, tableId, dateId, searchId){
   const el = document.getElementById(tableId);
   el.innerHTML="Načítavam dáta...";
@@ -184,117 +183,155 @@ async function loadAttendance(type, tableId, dateId, searchId){
   try{
     const snap = await get(ref(db, "users"));
     let html = "<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>";
-    snap.forEach(userSnap=>{
-      const user = userSnap.val();
-      const logsObj = user[type] || {};
-      const keys = Object.keys(logsObj).sort(); // zoradenie podľa času
-
-      keys.forEach(key=>{
-        const log = logsObj[key];
-        const logDate = (log.cas||"").slice(0,10);
-        const name = user.name||"(bez mena)";
-        let rowClass = "";
-        if(log.typ==="prichod") rowClass="style='background:#d4edda;'"; // zelená – príchod
-        else if(log.typ==="odchod") rowClass="style='background:#f8d7da;'"; // červená – odchod
-        else if(log.typ==="prestávka") rowClass="style='background:#fff3cd;'"; // žltá – prestávka
-        if((!dateFilter||logDate===dateFilter)&&(!search||name.toLowerCase().includes(search))){
-          html += `<tr ${rowClass}><td>${name}</td><td>${log.cas||"-"}</td><td>${log.typ||type}</td></tr>`;
-        }
+    if(snap.exists()){
+      snap.forEach(userSnap=>{
+        const user = userSnap.val();
+        const logsObj = user[type] || {};
+        const keys = Object.keys(logsObj).sort();
+        keys.forEach(key=>{
+          const log = logsObj[key];
+          const logDate = (log.cas||"").slice(0,10);
+          const name = user.name||"(bez mena)";
+          let rowClass = "";
+          if(log.typ==="prichod") rowClass="style='background:#d4edda;'";
+          else if(log.typ==="odchod") rowClass="style='background:#f8d7da;'";
+          else if(log.typ==="prestávka") rowClass="style='background:#fff3cd;'";
+          if((!dateFilter||logDate===dateFilter)&&(!search||name.toLowerCase().includes(search))){
+            html += `<tr ${rowClass}><td>${name}</td><td>${log.cas||"-"}</td><td>${log.typ||type}</td></tr>`;
+          }
+        });
       });
-    });
-    html+="</table>";
+    } else {
+      html += "<tr><td colspan='3'>Žiadne záznamy</td></tr>";
+    }
+    html += "</table>";
     el.innerHTML = html;
-  } catch(e){ 
-    if(e.message.includes("PERMISSION_DENIED")) {
-      el.innerHTML="Prístup odmietnutý. Skontrolujte pravidlá Firebase databázy.";
-    } else {
-      el.innerHTML="Chyba pri načítaní dát."; 
-    }
-    console.error(e); 
-  }
-}
-
-// Používatelia
-async function loadUsers(){
-  const el=document.getElementById("usersTable");
-  el.innerHTML="Načítavam používateľov...";
-  try{
-    const usersSnap = await get(ref(db, "users"));
-    const chipToUserSnap = await get(ref(db, "chipToUser"));
-    if(!usersSnap.exists()){el.innerHTML="Žiadni používatelia"; return;}
-    const chipMap = {};
-    if(chipToUserSnap.exists()){
-      chipToUserSnap.forEach(c=>{
-        chipMap[c.val()] = c.key; // uid to chipUid
-      });
-    }
-    let html="<table><tr><th>Meno</th><th>Čip</th><th>Akcie</th></tr>";
-    usersSnap.forEach(u=>{
-      const d=u.val();
-      const chip = chipMap[u.key] || d.chipUid || "-";
-      html+=`<tr><td>${d.name||"(bez mena)"}</td><td>${chip}</td>
-      <td><button onclick="removeUser('${u.key}')">🗑️</button>
-      <button onclick="openChangePassword('${u.key}')">🔑</button></td></tr>`;
-    });
-    html+="</table>";
-    el.innerHTML=html;
-  }catch(e){el.innerHTML="Chyba pri načítaní používateľov.";}
-}
-
-// Nové čipy
-async function loadNewChips(){
-  const el=document.getElementById("newChipsContainer");
-  el.innerHTML="Načítavam čipy...";
-  try{
-    const snap = await get(ref(db, "newChips"));
-    el.innerHTML="";
-    if(!snap.exists()){el.innerHTML="Žiadne nové čipy"; return;}
-    Object.keys(snap.val()).forEach(chip=>{
-      const div=document.createElement("div");
-      div.className="new-chip";
-      div.innerHTML=`${chip} <button onclick="assignChip('${chip}')">Priradiť</button> <button onclick="removeChip('${chip}')">Odstrániť</button>`;
-      el.appendChild(div);
-    });
-  }catch(e){el.innerHTML="Chyba pri načítaní čipov.";}
-}
-
-// Pomocné funkcie
-async function assignChip(chipUid){
-  const name=prompt("Zadaj meno používateľa:");
-  if(!name) return;
-  const snap=await get(ref(db, "users"));
-  let uid=null;
-  snap.forEach(u=>{if(u.val().name===name) uid=u.key;});
-  if(!uid) return alert("Používateľ nenájdený!");
-  await set(ref(db, `users/${uid}/chipUid`), chipUid);
-  await set(ref(db, `chipToUser/${chipUid}`), uid);
-  await set(ref(db, `newChips/${chipUid}`), null);
-  loadUsers(); loadNewChips();
-}
-async function removeChip(chipUid){ if(confirm("Naozaj odstrániť čip?")){ await set(ref(db, `newChips/${chipUid}`), null); loadNewChips(); } }
-async function removeUser(id){ if(confirm("Odstrániť používateľa?")){ await set(ref(db, `users/${id}`), null); loadUsers(); } }
-function logout(){ alert("Odhlásenie"); }
-function openChangePassword(id){ document.getElementById("changePasswordModal").style.display="flex"; document.getElementById("changePasswordUserId").value=id; }
-function closeModal(){ document.getElementById("changePasswordModal").style.display="none"; }
-async function saveNewPassword(){
-  const id=document.getElementById("changePasswordUserId").value;
-  const pass=document.getElementById("newPassword").value.trim();
-  if(!pass) return alert("Zadaj nové heslo.");
-  try {
-    await set(ref(db, `users/${id}/password`), pass);
-    alert("Heslo zmenené.");
-    closeModal();
-  } catch(e) {
-    if(e.message.includes("PERMISSION_DENIED")) {
-      alert("Prístup odmietnutý. Skontrolujte pravidlá Firebase databázy.");
-    } else {
-      alert("Chyba pri zmene hesla.");
-    }
+  } catch(e){
+    if(e.message.includes("PERMISSION_DENIED")) el.innerHTML="Prístup odmietnutý. Skontrolujte pravidlá Firebase databázy.";
+    else el.innerHTML="Chyba pri načítaní dát.";
     console.error(e);
   }
 }
 
-// Sekcie
+// --- Používatelia ---
+async function loadUsers(){
+  const el = document.getElementById("usersTable");
+  el.innerHTML = "Načítavam používateľov...";
+  try {
+    const usersSnap = await get(ref(db, "users"));
+    const chipToUserSnap = await get(ref(db, "chipToUser"));
+    if(!usersSnap.exists()){
+      el.innerHTML = "Žiadni používatelia.";
+      return;
+    }
+    const chipMap = {};
+    if(chipToUserSnap.exists()){
+      chipToUserSnap.forEach(c => { chipMap[c.val()] = c.key; });
+    }
+    let html="<table><tr><th>Meno</th><th>Čip</th><th>Akcie</th></tr>";
+    usersSnap.forEach(u=>{
+      const d = u.val();
+      const chip = chipMap[u.key] || d.chipUid || "-";
+      html+=`<tr>
+        <td>${d.name||"(bez mena)"}</td>
+        <td>${chip}</td>
+        <td>
+          <button onclick="removeUser('${u.key}')">🗑️</button>
+          <button onclick="openChangePassword('${u.key}')">🔑</button>
+        </td>
+      </tr>`;
+    });
+    html+="</table>";
+    el.innerHTML = html;
+  } catch(e){
+    if(e.message.includes("PERMISSION_DENIED")) el.innerHTML="Prístup odmietnutý. Skontrolujte pravidlá Firebase databázy.";
+    else el.innerHTML="Chyba pri načítaní používateľov.";
+    console.error(e);
+  }
+}
+
+// --- Nové čipy ---
+async function loadNewChips(){
+  const el = document.getElementById("newChipsContainer");
+  el.innerHTML = "Načítavam čipy...";
+  try{
+    const snap = await get(ref(db, "newChips"));
+    el.innerHTML="";
+    if(!snap.exists() || Object.keys(snap.val()).length===0){
+      el.innerHTML="Žiadne nové čipy.";
+      return;
+    }
+    Object.keys(snap.val()).forEach(chip=>{
+      const div = document.createElement("div");
+      div.className = "new-chip";
+      div.innerHTML = `${chip} <button onclick="assignChip('${chip}')">Priradiť</button> <button onclick="removeChip('${chip}')">Odstrániť</button>`;
+      el.appendChild(div);
+    });
+  } catch(e){
+    if(e.message.includes("PERMISSION_DENIED")) el.innerHTML="Prístup odmietnutý. Skontrolujte pravidlá Firebase databázy.";
+    else el.innerHTML="Chyba pri načítaní čipov.";
+    console.error(e);
+  }
+}
+
+// --- Pomocné funkcie ---
+async function assignChip(chipUid){
+  const name = prompt("Zadaj meno používateľa:");
+  if(!name) return;
+  try {
+    const snap = await get(ref(db, "users"));
+    let uid=null;
+    snap.forEach(u=>{if(u.val().name===name) uid=u.key;});
+    if(!uid) return alert("Používateľ nenájdený!");
+    await set(ref(db, `users/${uid}/chipUid`), chipUid);
+    await set(ref(db, `chipToUser/${chipUid}`), uid);
+    await set(ref(db, `newChips/${chipUid}`), null);
+    loadUsers(); loadNewChips();
+  } catch(e){
+    alert("Chyba pri priraďovaní čipu.");
+    console.error(e);
+  }
+}
+
+async function removeChip(chipUid){
+  if(confirm("Naozaj odstrániť čip?")) {
+    await set(ref(db, `newChips/${chipUid}`), null);
+    loadNewChips();
+  }
+}
+
+async function removeUser(id){
+  if(confirm("Odstrániť používateľa?")){
+    await set(ref(db, `users/${id}`), null);
+    loadUsers();
+  }
+}
+
+function logout(){ alert("Odhlásenie"); }
+
+function openChangePassword(id){
+  document.getElementById("changePasswordModal").style.display="flex";
+  document.getElementById("changePasswordUserId").value=id;
+}
+
+function closeModal(){ document.getElementById("changePasswordModal").style.display="none"; }
+
+async function saveNewPassword(){
+  const id=document.getElementById("changePasswordUserId").value;
+  const pass=document.getElementById("newPassword").value.trim();
+  if(!pass) return alert("Zadaj nové heslo.");
+  try{
+    await set(ref(db, `users/${id}/password`), pass);
+    alert("Heslo zmenené.");
+    closeModal();
+  } catch(e){
+    if(e.message.includes("PERMISSION_DENIED")) alert("Prístup odmietnutý. Skontrolujte pravidlá Firebase databázy.");
+    else alert("Chyba pri zmene hesla.");
+    console.error(e);
+  }
+}
+
+// --- Sekcie ---
 function loadSection(id){
   if(id==="dochadzka") loadAttendance("dochadzka","dochadzkaTable","dateDochadzka","searchDochadzka");
   if(id==="prestavky") loadAttendance("prestavky","prestavkyTable","datePrestavky","searchPrestavky");
@@ -302,10 +339,12 @@ function loadSection(id){
   if(id==="pouzivatelia"){ loadUsers(); loadNewChips(); }
 }
 
-// Inicializácia
+// --- Inicializácia ---
 loadSection("dochadzka");
 ["dateDochadzka","searchDochadzka","datePrestavky","searchPrestavky","datePN","searchPN"].forEach(id=>{
-  document.getElementById(id).addEventListener("input",()=>{ loadSection(document.querySelector("section.active").id); });
+  document.getElementById(id).addEventListener("input",()=>{
+    loadSection(document.querySelector("section.active").id);
+  });
 });
 </script>
 </body>
