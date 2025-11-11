@@ -147,7 +147,7 @@ if (!userId) {
     debugUidEl.textContent = `Aktuálne načítané UID: ${userId}`;
 }
 
-// --- Načítanie dát používateľa z Firebase (ROBUSTNÁ VERZIA) ---
+// --- Načítanie dát používateľa z Firebase (FINÁLNA ROBUSTNÁ VERZIA) ---
 async function loadUserData() {
     try {
         const userSnap = await get(ref(db, `users/${userId}`));
@@ -166,64 +166,65 @@ async function loadUserData() {
         userNameEl.textContent = userData.name || "(bez mena)";
 
         const records = [];
-        const logTypes = ["dochadzka", "prestavky", "pn"];
-
+        const allPossibleLogs = [];
+        
         // 1. Zber záznamov z OČAKÁVANÝCH PODUZLOV ("dochadzka", "prestavky", "pn")
-        logTypes.forEach(type => {
+        // Týmto zozbierame dáta uložené pod štandardnou štruktúrou
+        ["dochadzka", "prestavky", "pn"].forEach(type => {
             const logsObj = userData[type] || {};
-            
-            Object.values(logsObj).forEach(log => {
-                if (log && log.cas && log.typ) {
-                    let cleanTime = String(log.cas).replace(' ', 'T');
-                    
-                    if (!cleanTime.includes('-')) return; // Ignorujeme nekompatibilné formáty
-
-                    const recordType = String(log.typ).toLowerCase();
-                    
-                    // Zbierame len relevantné typy a kontrolujeme, či typ sedí
-                    // (Používame slice(0, -1) na odstránenie 's' z dochadzka/prestavky/pn)
-                    if (recordType === type.slice(0, -1) || (type === "dochadzka" && (recordType === "prichod" || recordType === "odchod"))) {
-                        records.push({
-                            cas: cleanTime,
-                            stav: recordType,
-                        });
-                    }
-                }
-            });
+            Object.values(logsObj).forEach(log => allPossibleLogs.push(log));
         });
         
-        // 2. EXPLICITNÁ KONTROLA PRE PLOCHÉ ZÁZNAMY (Prestávky/PN) v hlavnom uzle
-        // Toto rieši situáciu, keď sú Prestávky/PN uložené priamo pod ID používateľa
-        Object.values(userData).forEach(log => {
-             if (log && log.cas && log.typ) {
-                 const recordType = String(log.typ).toLowerCase();
-                 // Hľadáme tie, ktoré sme už nenašli v kroku 1
-                 if (recordType === "prestavka" || recordType === "pn") {
-                     let cleanTime = String(log.cas).replace(' ', 'T');
-                     if (!cleanTime.includes('-')) return;
-                     
-                     // Vyhneme sa duplikátom: Ak záznam s rovnakým časom a typom už existuje, preskočíme ho.
-                     if (!records.some(r => r.cas === cleanTime && r.stav === recordType)) {
-                          records.push({
-                             cas: cleanTime,
-                             stav: recordType,
-                         });
-                     }
+        // 2. Zber záznamov z PLOCHÝCH/NEŠTANDARDNÝCH uzlov (priamo pod UID)
+        // Toto rieši Prestávky uložené mimo poduzlu 'prestavky'
+        Object.values(userData).forEach(prop => {
+            if (prop && prop.cas && prop.typ) {
+                // Pridávame len logy, ktoré majú čas a typ, a ktoré nie sú 'name', 'password', 'chipUid', atď.
+                // Na konci sa zbavíme duplikátov
+                allPossibleLogs.push(prop); 
+            }
+        });
+        
+        // 3. Spracovanie, Normalizácia a Filtrácia VŠETKÝCH NÁJDENÝCH LOGOV
+        allPossibleLogs.forEach(log => {
+            if (!log || !log.cas || !log.typ) return;
+
+            let cleanTime = String(log.cas).replace(' ', 'T');
+            if (!cleanTime.includes('-')) return; // Zlý formát dátumu (napr. chýbajúci rok)
+
+            // Normalizácia typu: odstránenie diakritiky, malé písmená a hľadanie kľúčového slova
+            const cleanType = String(log.typ)
+                .normalize("NFD").replace(/[\u0300-\u036f]/g, "") 
+                .toLowerCase();
+
+            let recordType = null;
+            if (cleanType.includes('prichod')) recordType = 'prichod';
+            else if (cleanType.includes('odchod')) recordType = 'odchod';
+            else if (cleanType.includes('prestavka')) recordType = 'prestavka'; // Najrobustnejší filter pre Prestávku
+            else if (cleanType.includes('pn')) recordType = 'pn';
+            
+            if (recordType) {
+                 // Ošetrenie duplikátov: logy sa mohli objaviť dvakrát (štandardne a ako plochý)
+                 const isDuplicate = records.some(r => r.cas === cleanTime && r.stav === recordType);
+                 if (!isDuplicate) {
+                     records.push({
+                         cas: cleanTime,
+                         stav: recordType,
+                     });
                  }
-             }
-         });
+            }
+        });
 
-
-        // 3. Triedenie (od najnovšieho)
+        // 4. Triedenie (od najnovšieho)
         records.sort((a, b) => new Date(b.cas) - new Date(a.cas));
         allRecordsCache = records;
         
-        // 4. Aktualizácia stavu
+        // 5. Aktualizácia stavu
         const lastStatus = records.length ? records[0].stav.toUpperCase() : "Žiadny stav nezaznamenaný.";
         const lastStatusClass = records.length ? `status-${records[0].stav}` : '';
         statusBox.innerHTML = `Posledný stav: <span class="status-badge ${lastStatusClass}">${lastStatus}</span>`;
 
-        // 5. Vykreslenie všetkých sekcií
+        // 6. Vykreslenie všetkých sekcií
         renderTables(allRecordsCache);
 
     } catch (e) {
@@ -259,7 +260,7 @@ function renderTables(records) {
       bodyEl.innerHTML = `<tr><td colspan="${colCount}">Žiadne záznamy</td></tr>`;
     } else {
       bodyEl.innerHTML = sectionRecords.map(z => {
-        // Úprava času pre zobrazenie (odstránenie T, milisekúnd a Z)
+        // Úprava času pre zobrazenie
         let visibleTime = z.cas.replace('T', ' ').split('.')[0]; 
         visibleTime = visibleTime.endsWith('Z') ? visibleTime.slice(0, -1) : visibleTime;
 
@@ -269,7 +270,7 @@ function renderTables(records) {
           // Dochádzka: 2 stĺpce
           return `<tr><td>${visibleTime}</td><td><span class="status-badge ${cls}">${z.stav.toUpperCase()}</span></td></tr>`;
         } else {
-          // Prestávky a PN: 1 stĺpec
+          // Prestávky a PN: 1 stĺpec (Zobrazujeme celý záznam v jednom stĺpci s odznakom)
           return `<tr><td><span class="status-badge ${cls}">${visibleTime}</span></td></tr>`;
         }
       }).join("");
@@ -317,7 +318,7 @@ window.exportTable = function(sectionNameId) {
     a.click();
 };
 
-// --- Listenery (Bezo zmeny) ---
+// --- Listenery ---
 
 document.getElementById("logoutBtn").addEventListener("click", () => {
   localStorage.removeItem("uid");
@@ -348,4 +349,3 @@ loadUserData();
 </script>
 </body>
 </html>
-
