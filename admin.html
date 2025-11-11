@@ -99,7 +99,7 @@ tr:nth-child(even){ background:#f8f9fa; }
 </div>
 </div>
 
-<!-- ✅ Firebase compat SDK -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
@@ -145,7 +145,38 @@ function exportTable(id){
   a.click();
 }
 
-// Načítanie používateľov
+// Načítanie dát
+async function loadAttendance(type, tableId, dateId, searchId){
+  const el=document.getElementById(tableId);
+  el.innerHTML="Načítavam dáta...";
+  const dateFilter=document.getElementById(dateId)?.value;
+  const search=document.getElementById(searchId)?.value.toLowerCase()||"";
+  try{
+    const snap=await db.ref(type).get();
+    const usersSnap=await db.ref("users").get();
+    const users=usersSnap.exists()?usersSnap.val():{};
+    let html="<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>";
+    if(snap.exists()){
+      snap.forEach(uidSnap=>{
+        const uid=uidSnap.key;
+        uidSnap.forEach(logSnap=>{
+          const val=logSnap.val();
+          const logDate=(val.cas||"").slice(0,10);
+          const name=users[uid]?.name || "(bez mena)";
+          if((!dateFilter||logDate===dateFilter)&&(!search||name.toLowerCase().includes(search))){
+            html+=`<tr><td>${name}</td><td>${val.cas||"-"}</td><td>${val.typ||type}</td></tr>`;
+          }
+        });
+      });
+    } else {
+      html+="<tr><td colspan='3'>Žiadne dáta</td></tr>";
+    }
+    html+="</table>";
+    el.innerHTML=html;
+  }catch(e){el.innerHTML="Chyba pri načítaní dát.";}
+}
+
+// Používatelia
 async function loadUsers(){
   const el=document.getElementById("usersTable");
   el.innerHTML="Načítavam používateľov...";
@@ -162,38 +193,7 @@ async function loadUsers(){
   el.innerHTML=html;
 }
 
-// Načítanie dochádzky
-async function loadAttendance(type, tableId, dateId, searchId){
-  const el=document.getElementById(tableId);
-  el.innerHTML="Načítavam dáta...";
-  const dateFilter=document.getElementById(dateId)?.value;
-  const search=document.getElementById(searchId)?.value.toLowerCase()||"";
-  try{
-    const snap=await db.ref(type).get();
-    const chipMapSnap=await db.ref("chipToUser").get();
-    const chipMap=chipMapSnap.exists()?chipMapSnap.val():{};
-    const usersSnap=await db.ref("users").get();
-    const users=usersSnap.exists()?usersSnap.val():{};
-
-    let html="<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>";
-    if(snap.exists()){
-      snap.forEach(u=>{
-        const uid=u.key;
-        u.forEach(log=>{
-          const val=log.val();
-          const logDate=(val.cas||"").slice(0,10);
-          const name=users[uid]?.name || "(bez mena)";
-          if((!dateFilter||logDate===dateFilter)&&(!search||name.toLowerCase().includes(search))){
-            html+=`<tr><td>${name}</td><td>${val.cas||"-"}</td><td>${val.typ||"-"}</td></tr>`;
-          }
-        });
-      });
-    }
-    html+="</table>";
-    el.innerHTML=html;
-  }catch(e){el.innerHTML="Chyba pri načítaní dát.";}
-}
-
+// Nové čipy
 async function loadNewChips(){
   const el=document.getElementById("newChipsContainer");
   el.innerHTML="Načítavam čipy...";
@@ -222,13 +222,11 @@ async function assignChip(chipUid){
   await db.ref("newChips/"+chipUid).remove();
   loadUsers(); loadNewChips();
 }
-
 async function removeChip(chipUid){
   if(confirm("Naozaj odstrániť čip?")){await db.ref("newChips/"+chipUid).remove();loadNewChips();}
 }
-
-function logout(){alert("Odhlásenie");}
 async function removeUser(id){if(confirm("Odstrániť používateľa?")){await db.ref("users/"+id).remove();loadUsers();}}
+function logout(){alert("Odhlásenie");}
 function openChangePassword(id){document.getElementById("changePasswordModal").style.display="flex";document.getElementById("changePasswordUserId").value=id;}
 function closeModal(){document.getElementById("changePasswordModal").style.display="none";}
 async function saveNewPassword(){
@@ -240,6 +238,7 @@ async function saveNewPassword(){
   closeModal();
 }
 
+// Sekcie
 function loadSection(id){
   if(id==="dochadzka")loadAttendance("dochadzka","dochadzkaTable","dateDochadzka","searchDochadzka");
   if(id==="prestavky")loadAttendance("prestavky","prestavkyTable","datePrestavky","searchPrestavky");
@@ -247,8 +246,9 @@ function loadSection(id){
   if(id==="pouzivatelia"){loadUsers();loadNewChips();}
 }
 
-// po načítaní
 loadSection("dochadzka");
+
+// Filtre
 ["dateDochadzka","searchDochadzka","datePrestavky","searchPrestavky","datePN","searchPN"].forEach(id=>{
   document.getElementById(id).addEventListener("input",()=>{
     const active=document.querySelector("section.active").id;
@@ -256,10 +256,5 @@ loadSection("dochadzka");
   });
 });
 </script>
-
 </body>
 </html>
-
-
-
-
