@@ -11,34 +11,29 @@ header { background:#fff; padding:15px 25px; display:flex; justify-content:space
 h1 { color:#007bff; margin:0; font-size:22px; font-weight:600; }
 button { background:#007bff; border:none; color:white; padding:8px 14px; border-radius:8px; cursor:pointer; font-size:14px; transition:0.3s; }
 button:hover { background:#0056b3; }
-nav { background:#fff; display:flex; justify-content:center; padding:10px; gap:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); position:sticky; top:70px; z-index:5; }
-nav button { background:#007bff; color:white; padding:8px 14px; border-radius:8px; font-weight:500; cursor:pointer; }
+nav { background:#fff; display:flex; justify-content:center; padding:10px; gap:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); position:sticky; top:70px; z-index:5; flex-wrap:wrap; }
 nav button.active { background:#6f42c1; }
 section { display:none; padding:25px; background:#fff; margin:25px auto; border-radius:12px; max-width:1100px; box-shadow:0 4px 20px rgba(0,0,0,0.1); transition:0.3s; }
 section.active { display:block; }
 h2 { color:#007bff; margin-top:0; border-bottom:2px solid #007bff; padding-bottom:5px; }
 table { width:100%; border-collapse:collapse; margin-top:15px; border-radius:8px; overflow:hidden; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
 th,td { border:1px solid #ddd; padding:10px; text-align:left; font-size:14px; }
-th { background:#007bff; color:white; font-weight:500; cursor:pointer; user-select:none; }
+th { background:#007bff; color:white; font-weight:500; }
 tr:nth-child(even){ background:#f8f9fa; }
 .loader{ text-align:center; padding:20px; color:#007bff; font-weight:bold; }
-td button { background:#007bff; font-size:13px; margin-right:5px; border-radius:6px; padding:5px 8px; }
-td button:hover { background:#0056b3; }
 .export-btn{ margin-top:15px; background:#28a745; border-radius:8px; padding:8px 14px; }
 .export-btn:hover{ background:#1e7e34; }
 .new-chip { background:#17a2b8; padding:8px 10px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border-radius:6px; color:white; font-size:14px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
-.new-chip button { background:#007bff; color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-size:13px; }
+.new-chip button { background:#007bff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-size:13px; }
 .new-chip button:hover { background:#0056b3; }
-/* Modály */
 .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; }
 .modal-content{ background:#fff; padding:20px; border-radius:8px; width:90%; max-width:400px; position:relative; animation:fadeIn 0.3s; box-shadow:0 5px 15px rgba(0,0,0,0.2);}
 .modal-content input{ width:100%; margin-top:10px; padding:8px; border:1px solid #ccc; border-radius:6px; font-size:14px; }
-.modal-content button{ width:100%; margin-top:10px; border-radius:6px; padding:8px 0; font-weight:500; cursor:pointer; background:#007bff; color:white; transition:0.3s;}
+.modal-content button{ width:100%; margin-top:10px; border-radius:6px; padding:8px 0; font-weight:500; background:#007bff; color:white; transition:0.3s;}
 .modal-content button:hover{ background:#0056b3; }
 #closeModal{ position:absolute; right:10px; top:5px; font-size:22px; cursor:pointer; color:#333; }
 @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
-/* Mobilná optimalizácia */
-@media(max-width:768px){ header{flex-direction:column; text-align:center; gap:10px;} nav{flex-wrap:wrap;} nav button{flex:1 1 50%; font-size:14px; padding:10px;} table{display:block; overflow-x:auto; white-space:nowrap;} th,td{padding:8px 6px; font-size:14px;} }
+@media(max-width:768px){ header{flex-direction:column; text-align:center; gap:10px;} table{display:block; overflow-x:auto; white-space:nowrap;} }
 </style>
 </head>
 <body>
@@ -50,7 +45,7 @@ td button:hover { background:#0056b3; }
 
 <nav>
 <button data-target="dochadzka" class="active">Dochádzka</button>
-<button data-target="prestávky">Prestávky</button>
+<button data-target="prestavky">Prestávky</button>
 <button data-target="pn">PN</button>
 <button data-target="pouzivatelia">Používatelia</button>
 </nav>
@@ -65,14 +60,14 @@ td button:hover { background:#0056b3; }
 <div id="dochadzkaTable" class="loader">Načítavam dáta...</div>
 </section>
 
-<section id="prestávky">
+<section id="prestavky">
 <h2>Prestávky</h2>
-<button class="export-btn" onclick="exportTable('prestávkyTable')">Exportovať do CSV</button>
+<button class="export-btn" onclick="exportTable('prestavkyTable')">Exportovať do CSV</button>
 <div style="display:flex; gap:10px; margin-top:10px;">
-<input type="date" id="datePrestávky" style="flex:1;">
-<input type="text" id="searchPrestávky" placeholder="Hľadať..." style="flex:2;">
+<input type="date" id="datePrestavky" style="flex:1;">
+<input type="text" id="searchPrestavky" placeholder="Hľadať..." style="flex:2;">
 </div>
-<div id="prestávkyTable" class="loader">Načítavam dáta...</div>
+<div id="prestavkyTable" class="loader">Načítavam dáta...</div>
 </section>
 
 <section id="pn">
@@ -89,7 +84,7 @@ td button:hover { background:#0056b3; }
 <h2>Používatelia</h2>
 <button class="export-btn" onclick="exportTable('usersTable')">Exportovať do CSV</button>
 <div id="usersTable" class="loader">Načítavam používateľov...</div>
-<h3>Nepřiradené čipy</h3>
+<h3>Nepriradené čipy</h3>
 <div id="newChipsContainer" class="loader">Načítavam čipy...</div>
 </section>
 
@@ -125,6 +120,7 @@ document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"))
 btn.classList.add("active");
 document.querySelectorAll("section").forEach(sec=>sec.classList.remove("active"));
 document.getElementById(btn.dataset.target).classList.add("active");
+loadSection(btn.dataset.target);
 });
 });
 
@@ -144,10 +140,38 @@ a.click();
 }
 
 let usersData={};
+
 async function loadUsersData(){
 const snap=await db.ref("users").get();
 usersData={};
 snap.forEach(u=>usersData[u.key]=u.val());
+}
+
+async function loadAttendance(type, tableId, dateId, searchId){
+const el=document.getElementById(tableId);
+el.innerHTML="Načítavam dáta...";
+await loadUsersData();
+const dateFilter=document.getElementById(dateId).value;
+const search=document.getElementById(searchId).value.toLowerCase();
+try{
+const snap=await db.ref(type).get();
+let html="<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>";
+if(snap.exists()){
+snap.forEach(u=>{
+const uid=u.key;
+u.forEach(log=>{
+const val=log.val();
+const name=usersData[uid]?.name || "(bez mena)";
+const logDate=val.cas?.slice(0,10);
+if((!dateFilter || logDate===dateFilter) && (!search || name.toLowerCase().includes(search))){
+html+=`<tr><td>${name}</td><td>${val.cas||"-"}</td><td>${val.typ||"-"}</td></tr>`;
+}
+});
+});
+}
+html+="</table>";
+el.innerHTML=html;
+}catch(e){el.innerHTML="Chyba pri načítaní dát.";}
 }
 
 async function loadUsers(){
@@ -166,32 +190,6 @@ html+=`<tr><td>${d.name||"(bez mena)"}</td><td>${d.chipUid||"-"}</td>
 html+="</table>";
 el.innerHTML=html;
 }catch(err){el.innerHTML="Chyba pri načítaní používateľov.";}
-}
-
-async function loadAttendance(type, tableId, dateInputId, searchInputId){
-const el=document.getElementById(tableId);
-el.innerHTML="Načítavam dáta...";
-try{
-const snap=await db.ref(type).get();
-let html="<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>";
-const dateFilter=document.getElementById(dateInputId).value;
-const searchFilter=document.getElementById(searchInputId).value.toLowerCase();
-if(snap.exists()){
-snap.forEach(userNode=>{
-const userId=userNode.key;
-userNode.forEach(log=>{
-const val=log.val();
-const logDate=val.cas?val.cas.slice(0,10):"";
-const name=usersData[userId]?.name||"(bez mena)";
-if((!dateFilter||logDate===dateFilter)&&(!searchFilter||name.toLowerCase().includes(searchFilter))){
-html+=`<tr><td>${name}</td><td>${val.cas||"-"}</td><td>${val.typ||"-"}</td></tr>`;
-}
-});
-});
-}
-html+="</table>";
-el.innerHTML=html;
-}catch(err){el.innerHTML="Chyba pri načítaní dát.";}
 }
 
 async function loadNewChips(){
@@ -213,45 +211,57 @@ el.appendChild(div);
 
 async function assignChip(chipUid){
 const name=prompt("Zadaj meno používateľa pre tento čip:");
-if(!name) return alert("Meno je povinné!");
+if(!name) return;
 const usersSnap=await db.ref("users").get();
-let userId=null;
-usersSnap.forEach(u=>{if(u.val().name===name) userId=u.key;});
-if(!userId) return alert("Používateľ nenájdený!");
-await db.ref("users/"+userId).update({chipUid});
-await db.ref("newChips/"+chipUid).set(null);
-await loadUsers();
-await loadNewChips();
+let uid=null;
+usersSnap.forEach(u=>{if(u.val().name===name) uid=u.key;});
+if(!uid) return alert("Používateľ nenájdený!");
+await db.ref("users/"+uid).update({chipUid});
+await db.ref("newChips/"+chipUid).remove();
+loadUsers();
+loadNewChips();
 }
 
 async function removeChip(chipUid){
-if(!confirm("Naozaj odstrániť tento čip?")) return;
-await db.ref("newChips/"+chipUid).set(null);
-await loadNewChips();
+if(confirm("Naozaj odstrániť tento čip?")){
+await db.ref("newChips/"+chipUid).remove();
+loadNewChips();
+}
 }
 
 function logout(){alert("Odhlásenie");}
-async function removeUser(id){if(confirm("Naozaj odstrániť používateľa?")){await db.ref("users/"+id).set(null);loadUsers();}}
+async function removeUser(id){if(confirm("Naozaj odstrániť používateľa?")){await db.ref("users/"+id).remove();loadUsers();}}
 function openChangePassword(id){document.getElementById("changePasswordModal").style.display="flex";document.getElementById("changePasswordUserId").value=id;}
 function closeModal(){document.getElementById("changePasswordModal").style.display="none";}
-async function saveNewPassword(){const id=document.getElementById("changePasswordUserId").value;const newPass=document.getElementById("newPassword").value; if(!newPass.trim())return alert("Zadaj nové heslo."); await db.ref("users/"+id+"/password").set(newPass); alert("Heslo zmenené"); closeModal();}
-
-async function loadAllTables(){
-await loadUsersData();
-await loadAttendance("dochadzka","dochadzkaTable","dateDochadzka","searchDochadzka");
-await loadAttendance("prestavky","prestávkyTable","datePrestávky","searchPrestávky");
-await loadAttendance("pn","pnTable","datePN","searchPN");
-await loadUsers();
-await loadNewChips();
+async function saveNewPassword(){
+const id=document.getElementById("changePasswordUserId").value;
+const pass=document.getElementById("newPassword").value.trim();
+if(!pass)return alert("Zadaj nové heslo.");
+await db.ref("users/"+id+"/password").set(pass);
+alert("Heslo zmenené.");
+closeModal();
 }
 
-["dateDochadzka","searchDochadzka","datePrestávky","searchPrestávky","datePN","searchPN"].forEach(id=>document.getElementById(id).addEventListener("input",loadAllTables));
+function loadSection(id){
+if(id==="dochadzka") loadAttendance("dochadzka","dochadzkaTable","dateDochadzka","searchDochadzka");
+if(id==="prestavky") loadAttendance("prestavky","prestavkyTable","datePrestavky","searchPrestavky");
+if(id==="pn") loadAttendance("pn","pnTable","datePN","searchPN");
+if(id==="pouzivatelia"){loadUsers();loadNewChips();}
+}
 
-loadAllTables();
+// po načítaní
+loadSection("dochadzka");
+["dateDochadzka","searchDochadzka","datePrestavky","searchPrestavky","datePN","searchPN"].forEach(id=>{
+document.getElementById(id).addEventListener("input",()=>{
+const active=document.querySelector("section.active").id;
+loadSection(active);
+});
+});
 </script>
 
 </body>
 </html>
+
 
 
 
