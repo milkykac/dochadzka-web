@@ -138,12 +138,13 @@ if (!userId) {
   window.location.href = "admin.html";
 }
 
-// --- Načítanie dát používateľa z Firebase (Hlavná funkcia) ---
+// --- Načítanie dát používateľa z Firebase ---
 async function loadUserData() {
   try {
     const userSnap = await get(ref(db, `users/${userId}`));
     if (!userSnap.exists()) {
       userNameEl.textContent = "(Neznámy)";
+      renderTables([]);
       return;
     }
 
@@ -154,12 +155,17 @@ async function loadUserData() {
     const logTypes = ["dochadzka", "prestavky", "pn"];
 
     logTypes.forEach(type => {
+      // Zabezpečíme, že pracujeme iba s pod-objektom (napr. userData.prestavky)
       const logsObj = userData[type] || {};
       
       Object.values(logsObj).forEach(log => {
         if (log && log.cas && log.typ) {
+          let cleanTime = log.cas.replace(' ', 'T');
+          // Ak čas nemá ISO formát (napr. "11.11.2025 12:44"), ignorujeme ho.
+          if (!cleanTime.includes('-')) return; 
+
           records.push({
-            cas: log.cas.replace(' ', 'T'), // Použijeme T pre správne triedenie Date
+            cas: cleanTime, 
             stav: log.typ.toLowerCase(),
           });
         }
@@ -169,22 +175,23 @@ async function loadUserData() {
     records.sort((a, b) => new Date(b.cas) - new Date(a.cas));
 
     allRecordsCache = records;
+    
+    // Aktualizácia stavu
     const lastStatus = records.length ? records[0].stav.toUpperCase() : "Žiadny stav nezaznamenaný.";
     const lastStatusClass = records.length ? `status-${records[0].stav}` : '';
-    
     statusBox.innerHTML = `Posledný stav: <span class="status-badge ${lastStatusClass}">${lastStatus}</span>`;
 
-
+    // Vykreslenie všetkých sekcií
     renderTables(allRecordsCache);
 
   } catch (e) {
-    console.error("Chyba pri načítaní dát:", e);
-    statusBox.textContent = "Chyba pri načítaní dát!";
+    console.error("Kritická chyba pri načítaní dát:", e);
+    statusBox.textContent = "Kritická chyba pri načítaní dát!";
     renderTables([]);
   }
 }
 
-// --- Vykreslenie tabuliek (Používa dáta z cache) ---
+// --- Vykreslenie tabuliek (Finálne upravená) ---
 function renderTables(records) {
   const dochadzkaTable = document.getElementById("dochadzkaTable");
   const prestavkyTable = document.getElementById("prestavkyTable");
@@ -194,8 +201,8 @@ function renderTables(records) {
   const filterPrestavky = document.getElementById("datePrestavky").value;
   const filterPN = document.getElementById("datePN").value;
 
-  // Pomocná funkcia pre renderovanie jednej sekcie (FINÁLNA VERZIA)
-  const renderSection = (bodyEl, type, filterDate, expectedStav) => {
+  // Vykresľuje sekciu s explicitne určeným počtom stĺpcov
+  const renderSection = (bodyEl, type, filterDate, expectedStav, colCount) => {
     let filtered = records;
     
     if(filterDate) {
@@ -204,36 +211,39 @@ function renderTables(records) {
     }
     
     const sectionRecords = filtered.filter(r => expectedStav.includes(r.stav));
-    
+    
     if (!sectionRecords.length) {
-      bodyEl.innerHTML = `<tr><td colspan="${type === 'dochadzka' ? 2 : 1}">Žiadne záznamy</td></tr>`;
+      // Ak nie sú žiadne záznamy, použijeme colspan na základe colCount
+      bodyEl.innerHTML = `<tr><td colspan="${colCount}">Žiadne záznamy</td></tr>`;
     } else {
       bodyEl.innerHTML = sectionRecords.map(z => {
-        const visibleTime = z.cas.replace('T', ' '); 
+        // Odstránime 'T', milisekundy (.XXX) a prípadné 'Z' na konci
+        let visibleTime = z.cas.replace('T', ' ').split('.')[0]; 
+        visibleTime = visibleTime.endsWith('Z') ? visibleTime.slice(0, -1) : visibleTime;
+
         const cls = `status-${z.stav}`;
         
         if (type === 'dochadzka') {
+          // Dochádzka: 2 stĺpce
           return `<tr><td>${visibleTime}</td><td><span class="status-badge ${cls}">${z.stav.toUpperCase()}</span></td></tr>`;
         } else {
-          // Prestávky a PN majú 1 stĺpec, čas je vo farebnom odznaku
+          // Prestávky a PN: 1 stĺpec (čas je v odznaku)
           return `<tr><td><span class="status-badge ${cls}">${visibleTime}</span></td></tr>`;
         }
       }).join("");
     }
   };
 
-  renderSection(dochadzkaTable, 'dochadzka', filterDochadzka, ["prichod", "odchod"]);
-  renderSection(prestavkyTable, 'prestavky', filterPrestavky, ["prestavka"]);
-  renderSection(pnTable, 'pn', filterPN, ["pn"]);
+  // Zavolanie funkcie s explicitným počtom stĺpcov
+  renderSection(dochadzkaTable, 'dochadzka', filterDochadzka, ["prichod", "odchod"], 2);
+  renderSection(prestavkyTable, 'prestavky', filterPrestavky, ["prestavka"], 1);
+  renderSection(pnTable, 'pn', filterPN, ["pn"], 1);
 }
 
 
-// --- Export do CSV (Prispôsobená funkcia - OPRAVENÁ) ---
+// --- Export do CSV (Robustná verzia) ---
 window.exportTable = function(sectionNameId) {
-    // 1. Nájdenie elementu sekcie (napr. <section id="prestavky">)
     const sectionEl = document.getElementById(sectionNameId); 
-    
-    // 2. Nájdenie celého elementu tabuľky <table> v rámci sekcie
     const table = sectionEl ? sectionEl.querySelector('table') : null;
     
     if(!table) return alert("Žiadne dáta na export alebo tabuľka nebola nájdená.");
@@ -254,7 +264,6 @@ window.exportTable = function(sectionNameId) {
     
     // Dáta riadkov
     table.querySelectorAll("tbody tr").forEach(row => {
-        // Použijeme textContent z bunky.
         const cols = Array.from(row.querySelectorAll("td")).map(td => `"${td.textContent.trim()}"`);
         
         if (cols.length > 0 && cols[0].includes("Žiadne záznamy") === false) {
@@ -262,7 +271,7 @@ window.exportTable = function(sectionNameId) {
         }
     });
     
-    // Vytvorenie a stiahnutie súboru
+    // Stiahnutie súboru
     const blob = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -270,7 +279,7 @@ window.exportTable = function(sectionNameId) {
     a.click();
 };
 
-// --- Listenery ---
+// --- Listenery (Bezo zmeny) ---
 
 document.getElementById("logoutBtn").addEventListener("click", () => {
   localStorage.removeItem("uid");
@@ -286,12 +295,10 @@ document.querySelectorAll("nav button").forEach(btn => {
   });
 });
 
-// Filtre
 document.getElementById("dateDochadzka").addEventListener("change", () => renderTables(allRecordsCache));
 document.getElementById("datePrestavky").addEventListener("change", () => renderTables(allRecordsCache));
 document.getElementById("datePN").addEventListener("change", () => renderTables(allRecordsCache));
 
-// Export
 document.querySelectorAll(".export-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     exportTable(btn.dataset.exportTable);
