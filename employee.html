@@ -63,7 +63,7 @@ tr:nth-child(even){ background:#f8f9fa; }
   <button id="logoutBtn">Odhlásiť sa</button>
 </header>
 
-<div id="debugUid" style="background:#f8d7da;color:#721c24;padding:5px;text-align:center;font-size:12px;margin-bottom:10px;">Načítavam UID...</div>
+<div id="debugUid">Načítavam UID...</div>
 
 <nav>
   <button data-target="dochadzka" class="active">Dochádzka</button>
@@ -145,7 +145,6 @@ if (!userId) {
 } else {
     // Okamžité zobrazenie UID
     debugUidEl.textContent = `Aktuálne načítané UID: ${userId}`;
-    console.log("AKTÍVNE UID:", userId);
 }
 
 // --- Načítanie dát používateľa z Firebase (ROBUSTNÁ VERZIA) ---
@@ -167,37 +166,53 @@ async function loadUserData() {
         userNameEl.textContent = userData.name || "(bez mena)";
 
         const records = [];
+        const logTypes = ["dochadzka", "prestavky", "pn"];
 
-        // Rekurzívna funkcia na nájdenie záznamov v chaotickej (plochej) štruktúre
-        function collectRecords(data) {
-            if (typeof data !== 'object' || data === null) return;
+        // 1. Zber záznamov z OČAKÁVANÝCH PODUZLOV ("dochadzka", "prestavky", "pn")
+        logTypes.forEach(type => {
+            const logsObj = userData[type] || {};
+            
+            Object.values(logsObj).forEach(log => {
+                if (log && log.cas && log.typ) {
+                    let cleanTime = String(log.cas).replace(' ', 'T');
+                    
+                    if (!cleanTime.includes('-')) return; // Ignorujeme nekompatibilné formáty
 
-            // Kľúčová podmienka: ak objekt obsahuje polia 'cas' a 'typ', je to dochádzkový záznam.
-            if (data.cas && data.typ) {
-                let cleanTime = String(data.cas).replace(' ', 'T');
-                
-                // Kontrola pre formát dátumu (ignorujeme nekompatibilné formáty)
-                if (!cleanTime.includes('-')) return;
-
-                const recordType = String(data.typ).toLowerCase();
-                
-                // Zbierame len relevantné typy
-                if (["prichod", "odchod", "prestavka", "pn"].includes(recordType)) {
-                    records.push({
-                        cas: cleanTime,
-                        stav: recordType,
-                    });
+                    const recordType = String(log.typ).toLowerCase();
+                    
+                    // Zbierame len relevantné typy a kontrolujeme, či typ sedí
+                    if (recordType === type.slice(0, -1) || (type === "dochadzka" && (recordType === "prichod" || recordType === "odchod"))) {
+                        records.push({
+                            cas: cleanTime,
+                            stav: recordType,
+                        });
+                    }
                 }
-                return; // Ak je to záznam, nepokračujeme hlbšie v tomto uzle
-            }
-
-            // Rekurzívne volanie pre všetky pod-objekty (prehľadá dochadzka, prestavky, pn, atď.)
-            Object.values(data).forEach(collectRecords);
-        }
-
-        // Spustíme zber dát z hlavného uzla používateľa
-        collectRecords(userData);
+            });
+        });
         
+        // 2. EXPLICITNÁ KONTROLA PRE PLOCHÉ ZÁZNAMY (Prestávky/PN) v hlavnom uzle
+        // Toto rieši situáciu, keď sú Prestávky/PN uložené priamo pod ID používateľa
+        Object.values(userData).forEach(log => {
+             if (log && log.cas && log.typ) {
+                 const recordType = String(log.typ).toLowerCase();
+                 // Hľadáme tie, ktoré sme už nenašli v kroku 1 (hlavne prestávky a pn)
+                 if (recordType === "prestavka" || recordType === "pn") {
+                     let cleanTime = String(log.cas).replace(' ', 'T');
+                     if (!cleanTime.includes('-')) return;
+                     
+                     // Ak sa záznam s rovnakým časom už nenašiel, pridáme ho
+                     if (!records.some(r => r.cas === cleanTime && r.stav === recordType)) {
+                          records.push({
+                             cas: cleanTime,
+                             stav: recordType,
+                         });
+                     }
+                 }
+             }
+         });
+
+
         // 3. Triedenie (od najnovšieho)
         records.sort((a, b) => new Date(b.cas) - new Date(a.cas));
         allRecordsCache = records;
