@@ -4,60 +4,96 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin panel – Dochádzka</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 /* --- Všeobecné a Layout štýly --- */
 body { font-family:'Poppins',sans-serif; margin:0; background:linear-gradient(135deg,#007bff,#6f42c1); min-height:100vh; color:#333; }
 header { background:#fff; padding:15px 25px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 3px 10px rgba(0,0,0,0.1); position:sticky; top:0; z-index:10; }
-h1 { color:#007bff; margin:0; font-size:22px; font-weight:600; }
-button { background:#007bff; border:none; color:white; padding:8px 14px; border-radius:8px; cursor:pointer; font-size:14px; transition:0.3s; }
+h1 { color:#007bff; margin:0; font-size:22px; font-weight:700; } /* Tučnejšie písmo */
+button { background:#007bff; border:none; color:white; padding:10px 16px; border-radius:8px; cursor:pointer; font-size:15px; font-weight:600; transition:0.3s; }
 button:hover { background:#0056b3; }
 nav { background:#fff; display:flex; justify-content:center; padding:10px; gap:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); position:sticky; top:70px; z-index:5; flex-wrap:wrap; }
 nav button.active { background:#6f42c1; }
 
 /* --- Sekcie a Kontajnery --- */
-section { display:none; padding:25px; background:#fff; margin:25px auto; border-radius:12px; max-width:1100px; box-shadow:0 4px 20px rgba(0,0,0,0.1); transition:0.3s; }
+section { display:none; padding:30px; background:#fff; margin:25px auto; border-radius:12px; max-width:1100px; box-shadow:0 4px 20px rgba(0,0,0,0.1); transition:0.3s; }
 section.active { display:block; }
-h2 { color:#007bff; margin-top:0; border-bottom:2px solid #007bff; padding-bottom:5px; }
+h2 { color:#007bff; margin-top:0; border-bottom:2px solid #007bff; padding-bottom:5px; font-weight:600; }
 .loader{ text-align:center; padding:20px; color:#007bff; font-weight:bold; }
-.export-btn{ margin-top:15px; background:#28a745; border-radius:8px; padding:8px 14px; }
+.export-btn{ margin-top:15px; background:#28a745; border-radius:8px; padding:10px 16px; }
 .export-btn:hover{ background:#1e7e34; }
-.new-chip { background:#17a2b8; padding:8px 10px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border-radius:6px; color:white; font-size:14px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
-.new-chip button { background:#007bff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-size:13px; }
+.new-chip { background:#17a2b8; padding:10px 12px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; border-radius:8px; color:white; font-size:15px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+.new-chip button { background:#007bff; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:14px; }
 .new-chip button:hover { background:#0056b3; }
 
 /* --- Tabuľky --- */
 table { width:100%; border-collapse:collapse; margin-top:15px; border-radius:8px; overflow:hidden; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
-th,td { border:1px solid #ddd; padding:10px; text-align:left; font-size:14px; }
-th { background:#007bff; color:white; font-weight:500; }
+th,td { border:1px solid #ddd; padding:12px; text-align:left; font-size:15px; }
+th { background:#007bff; color:white; font-weight:600; }
 tr:nth-child(even){ background:#f8f9fa; }
 
-/* --- VIZUÁLNE ODZNAKY (Sústredenie sa na farbu a pozadie) --- */
+/* --- VIZUÁLNE ODZNAKY (Sústredenie sa na farbu pozadia) --- */
 .status-badge {
-    font-weight: 600;
-    padding: 5px 10px; 
+    font-weight: 700;
+    padding: 7px 14px; /* Väčší padding */
     display: inline-block;
     text-align: center;
-    min-width: 70px; 
+    min-width: 80px; 
     white-space: nowrap; 
-    /* Zaoblenie, farba textu a text-shadow je teraz vynútené INLINE v JS pre maximálnu prioritu */
-    font-size: 15px;
+    font-size: 16px; /* Väčší font */
 }
 
-/* Farby pozadia - vynútené */
-.status-prichod { background: #008000 !important; } /* Sýta zelená */
-.status-odchod { background: #CC0000 !important; } /* Sýta červená */
-.status-prestavka { background: #f0ad4e !important; } /* Tmavšia oranžová/žltá */
-.status-pn { background: #6f42c1 !important; } /* Fialová */
+/* Farby pozadia */
+.status-prichod { background: #198754 !important; } /* Ostrejšia zelená */
+.status-odchod { background: #dc3545 !important; } /* Ostrejšia červená */
+.status-prestavka { background: #ffc107 !important; } /* Sýta žltá */
+.status-pn { background: #6f42c1 !important; } 
 
 
-/* --- Modálne okno --- */
-.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; }
-.modal-content{ background:#fff; padding:20px; border-radius:8px; width:90%; max-width:400px; position:relative; animation:fadeIn 0.3s; box-shadow:0 5px 15px rgba(0,0,0,0.2);}
-.modal-content input{ width:100%; margin-top:10px; padding:8px; border:1px solid #ccc; border-radius:6px; font-size:14px; }
-.modal-content button{ width:100%; margin-top:10px; border-radius:6px; padding:8px 0; font-weight:500; background:#007bff; color:white; transition:0.3s;}
+/* --- Modálne okno (Lepší kontrast a väčšie prvky) --- */
+.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); justify-content:center; align-items:center; z-index:100; }
+.modal-content{ 
+    background:#fff; 
+    padding:30px; 
+    border-radius:12px; 
+    width:90%; 
+    max-width:450px; /* Väčšie okno */
+    position:relative; 
+    animation:fadeIn 0.3s; 
+    box-shadow:0 10px 25px rgba(0,0,0,0.3);
+}
+.modal-content h3 { color: #007bff; font-weight:600; margin-top:0; margin-bottom:15px; }
+.modal-content input{ 
+    width:100%; 
+    margin-top:10px; 
+    padding:12px; /* Väčší input */
+    border:2px solid #ccc; 
+    border-radius:8px; 
+    font-size:16px; 
+    box-sizing: border-box;
+}
+.modal-content button{ 
+    width:100%; 
+    margin-top:15px; 
+    border-radius:8px; 
+    padding:12px 0; /* Väčšie tlačidlá */
+    font-weight:700; 
+    font-size:16px;
+    background:#007bff; 
+    color:white; 
+    transition:0.3s;
+}
 .modal-content button:hover{ background:#0056b3; }
-#closeModal{ position:absolute; right:10px; top:5px; font-size:22px; cursor:pointer; color:#333; }
+#closeModal{ 
+    position:absolute; 
+    right:15px; 
+    top:10px; 
+    font-size:30px; /* Väčšie X */
+    cursor:pointer; 
+    color:#333; 
+    font-weight:100;
+}
+
 @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
 @media(max-width:768px){ header{flex-direction:column; text-align:center; gap:10px;} table{display:block; overflow-x:auto; white-space:nowrap;} }
 </style>
@@ -85,8 +121,8 @@ tr:nth-child(even){ background:#f8f9fa; }
   </div>
   <button class="export-btn" onclick="exportTable('dochadzkaTable')">Exportovať do CSV</button>
   <div style="display:flex; gap:10px; margin-top:10px;">
-    <input type="date" id="dateDochadzka" style="flex:1;" onchange="loadSection('dochadzka')">
-    <input type="text" id="searchDochadzka" placeholder="Hľadať podľa mena..." style="flex:2;" oninput="loadSection('dochadzka')">
+    <input type="date" id="dateDochadzka" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ccc;" onchange="loadSection('dochadzka')">
+    <input type="text" id="searchDochadzka" placeholder="Hľadať podľa mena..." style="flex:2; padding:10px; border-radius:8px; border:1px solid #ccc;" oninput="loadSection('dochadzka')">
   </div>
   <div id="dochadzkaTable" class="loader">Načítavam dáta...</div>
 </section>
@@ -95,8 +131,8 @@ tr:nth-child(even){ background:#f8f9fa; }
   <h2>Prestávky</h2>
   <button class="export-btn" onclick="exportTable('prestavkyTable')">Exportovať do CSV</button>
   <div style="display:flex; gap:10px; margin-top:10px;">
-    <input type="date" id="datePrestavky" style="flex:1;" onchange="loadSection('prestavky')">
-    <input type="text" id="searchPrestavky" placeholder="Hľadať podľa mena..." style="flex:2;" oninput="loadSection('prestavky')">
+    <input type="date" id="datePrestavky" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ccc;" onchange="loadSection('prestavky')">
+    <input type="text" id="searchPrestavky" placeholder="Hľadať podľa mena..." style="flex:2; padding:10px; border-radius:8px; border:1px solid #ccc;" oninput="loadSection('prestavky')">
   </div>
   <div id="prestavkyTable" class="loader">Načítavam dáta...</div>
 </section>
@@ -105,8 +141,8 @@ tr:nth-child(even){ background:#f8f9fa; }
   <h2>PN</h2>
   <button class="export-btn" onclick="exportTable('pnTable')">Exportovať do CSV</button>
   <div style="display:flex; gap:10px; margin-top:10px;">
-    <input type="date" id="datePN" style="flex:1;" onchange="loadSection('pn')">
-    <input type="text" id="searchPN" placeholder="Hľadať podľa mena..." style="flex:2;" oninput="loadSection('pn')">
+    <input type="date" id="datePN" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ccc;" onchange="loadSection('pn')">
+    <input type="text" id="searchPN" placeholder="Hľadať podľa mena..." style="flex:2; padding:10px; border-radius:8px; border:1px solid #ccc;" oninput="loadSection('pn')">
   </div>
   <div id="pnTable" class="loader">Načítavam dáta...</div>
 </section>
@@ -125,11 +161,11 @@ tr:nth-child(even){ background:#f8f9fa; }
 <div id="changePasswordModal" class="modal">
   <div class="modal-content">
     <span id="closeModal" onclick="closeModal()">&times;</span>
-    <h3>Zmeniť heslo</h3>
+    <h3>Zmeniť heslo a spravovať používateľa</h3>
     <input type="hidden" id="changePasswordUserId">
     <input type="password" id="newPassword" placeholder="Nové heslo">
-    <button onclick="saveNewPassword()">Uložiť</button>
-    <button style="background:red;" onclick="removeUser(document.getElementById('changePasswordUserId').value); closeModal();">Odstrániť používateľa</button>
+    <button onclick="saveNewPassword()">Uložiť nové heslo</button>
+    <button style="background:#dc3545;" onclick="removeUser(document.getElementById('changePasswordUserId').value); closeModal();">❌ Odstrániť používateľa</button>
   </div>
 </div>
 
@@ -223,7 +259,7 @@ window.addLog = async function(type, typ){
   }
 };
 
-// ----- ZJEDNOTENÁ funkcia načítania dochádzky/prestávok/pn (S menom a opraveným typom) -----
+// ----- ZJEDNOTENÁ funkcia načítania dochádzky/prestávok/pn (FINÁLNA VERZIA S INLINE ŠTÝLOM) -----
 async function loadAttendance(type, tableId, dateId, searchId){
   const el = document.getElementById(tableId);
   el.innerHTML='<div class="loader">Načítavam dáta...</div>'; 
@@ -237,10 +273,10 @@ async function loadAttendance(type, tableId, dateId, searchId){
     let found=false;
     
     // Inline štýly, ktoré vynútia zobrazenie (Najvyššia priorita)
-    const badgeDefaultStyle = "border-radius: 50px !important; text-shadow: none !important;";
+    // text-shadow: none !important; je KĽÚČ k odstráneniu glitchu
+    const badgeDefaultStyle = "border-radius: 50px !important; text-shadow: none !important; font-weight: 700 !important;";
     const defaultTextColor = "color: white !important;";
-    const prestavkaTextColor = "color: #212529 !important;";
-
+    const prestavkaTextColor = "color: #212529 !important;"; // Takmer čierna
 
     if(snap.exists()){
       snap.forEach(userSnap=>{
@@ -400,6 +436,7 @@ window.removeUser = async function(id){
 window.openChangePassword = function(id){
   document.getElementById("changePasswordModal").style.display="flex";
   document.getElementById("changePasswordUserId").value=id;
+  document.getElementById("newPassword").value = ''; // vyčistiť pole pre nové heslo
 };
 
 window.closeModal = function(){ document.getElementById("changePasswordModal").style.display="none"; };
