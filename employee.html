@@ -133,7 +133,7 @@ const db = getDatabase(app);
 const userId = localStorage.getItem("uid");
 const userNameEl = document.getElementById("userName");
 const statusBox = document.getElementById("statusBox");
-const debugUidEl = document.getElementById("debugUid"); 
+const debugUidEl = document.getElementById("debugUid"); 
 let allRecordsCache = [];
 
 // --- Overenie a presmerovanie ---
@@ -143,98 +143,98 @@ if (!userId) {
 } else if (userId === "admin") {
   window.location.href = "admin.html";
 } else {
-    // Okamžité zobrazenie UID
-    debugUidEl.textContent = `Aktuálne načítané UID: ${userId}`;
+    // Okamžité zobrazenie UID
+    debugUidEl.textContent = `Aktuálne načítané UID: ${userId}`;
 }
 
 // --- Načítanie dát používateľa z Firebase (FINÁLNA ROBUSTNÁ VERZIA) ---
 async function loadUserData() {
-    try {
-        const userSnap = await get(ref(db, `users/${userId}`));
-        
-        if (!userSnap.exists()) {
-            console.error(`Chyba: Dáta pre UID "${userId}" neboli vo Firebase nájdené!`);
-            userNameEl.textContent = "(Neznámy)";
-            debugUidEl.style.backgroundColor = '#dc3545';
-            debugUidEl.style.color = 'white';
-            debugUidEl.textContent = `CHYBA: Dáta pre UID ${userId} neexistujú!`;
-            renderTables([]);
-            return;
-        }
+    try {
+        const userSnap = await get(ref(db, `users/${userId}`));
+        
+        if (!userSnap.exists()) {
+            console.error(`Chyba: Dáta pre UID "${userId}" neboli vo Firebase nájdené!`);
+            userNameEl.textContent = "(Neznámy)";
+            debugUidEl.style.backgroundColor = '#dc3545';
+            debugUidEl.style.color = 'white';
+            debugUidEl.textContent = `CHYBA: Dáta pre UID ${userId} neexistujú!`;
+            renderTables([]);
+            return;
+        }
 
-        const userData = userSnap.val();
-        userNameEl.textContent = userData.name || "(bez mena)";
+        const userData = userSnap.val();
+        userNameEl.textContent = userData.name || "(bez mena)";
 
-        const records = [];
-        const allPossibleLogs = [];
-        
-        // 1. Zber záznamov z OČAKÁVANÝCH PODUZLOV ("dochadzka", "prestavky", "pn")
-        ["dochadzka", "prestavky", "pn"].forEach(type => {
-            const logsObj = userData[type] || {};
-            Object.values(logsObj).forEach(log => allPossibleLogs.push(log));
-        });
-        
-        // 2. Zber záznamov z PLOCHÝCH/NEŠTANDARDNÝCH uzlov (priamo pod UID)
-        Object.values(userData).forEach(prop => {
-            if (prop && prop.cas && prop.typ) {
-                allPossibleLogs.push(prop); 
-            }
-        });
-        
-        // 3. Spracovanie, Normalizácia a Filtrácia VŠETKÝCH NÁJDENÝCH LOGOV
-        allPossibleLogs.forEach(log => {
-            if (!log || !log.cas || !log.typ) return;
+        const records = [];
+        const allPossibleLogs = [];
+        
+        // 1. Zber záznamov z OČAKÁVANÝCH PODUZLOV ("dochadzka", "prestavky", "pn")
+        ["dochadzka", "prestavky", "pn"].forEach(type => {
+            const logsObj = userData[type] || {};
+            Object.values(logsObj).forEach(log => allPossibleLogs.push(log));
+        });
+        
+        // 2. Zber záznamov z PLOCHÝCH/NEŠTANDARDNÝCH uzlov (priamo pod UID)
+        Object.values(userData).forEach(prop => {
+            if (prop && prop.cas && prop.typ) {
+                allPossibleLogs.push(prop); 
+            }
+        });
+        
+        // 3. Spracovanie, Normalizácia a Filtrácia VŠETKÝCH NÁJDENÝCH LOGOV
+        allPossibleLogs.forEach(log => {
+            if (!log || !log.cas || !log.typ) return;
 
-            let cleanTime = String(log.cas).replace(' ', 'T');
-            if (!cleanTime.includes('-')) return; 
+            let cleanTime = String(log.cas).replace(' ', 'T');
+            if (!cleanTime.includes('-')) return; 
 
-            // Normalizácia typu: odstránenie diakritiky, malé písmená a hľadanie kľúčového slova
-            const cleanType = String(log.typ)
-                .normalize("NFD").replace(/[\u0300-\u036f]/g, "") 
-                .toLowerCase();
+            // Normalizácia typu: odstránenie diakritiky, malé písmená a hľadanie kľúčového slova
+            const cleanType = String(log.typ)
+                .normalize("NFD").replace(/[\u0300-\u036f]/g, "") 
+                .toLowerCase();
 
-            let recordType = null;
-            if (cleanType.includes('prichod')) recordType = 'prichod';
-            else if (cleanType.includes('odchod')) recordType = 'odchod';
-            else if (cleanType.includes('prestavka')) recordType = 'prestavka';
-            else if (cleanType.includes('pn')) recordType = 'pn';
-            
-            if (recordType) {
-                 const isDuplicate = records.some(r => r.cas === cleanTime && r.stav === recordType);
-                 if (!isDuplicate) {
-                     records.push({
-                         cas: cleanTime,
-                         stav: recordType,
-                     });
-                 }
-            }
-        });
+            let recordType = null;
+            if (cleanType.includes('prichod')) recordType = 'prichod';
+            else if (cleanType.includes('odchod')) recordType = 'odchod';
+            else if (cleanType.includes('prestavka')) recordType = 'prestavka';
+            else if (cleanType.includes('pn')) recordType = 'pn';
+            
+            if (recordType) {
+                 const isDuplicate = records.some(r => r.cas === cleanTime && r.stav === recordType);
+                 if (!isDuplicate) {
+                     records.push({
+                         cas: cleanTime,
+                         stav: recordType,
+                     });
+                 }
+            }
+        });
 
-        // 4. Triedenie (od najnovšieho)
-        records.sort((a, b) => new Date(b.cas) - new Date(a.cas));
-        allRecordsCache = records;
-        
-        // 5. AKTUALIZÁCIA STAVU (Opravená logika: Ignoruje Prestávky a PN)
-        // Nájdeme najnovší záznam, ktorý NIE JE "prestávka" ani "pn"
-        const mainStatusRecord = records.find(r => r.stav !== 'prestavka' && r.stav !== 'pn');
-        
-        const lastStatus = mainStatusRecord ? mainStatusRecord.stav.toUpperCase() : "Žiadny stav nezaznamenaný.";
-        // Použijeme "prichod" triedu, ak stav nie je nájdený/zaznamenaný (predvolené pre začiatok dňa)
-        const lastStatusClass = mainStatusRecord ? `status-${mainStatusRecord.stav}` : 'status-prichod'; 
-        
-        statusBox.innerHTML = `Posledný stav: <span class="status-badge ${lastStatusClass}">${lastStatus}</span>`;
+        // 4. Triedenie (od najnovšieho)
+        records.sort((a, b) => new Date(b.cas) - new Date(a.cas));
+        allRecordsCache = records;
+        
+        // 5. AKTUALIZÁCIA STAVU (Opravená logika: Ignoruje Prestávky a PN)
+        // Nájdeme najnovší záznam, ktorý NIE JE "prestávka" ani "pn"
+        const mainStatusRecord = records.find(r => r.stav !== 'prestavka' && r.stav !== 'pn');
+        
+        const lastStatus = mainStatusRecord ? mainStatusRecord.stav.toUpperCase() : "Žiadny stav nezaznamenaný.";
+        // Použijeme "prichod" triedu, ak stav nie je nájdený/zaznamenaný (predvolené pre začiatok dňa)
+        const lastStatusClass = mainStatusRecord ? `status-${mainStatusRecord.stav}` : 'status-prichod'; 
+        
+        statusBox.innerHTML = `Posledný stav: <span class="status-badge ${lastStatusClass}">${lastStatus}</span>`;
 
-        // 6. Vykreslenie všetkých sekcií
-        renderTables(allRecordsCache);
+        // 6. Vykreslenie všetkých sekcií
+        renderTables(allRecordsCache);
 
-    } catch (e) {
-        console.error("Kritická chyba pri načítaní dát:", e);
-        statusBox.textContent = "Kritická chyba pri načítaní dát!";
-        renderTables([]);
-    }
+    } catch (e) {
+        console.error("Kritická chyba pri načítaní dát:", e);
+        statusBox.textContent = "Kritická chyba pri načítaní dát!";
+        renderTables([]);
+    }
 }
 
-// --- Vykreslenie tabuliek (Používa explicitný počet stĺpcov) ---
+// --- Vykreslenie tabuliek (Opravená logika) ---
 function renderTables(records) {
   const dochadzkaTable = document.getElementById("dochadzkaTable");
   const prestavkyTable = document.getElementById("prestavkyTable");
@@ -254,24 +254,24 @@ function renderTables(records) {
     }
     
     const sectionRecords = filtered.filter(r => expectedStav.includes(r.stav));
-    
+    
     if (!sectionRecords.length) {
       // Colspan na základe colCount
       bodyEl.innerHTML = `<tr><td colspan="${colCount}">Žiadne záznamy</td></tr>`;
     } else {
       bodyEl.innerHTML = sectionRecords.map(z => {
         // Úprava času pre zobrazenie
-        let visibleTime = z.cas.replace('T', ' ').split('.')[0]; 
-        visibleTime = visibleTime.endsWith('Z') ? visibleTime.slice(0, -1) : visibleTime;
+        let visibleTime = z.cas.replace('T', ' ').split('.')[0]; 
+        visibleTime = visibleTime.endsWith('Z') ? visibleTime.slice(0, -1) : visibleTime;
 
         const cls = `status-${z.stav}`;
         
         if (type === 'dochadzka') {
-          // Dochádzka: 2 stĺpce
+          // Dochádzka: 2 stĺpce (Čas + Odznak Typu)
           return `<tr><td>${visibleTime}</td><td><span class="status-badge ${cls}">${z.stav.toUpperCase()}</span></td></tr>`;
         } else {
-          // Prestávky a PN: 1 stĺpec (Zobrazujeme celý záznam v jednom stĺpci s odznakom)
-          return `<tr><td><span class="status-badge ${cls}">${visibleTime}</span></td></tr>`;
+          // Prestávky a PN: 1 stĺpec (Len čas, bez odznaku, pretože by vyzeral zle v úzkej bunke)
+          return `<tr><td>${visibleTime}</td></tr>`;
         }
       }).join("");
     }
@@ -286,36 +286,36 @@ function renderTables(records) {
 
 // --- Export do CSV (Robustná verzia) ---
 window.exportTable = function(sectionNameId) {
-    const sectionEl = document.getElementById(sectionNameId); 
-    const table = sectionEl ? sectionEl.querySelector('table') : null;
-    
-    if(!table) return alert("Žiadne dáta na export alebo tabuľka nebola nájdená.");
-    
-    const userName = userNameEl.textContent;
-    const sectionTitle = sectionEl.querySelector('h2').textContent.trim(); 
-    
-    let csv = [];
-    
-    csv.push(`"Typ záznamu","${sectionTitle.split('(')[0].trim()}"`);
-    csv.push(`"Používateľ","${userName}"`);
-    csv.push("");
-    
-    const header = Array.from(table.querySelectorAll("thead th")).map(th => `"${th.innerText.trim()}"`);
-    csv.push(header.join(","));
-    
-    table.querySelectorAll("tbody tr").forEach(row => {
-        const cols = Array.from(row.querySelectorAll("td")).map(td => `"${td.textContent.trim()}"`);
-        
-        if (cols.length > 0 && cols[0].includes("Žiadne záznamy") === false) {
-            csv.push(cols.join(","));
-        }
-    });
-    
-    const blob = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `${sectionTitle.replace(/[^a-zA-Z0-9]/g, '_')}_${userName}.csv`;
-    a.click();
+    const sectionEl = document.getElementById(sectionNameId); 
+    const table = sectionEl ? sectionEl.querySelector('table') : null;
+    
+    if(!table) return alert("Žiadne dáta na export alebo tabuľka nebola nájdená.");
+    
+    const userName = userNameEl.textContent;
+    const sectionTitle = sectionEl.querySelector('h2').textContent.trim(); 
+    
+    let csv = [];
+    
+    csv.push(`"Typ záznamu","${sectionTitle.split('(')[0].trim()}"`);
+    csv.push(`"Používateľ","${userName}"`);
+    csv.push("");
+    
+    const header = Array.from(table.querySelectorAll("thead th")).map(th => `"${th.innerText.trim()}"`);
+    csv.push(header.join(","));
+    
+    table.querySelectorAll("tbody tr").forEach(row => {
+        const cols = Array.from(row.querySelectorAll("td")).map(td => `"${td.textContent.trim()}"`);
+        
+        if (cols.length > 0 && cols[0].includes("Žiadne záznamy") === false) {
+            csv.push(cols.join(","));
+        }
+    });
+    
+    const blob = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${sectionTitle.replace(/[^a-zA-Z0-9]/g, '_')}_${userName}.csv`;
+    a.click();
 };
 
 // --- Listenery ---
@@ -347,5 +347,3 @@ document.querySelectorAll(".export-btn").forEach(btn => {
 // --- Spustenie aplikácie ---
 loadUserData();
 </script>
-</body>
-</html>
