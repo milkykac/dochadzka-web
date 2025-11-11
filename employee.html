@@ -43,14 +43,53 @@ header {
   z-index: 100;
   box-shadow: 0 4px 15px rgba(0,0,0,0.15);
 }
-header h1 { font-weight: 600; font-size: 22px; margin: 0; }
-header button { background: #fff; color: var(--accent); border: none; border-radius: 8px; padding: 8px 14px; cursor: pointer; font-weight: 600; transition: 0.3s; }
-header button:hover { background: var(--accent-dark); color: white; }
 
-nav { display: flex; gap: 10px; margin: 20px 0 0 0; }
-nav button { background: var(--accent); color: white; border: none; border-radius: 8px; padding: 8px 16px; cursor: pointer; font-weight: 500; }
-nav button.active { background: var(--pn); }
-nav button:hover { background: var(--accent-dark); }
+header h1 {
+  font-weight: 600;
+  font-size: 22px;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+header button {
+  background: #fff;
+  color: var(--accent);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  margin-left: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.3s;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+}
+header button:hover {
+  background: var(--accent-dark);
+  color: white;
+}
+
+nav {
+  display: flex;
+  gap: 10px;
+  margin: 20px 0 0 0;
+}
+nav button {
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: 500;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+  transition: 0.3s;
+}
+nav button.active {
+  background: var(--pn);
+}
+nav button:hover {
+  background: var(--accent-dark);
+}
 
 .container {
   max-width: 850px;
@@ -62,32 +101,94 @@ nav button:hover { background: var(--accent-dark); }
   box-shadow: 0 6px 25px rgba(0,0,0,0.1);
 }
 
-h2 { color: var(--accent); border-bottom: 3px solid var(--accent); padding-bottom: 6px; margin-top: 0; font-weight: 600; }
+h2 {
+  color: var(--accent);
+  border-bottom: 3px solid var(--accent);
+  padding-bottom: 6px;
+  margin-top: 0;
+  font-weight: 600;
+}
 
-.table-section { display: none; margin-top: 20px; }
+.table-section {
+  display: none;
+  margin-top: 20px;
+}
 .table-section.active { display: block; }
 
-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 15px; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-th, td { border: 1px solid var(--border); padding: 10px; text-align: center; }
-th { background: var(--accent); color: white; font-weight: 500; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 15px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+th, td {
+  border: 1px solid var(--border);
+  padding: 10px;
+  text-align: center;
+}
+th {
+  background: var(--accent);
+  color: white;
+  font-weight: 500;
+}
 tr:nth-child(even) { background: rgba(0,0,0,0.03); }
 tr:hover { background: rgba(0,0,0,0.08); }
 
-.status-prichod, .status-odchod, .status-prestavka, .status-pn { font-weight: 600; padding: 3px 8px; border-radius: 12px; display: inline-block; color: white; }
+.status-prichod, .status-odchod, .status-prestavka, .status-pn {
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 12px;
+  display: inline-block;
+  color: white;
+}
 .status-prichod { background: var(--prichod); }
 .status-odchod { background: var(--odchod); }
 .status-prestavka { background: var(--prestavka); }
 .status-pn { background: var(--pn); }
 
-.status-box { margin: 10px 0 20px; font-weight: 600; padding: 12px; border-radius: 12px; text-align: center; background: #e9f2ff; font-size: 16px; color: var(--accent); border: 1px solid var(--accent); }
+.status-box {
+  margin: 10px 0 20px;
+  font-weight: 600;
+  padding: 12px;
+  border-radius: 12px;
+  text-align: center;
+  background: #e9f2ff;
+  font-size: 16px;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+}
 
-button.export-btn { margin-top: 10px; background: #28a745; border: none; border-radius: 8px; color: white; padding: 8px 14px; font-weight: 500; cursor: pointer; }
+button.export-btn {
+  margin-top: 10px;
+  background: #28a745;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  padding: 8px 14px;
+  font-weight: 500;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+  cursor: pointer;
+  transition: 0.3s;
+}
 button.export-btn:hover { background: #218838; }
 
-.filter { margin: 10px 0 0 0; }
-.filter input { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); width: 160px; }
+.filter {
+  margin: 10px 0 0 0;
+}
+.filter input {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  width: 160px;
+}
 </style>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
 </head>
 <body>
 
@@ -103,7 +204,7 @@ button.export-btn:hover { background: #218838; }
 </nav>
 
 <div class="container">
-  <div class="status-box" id="statusBox">Načítavam stav...</div>
+  <div id="statusBox" class="status-box">Načítavam stav...</div>
 
   <div class="table-section active" id="attendance">
     <h2>Dochádzka</h2>
@@ -139,7 +240,7 @@ button.export-btn:hover { background: #218838; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBsYrbYtP4E5blWbKlrJ6iI9v6YPAYp0g",
@@ -148,24 +249,24 @@ const firebaseConfig = {
   projectId: "maturita-395fd",
   storageBucket: "maturita-395fd.firebasestorage.app",
   messagingSenderId: "754745500563",
-  appId: "1:754745500563:web:74fd4d6ab5765ee788be66"
+  appId: "1:754745500563:web:74fd4d6ab5765ee788be66",
+  measurementId: "G-F6KQQS48GD"
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 const userId = localStorage.getItem("uid");
-const userNameEl = document.getElementById("userName");
+if (!userId) { alert("Nie si prihlásený!"); window.location.href = "index.html"; }
+else if (userId === "admin") { window.location.href = "admin.html"; }
+
 const myAttendanceBody = document.getElementById("myAttendanceBody");
 const myBreaksBody = document.getElementById("myBreaksBody");
 const myPNBody = document.getElementById("myPNBody");
+const userNameEl = document.getElementById("userName");
 const filterDate = document.getElementById("filterDate");
 const statusBox = document.getElementById("statusBox");
 
 let allRecords = [];
-
-if (!userId) { alert("Nie si prihlásený!"); window.location.href = "index.html"; }
-else if (userId === "admin") { window.location.href = "admin.html"; }
 
 document.querySelectorAll("nav button").forEach(btn=>{
   btn.onclick = ()=>{
@@ -176,32 +277,30 @@ document.querySelectorAll("nav button").forEach(btn=>{
   }
 });
 
-// Načítanie používateľa
-onValue(ref(db, "users/" + userId), snapshot => {
-  if (!snapshot.exists()) return;
-  const userData = snapshot.val();
+async function loadUserData() {
+  const userSnap = await get(ref(db, "users/" + userId));
+  if (!userSnap.exists()) { alert("Používateľ nenájdený!"); window.location.href = "index.html"; return; }
+  const userData = userSnap.val();
   userNameEl.textContent = userData.name;
-});
+  const chipUid = userData.chipUid;
 
-// Načítanie všetkej dochádzky
-onValue(ref(db, "dochadzka"), snapshot => {
+  const attendanceSnap = await get(ref(db, "dochadzka"));
   allRecords = [];
-  snapshot.forEach(childSnap => {
-    const val = childSnap.val();
-    if (val && val.cas && val.typ) {
-      allRecords.push(val);
-    }
-  });
-
-  if (allRecords.length) {
-    const latest = allRecords.reduce((prev, curr) => (prev.cas > curr.cas ? prev : curr));
-    statusBox.textContent = "Posledný stav: " + (latest.typ.toUpperCase() || "NEZNÁMY");
-  } else {
-    statusBox.textContent = "Žiadny stav nezaznamenaný.";
+  if (attendanceSnap.exists()) {
+    attendanceSnap.forEach(userSnap => {
+      const userRecords = userSnap.val();
+      Object.values(userRecords).forEach(rec => {
+        if (rec.cas && rec.typ) {
+          let stav = rec.typ.toUpperCase();
+          if (["PRICHOD","ODCHOD","PRESTAVKA","PN"].includes(stav)) {
+            allRecords.push({ cas: rec.cas, stav });
+          }
+        }
+      });
+    });
   }
-
   renderTables();
-});
+}
 
 function renderTables() {
   myAttendanceBody.innerHTML = "";
@@ -210,16 +309,16 @@ function renderTables() {
 
   let filtered = allRecords;
   const selectedDate = filterDate.value;
-  if (selectedDate) filtered = filtered.filter(r => r.cas.slice(0,10) === selectedDate);
+  if (selectedDate) filtered = filtered.filter(r => r.cas.startsWith(selectedDate));
 
-  const attendance = filtered.filter(r => ["prichod","odchod"].includes(r.typ.toLowerCase()));
-  const breaks = filtered.filter(r => r.typ.toLowerCase() === "prestavka");
-  const pn = filtered.filter(r => r.typ.toLowerCase() === "pn");
+  const attendance = filtered.filter(r => ["PRICHOD","ODCHOD"].includes(r.stav));
+  const breaks = filtered.filter(r => r.stav === "PRESTAVKA");
+  const pn = filtered.filter(r => r.stav === "PN");
 
   if (!attendance.length) myAttendanceBody.innerHTML = "<tr><td colspan='2'>Žiadne záznamy</td></tr>";
   else attendance.reverse().forEach(z => {
-    const cls = z.typ.toLowerCase() === "prichod" ? "status-prichod" : "status-odchod";
-    myAttendanceBody.innerHTML += `<tr><td>${z.cas}</td><td class="${cls}">${z.typ.toUpperCase()}</td></tr>`;
+    const cls = z.stav==="PRICHOD"?"status-prichod":"status-odchod";
+    myAttendanceBody.innerHTML += `<tr><td>${z.cas}</td><td class="${cls}">${z.stav}</td></tr>`;
   });
 
   if (!breaks.length) myBreaksBody.innerHTML = "<tr><td>Žiadne prestávky</td></tr>";
@@ -236,21 +335,29 @@ document.getElementById("logoutBtn").addEventListener("click", () => {
   window.location.href = "index.html";
 });
 
-// Export do CSV
 window.exportMyData = function() {
-  const rows = [["Čas","Stav"]];
-  allRecords.forEach(r => rows.push([r.cas,r.typ.toUpperCase()]));
-  let csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
-  const encodedUri = encodeURI(csvContent);
-  const link = document.createElement("a");
-  link.setAttribute("href", encodedUri);
-  link.setAttribute("download", "dochadzka.csv");
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  const userName = userNameEl.textContent;
+  const data = [
+    ["Zamestnanec", userName],
+    ["Posledný stav", statusBox.textContent],
+    [],
+    ["Dochádzka (Príchod / Odchod)"], ["Čas","Stav"],
+    ...Array.from(document.querySelectorAll("#myAttendanceBody tr")).map(tr => Array.from(tr.querySelectorAll("td")).map(td=>td.textContent)),
+    [], ["Prestávky"], ["Čas"],
+    ...Array.from(document.querySelectorAll("#myBreaksBody tr")).map(tr => Array.from(tr.querySelectorAll("td")).map(td=>td.textContent)),
+    [], ["PN"], ["Čas"],
+    ...Array.from(document.querySelectorAll("#myPNBody tr")).map(tr => Array.from(tr.querySelectorAll("td")).map(td=>td.textContent))
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Moja Dochádzka");
+  XLSX.writeFile(wb, `Dochadzka_${userName}.xlsx`);
 }
+
+loadUserData();
 </script>
 </body>
 </html>
+
 
 
