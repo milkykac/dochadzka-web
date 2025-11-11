@@ -242,12 +242,17 @@ async function loadUserData() {
 
     const records = [];
     if(logsSnap.exists()){
-      logsSnap.forEach(logSnap => {
-        const log = logSnap.val();
-        if(log && log.typ && log.cas){
-          // Zisti ownerId podľa chipToUser
-          const ownerId = Object.keys(chipMap).find(key => chipMap[key] === userId && key === logSnap.key) || null;
-          if(ownerId) records.push({cas: log.cas, stav: log.typ.toUpperCase()});
+      logsSnap.forEach(chipSnap => {
+        const chipUidKey = chipSnap.key;
+        if(chipMap[chipUidKey] === userId){
+          const logs = chipSnap.val();
+          if(logs){
+            Object.values(logs).forEach(log => {
+              if(log && log.typ && log.cas){
+                records.push({cas: log.cas, stav: log.typ.toUpperCase()});
+              }
+            });
+          }
         }
       });
       records.sort((a,b) => new Date(b.cas) - new Date(a.cas));
