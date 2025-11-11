@@ -27,27 +27,29 @@ h2 { color:#007bff; margin-top:0; border-bottom:2px solid #007bff; padding-botto
 .new-chip button:hover { background:#0056b3; }
 
 /* --- Tabuľky --- */
-table { width:100%; border-collapse:collapse; margin-top:15px; border-radius:8不斷; overflow:hidden; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
+table { width:100%; border-collapse:collapse; margin-top:15px; border-radius:8px; overflow:hidden; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
 th,td { border:1px solid #ddd; padding:10px; text-align:left; font-size:14px; }
 th { background:#007bff; color:white; font-weight:500; }
 tr:nth-child(even){ background:#f8f9fa; }
 
-/* --- VIZUÁLNE ODZNAKY (OPRAVENÉ: Zaoblené, bez text-shadow, farby) --- */
+/* --- VIZUÁLNE ODZNAKY (Konečné úpravy pre zaoblenie, farbu textu a odstránenie glichu) --- */
 .status-badge {
     font-weight: 600;
-    padding: 3px 8px;
-    border-radius: 12px !important; /* Zaoblené rohy */
+    padding: 5px 10px; /* Väčší padding pre lepší vizuál */
+    border-radius: 20px !important; /* Silné zaoblenie (oblé rohy) */
     display: inline-block;
     text-align: center;
-    min-width: 60px;
+    min-width: 70px; /* Mierne širší */
     white-space: nowrap; 
-    text-shadow: none !important; /* Odstráni glitch efekt modrého obrysu/tieňa */
+    text-shadow: none !important; /* Kritická oprava glitch efektu */
+    font-size: 15px; /* Mierne väčšie písmo */
 }
 
 /* Modrá farba textu sa už neprepíše vďaka !important */
 .status-prichod { background: #008000 !important; color: white !important; } /* Sýta zelená, biely text */
 .status-odchod { background: #CC0000 !important; color: white !important; } /* Sýta červená, biely text */
-.status-prestavka { background: #f0ad4e !important; color: #333 !important; } /* Tmavšia oranžová/žltá, tmavý text */
+/* Dôležité: Prestávka musí mať tmavý text na svetlom pozadí */
+.status-prestavka { background: #f0ad4e !important; color: #212529 !important; } /* Tmavšia oranžová/žltá, veľmi tmavý text */
 .status-pn { background: #6f42c1 !important; color: white !important; } /* Fialová, biely text */
 
 /* --- Modálne okno --- */
@@ -128,6 +130,7 @@ tr:nth-child(even){ background:#f8f9fa; }
     <input type="hidden" id="changePasswordUserId">
     <input type="password" id="newPassword" placeholder="Nové heslo">
     <button onclick="saveNewPassword()">Uložiť</button>
+    <button style="background:red;" onclick="removeUser(document.getElementById('changePasswordUserId').value); closeModal();">Odstrániť používateľa</button>
   </div>
 </div>
 
@@ -318,7 +321,6 @@ async function loadUsers(){
         <td>${d.name||"(bez mena)"}</td>
         <td>${chip}</td>
         <td>
-          <button onclick="removeUser('${u.key}')">🗑️</button>
           <button onclick="openChangePassword('${u.key}')">🔑</button>
         </td>
       </tr>`;
@@ -371,6 +373,13 @@ window.removeChip = async function(chipUid){
 window.removeUser = async function(id){
   if(confirm("Odstrániť používateľa?")){
     await set(ref(db, `users/${id}`), null);
+    // Tiež odstráňte čip z chipToUser, ak existuje
+    const chipToUserSnap = await get(ref(db, 'chipToUser'));
+    chipToUserSnap.forEach(c => {
+        if (c.val() === id) {
+            set(ref(db, `chipToUser/${c.key}`), null);
+        }
+    });
     loadUsers();
   }
 };
