@@ -32,7 +32,7 @@ th,td { border:1px solid #ddd; padding:12px; text-align:left; font-size:15px; }
 th { background:#007bff; color:white; font-weight:600; }
 tr:nth-child(even){ background:#f8f9fa; }
 
-/* --- VIZUÁLNE ODZNAKY (VYČISTENÉ A OPRAVENÉ) --- */
+/* --- VIZUÁLNE ODZNAKY (DEFINITÍVNE OPRAVENÉ PRE CHYBNOÉ ZOBRAZENIE GLITCHU) --- */
 .status-badge {
     /* Všeobecné vynútenie */
     font-weight: 700 !important;
@@ -43,17 +43,21 @@ tr:nth-child(even){ background:#f8f9fa; }
     white-space: nowrap !important; 
     font-size: 16px !important; 
     border-radius: 50px !important;
-    
-    /* KĽÚČOVÁ OPRAVA GLITCHU: Odstránenie akéhokoľvek tieňa */
-    text-shadow: none !important; 
-    box-shadow: none !important;
+    line-height: 1.2 !important; 
+
+    /* KĽÚČOVÁ ZÁRUKA OPRAVY: Nastavenie tieňov na NEONISTUJÚCE */
+    text-shadow: none !important;  /* Odstránenie tieňa textu (hlavný vinník) */
+    box-shadow: none !important;  /* Odstránenie tieňa boxu */
+    border: none !important; 
+    /* Pre webkit (Chrome, Safari): Zabezpečí, že sa nezobrazí žiadny obrys */
+    -webkit-text-stroke: 0px !important; 
 }
 
 /* Farby pozadia a textu */
-.status-prichod { background: #198754 !important; color: white !important; } /* Ostrejšia zelená, Biely text */
-.status-odchod { background: #dc3545 !important; color: white !important; } /* Ostrejšia červená, Biely text */
-.status-prestavka { background: #ffc107 !important; color: #000000 !important; } /* Sýta žltá, Čierny text pre kontrast */
-.status-pn { background: #6f42c1 !important; color: white !important; } /* Fialová, Biely text */
+.status-prichod { background: #198754 !important; color: white !important; } /* Zelená */
+.status-odchod { background: #dc3545 !important; color: white !important; } /* Červená */
+.status-prestavka { background: #ffc107 !important; color: #000000 !important; } /* Žltá, Čierny text pre dobrý kontrast */
+.status-pn { background: #6f42c1 !important; color: white !important; } /* Fialová */
 
 /* --- Modálne okno --- */
 .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); justify-content:center; align-items:center; z-index:100; }
@@ -192,11 +196,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// --- KONTROLA PRIHLÁSENIA (KĽÚČOVÁ OPRAVA) ---
+// --- KĽÚČOVÁ OPRAVA: KONTROLA PRIHLÁSENIA ADMINA (image_f86224.png) ---
 const currentUserId = localStorage.getItem("uid");
 
 if (!currentUserId || currentUserId !== "admin") {
-    alert("Prístup odmietnutý. Musíte sa prihlásiť ako Administrátor.");
+    alert("Prístup zamietnutý. Musíte sa prihlásiť ako Administrátor.");
     window.location.href = "index.html";
 }
 // ---------------------------------------------
@@ -278,7 +282,7 @@ window.addLog = async function(type, typ){
   }
 };
 
-// ----- ZJEDNOTENÁ funkcia načítania dochádzky/prestávok/pn (OPRAVENÁ VIZUALIZÁCIA) -----
+// ----- ZJEDNOTENÁ funkcia načítania dochádzky/prestávok/pn -----
 async function loadAttendance(type, tableId, dateId, searchId){
   const el = document.getElementById(tableId);
   el.innerHTML='<div class="loader">Načítavam dáta...</div>'; 
