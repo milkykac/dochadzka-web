@@ -12,7 +12,7 @@ header { background:#fff; padding:15px 25px; display:flex; justify-content:space
 h1 { color:#007bff; margin:0; font-size:22px; font-weight:600; }
 button { background:#007bff; border:none; color:white; padding:8px 14px; border-radius:8px; cursor:pointer; font-size:14px; transition:0.3s; }
 button:hover { background:#0056b3; }
-nav { background:#fff; display:flex; justify-content:center; padding:10px; gap:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); position:sticky; top:70px; z-index:5; flex-wrap:wrap; }
+nav { background:#fff; padding:10px; gap:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); position:sticky; top:70px; z-index:5; flex-wrap:wrap; display: flex; justify-content: center; } /* Opravené zarovnanie NAV */
 nav button.active { background:#6f42c1; }
 section { display:none; padding:25px; background:#fff; margin:25px auto; border-radius:12px; max-width:1100px; box-shadow:0 4px 20px rgba(0,0,0,0.1); transition:0.3s; }
 section.active { display:block; }
@@ -36,42 +36,42 @@ tr:nth-child(even){ background:#f8f9fa; }
 @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
 @media(max-width:768px){ header{flex-direction:column; text-align:center; gap:10px;} table{display:block; overflow-x:auto; white-space:nowrap;} }
 
-
+/* --- OPRAVENÉ A VYLEPŠENÉ VIZUÁLNE ŠTÝLY PRE STAVY (Dochádzka) --- */
 .status-badge {
-    font-weight: 700 !important; /* Tučnejšie */
-    padding: 7px 14px !important; /* Väčší padding */
+    font-weight: 700 !important;
+    padding: 7px 14px !important;
     border-radius: 50px !important; /* Tvar pilulky */
     display: inline-block;
     text-align: center;
-    min-width: 80px; 
+    min-width: 80px;
     white-space: nowrap;
-    text-shadow: none !important; /* KĽÚČ: ODSTRÁNENIE NEŽIADUCEHO MODRÉHO TIEŇA */
+    text-shadow: none !important; /* Odstránenie tieňa */
     font-size: 16px !important;
 }
 
 /* PRÍCHOD: Zelená s bielym textom */
-.status-prichod { 
+.status-prichod { 
     background: #198754 !important;
     color: white !important;
-} 
+} 
 
 /* ODCHOD: Červená s bielym textom */
-.status-odchod { 
+.status-odchod { 
     background: #dc3545 !important;
     color: white !important;
-} 
+} 
 
 /* PRESTÁVKA: Žltá s tmavým textom */
-.status-prestávka { 
+.status-prestávka { 
     background: #ffc107 !important;
     color: #212529 !important;
 }
 
 /* PN: Fialová s bielym textom */
-.status-pn { 
+.status-pn { 
     background: #6f42c1 !important;
     color: white !important;
-} 
+} 
 
 /* --- NOVÉ ŠTÝLY PRE POUŽÍVATEĽOV (ČIPY) --- */
 .chip-status-assigned, .chip-status-unassigned {
@@ -103,7 +103,7 @@ tr:nth-child(even){ background:#f8f9fa; }
     color: #007bff;
 }
 .user-actions button:first-child:hover { color: #dc3545; }
-
+/* ----------------------------------- */
 </style>
 </head>
 <body>
@@ -262,12 +262,13 @@ window.addLog = async function(type, typ){
   }
 };
 
-// ----- načítanie dochádzky / prestávok / pn (S FAREBNÝMI ODZNAKMI) -----
+// ----- OPRAVENÁ FUNKCIA pre načítanie (FILTROVANIE DÁTUM + MENO) -----
 async function loadAttendance(type, tableId, dateId, searchId){
   const el = document.getElementById(tableId);
   el.innerHTML="Načítavam dáta...";
   const dateFilter = document.getElementById(dateId)?.value;
-  const search = document.getElementById(searchId)?.value.toLowerCase()||"";
+  // Zabezpečí, že ak je filter prázdny, vyhľadávame v celom texte (prázdny reťazec)
+  const search = document.getElementById(searchId)?.value.toLowerCase().trim() || ""; 
 
   try{
     const snap = await get(ref(db, "users"));
@@ -279,21 +280,24 @@ async function loadAttendance(type, tableId, dateId, searchId){
         const user = userSnap.val();
         const logsObj = user[type] || {};
         const userName = user.name || "(bez mena)";
+        const userNameLower = userName.toLowerCase();
 
-        if (!search || userName.toLowerCase().includes(search)) {
-          Object.keys(logsObj).forEach(key => {
+        Object.keys(logsObj).forEach(key => {
             const log = logsObj[key];
             const logDate = log.cas ? log.cas.slice(0, 10) : "";
 
-            if (!dateFilter || logDate === dateFilter) {
+            // Overenie, či záznam spĺňa VŠETKY podmienky filtrovania:
+            const dateMatch = !dateFilter || logDate === dateFilter;
+            const nameMatch = !search || userNameLower.includes(search);
+
+            if (dateMatch && nameMatch) {
               allLogs.push({
-                time: new Date(log.cas.replace(' ', 'T') || 0), // Prekonvertovanie na správny formát pre triedenie
+                time: new Date(log.cas.replace(' ', 'T') || 0),
                 name: userName,
                 log: log
               });
             }
-          });
-        }
+        });
       });
       
       // Triedenie záznamov podľa času (najnovšie prvé)
