@@ -36,21 +36,22 @@ tr:nth-child(even){ background:#f8f9fa; }
 @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
 @media(max-width:768px){ header{flex-direction:column; text-align:center; gap:10px;} table{display:block; overflow-x:auto; white-space:nowrap;} }
 
-/* --- NOVÉ FAREBNÉ ŠTÝLY --- */
-.status-prichod, .status-odchod, .status-prestavka, .status-pn {
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 12px;
-  display: inline-block;
-  color: white;
-  text-align: center;
-  min-width: 60px;
+/* --- NOVÉ/UPRAVENÉ VIZUÁLNE ŠTÝLY PRE STAVY --- */
+.status-badge {
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 12px;
+    display: inline-block;
+    color: white;
+    text-align: center;
+    min-width: 60px;
+    white-space: nowrap; /* Zabezpečí, že sa nezlomí */
 }
 .status-prichod { background: #28a745; } /* Zelená */
 .status-odchod { background: #dc3545; } /* Červená */
-.status-prestavka { background: #ffc107; color: #333; } /* Žltá */
+.status-prestávka { background: #ffc107; color: #333; } /* Žltá */
 .status-pn { background: #6f42c1; } /* Fialová */
-/* -------------------------- */
+/* ----------------------------------------------- */
 </style>
 </head>
 <body>
@@ -72,7 +73,8 @@ tr:nth-child(even){ background:#f8f9fa; }
   <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap;">
     <button onclick="addLog('dochadzka','prichod')">Príchod</button>
     <button onclick="addLog('dochadzka','odchod')">Odchod</button>
-    <button onclick="addLog('dochadzka','prestavka')">Prestávka</button>     <button onclick="addLog('pn','pn')" style="background:#6f42c1;">PN</button>   </div>
+    <button onclick="addLog('prestavky','prestávka')">Prestávka</button>
+  </div>
   <button class="export-btn" onclick="exportTable('dochadzkaTable')">Exportovať do CSV</button>
   <div style="display:flex; gap:10px; margin-top:10px;">
     <input type="date" id="dateDochadzka" style="flex:1;">
@@ -154,16 +156,15 @@ document.querySelectorAll("nav button").forEach(btn=>{
 window.logout = () => { window.location.href="index.html"; };
 
 window.exportTable = function(id){
-  // Funkcia pre export je zachovaná, ale bude exportovať text v bunkách (vrátane farebných statusov ako text)
-  const table=document.getElementById(id).closest('section').querySelector("table");
+  // Funkcia Export: Ponechaná pôvodná implementácia (exportuje vnútorný text buniek)
+  const table=document.getElementById(id).querySelector("table");
   if(!table)return alert("Žiadne dáta na export.");
   let csv=[];
   table.querySelectorAll("tr").forEach(row=>{
-    // Pre dochadzku, prestavky, pn
-    const cols=[...row.querySelectorAll("th,td")].map(td=>`"${td.innerText.trim()}"`);
+    const cols=[...row.querySelectorAll("th,td")].map(td=>`"${td.innerText.trim()}"`); // Použijem trim()
     csv.push(cols.join(","));
   });
-  const blob=new Blob([csv.join("\n")],{type:"text/csv;charset=utf-8;"});
+  const blob=new Blob([csv.join("\n")],{type:"text/csv;charset=utf-8;"}); // Pridaný charset
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
   a.download=`${id}.csv`;
@@ -189,18 +190,7 @@ window.addLog = async function(type, typ){
                       now.getHours().toString().padStart(2,"0") + ":" +
                       now.getMinutes().toString().padStart(2,"0");
 
-    // Zmena: prestávka a príchod/odchod môžu byť v dochadzka alebo prestavky/pn
-    let path = `users/${userId}/`;
-    // Ak typ nie je PN alebo prestávka, použijeme všeobecnú dochadzku sekciu pre uloženie
-    if (typ === 'pn') {
-      path += 'pn';
-    } else if (typ === 'prestavka') {
-      path += 'prestavky';
-    } else {
-      path += 'dochadzka';
-    }
-
-
+    let path = `users/${userId}/${type}`;
     await push(ref(db, path), { 
       cas: timestamp, 
       typ: typ, 
@@ -209,8 +199,7 @@ window.addLog = async function(type, typ){
     });
 
     alert(`${typ.charAt(0).toUpperCase() + typ.slice(1)} zaznamenaný o ${timestamp}`);
-    // Zabezpečí načítanie správnej sekcie po pridaní záznamu
-    loadSection(typ === "prestavka" ? "prestavky" : (typ === "pn" ? "pn" : "dochadzka"));
+    loadSection(type === "prestavky" ? "prestavky" : "dochadzka");
   } catch(e){ 
     alert("Chyba pri pridávaní záznamu."); 
     console.error(e); 
@@ -231,29 +220,30 @@ async function loadAttendance(type, tableId, dateId, searchId){
       let found=false;
       snap.forEach(userSnap=>{
         const user = userSnap.val();
-        // Dochádzkové záznamy sú v poli s rovnakým názvom ako sekcia (dochadzka, prestavky, pn)
-        const logsObj = user[type] || {}; 
-
-        // Konvertujeme objekt na pole a zoradíme podľa kľúča (timestamp)
-        const sortedLogs = Object.keys(logsObj).map(key => logsObj[key]).sort((a,b) => new Date(b.cas) - new Date(a.cas));
-
-        sortedLogs.forEach(log=>{
+        // Získanie záznamov pre daný typ (dochadzka, prestavky, pn)
+        const logsObj = user[type] || {};
+        
+        // Iterácia cez záznamy (Zachovávam pôvodný spôsob iterácie)
+        Object.keys(logsObj).sort().forEach(key=>{
+          const log = logsObj[key];
           const logDate = (log.cas||"").slice(0,10);
           const name = user.name || "(bez mena)";
-          const logTyp = (log.typ||type).toLowerCase();
-          
+          const logTyp = (log.typ||type).toLowerCase(); // Získanie typu, napr. prichod, prestávka, pn
+
           if((!dateFilter || logDate===dateFilter) && (!search || name.toLowerCase().includes(search))){
             
+            // Určenie CSS triedy na základe typu
             let statusClass = '';
             if (logTyp === 'prichod') statusClass = 'status-prichod';
             else if (logTyp === 'odchod') statusClass = 'status-odchod';
-            else if (logTyp === 'prestavka') statusClass = 'status-prestavka';
+            else if (logTyp === 'prestávka') statusClass = 'status-prestávka';
             else if (logTyp === 'pn') statusClass = 'status-pn';
             
+            // Vytvorenie HTML s farebným odznakom
             html += `<tr>
                 <td>${name}</td>
                 <td>${log.cas||"-"}</td>
-                <td><span class="${statusClass}">${logTyp.toUpperCase()}</span></td>
+                <td><span class="status-badge ${statusClass}">${logTyp.toUpperCase()}</span></td>
             </tr>`;
             found=true;
           }
@@ -265,9 +255,8 @@ async function loadAttendance(type, tableId, dateId, searchId){
     el.innerHTML=html;
   } catch(e){ el.innerHTML="Chyba pri načítaní dát."; console.error(e); }
 }
-// ----- koniec loadAttendance úpravy -----
 
-// ----- načítanie používateľov (bez zmien) -----
+// ----- načítanie používateľov -----
 async function loadUsers(){
   const el = document.getElementById("usersTable");
   el.innerHTML="Načítavam používateľov...";
@@ -295,7 +284,7 @@ async function loadUsers(){
   } catch(e){ el.innerHTML="Chyba pri načítaní používateľov."; console.error(e); }
 }
 
-// ----- nové čipy (bez zmien) -----
+// ----- nové čipy -----
 async function loadNewChips(){
   const el = document.getElementById("newChipsContainer");
   el.innerHTML="Načítavam čipy...";
@@ -314,7 +303,7 @@ async function loadNewChips(){
   } catch(e){ el.innerHTML="Chyba pri načítaní čipov."; console.error(e); }
 }
 
-// ----- priradenie / odstránenie čipu / používateľa / hesla (bez zmien) -----
+// ----- priradenie / odstránenie čipu -----
 window.assignChip = async function(chipUid){
   const name = prompt("Zadaj meno používateľa:");
   if(!name) return;
@@ -359,7 +348,7 @@ window.saveNewPassword = async function(){
   catch(e){ alert("Chyba pri zmene hesla."); console.error(e); }
 };
 
-// ----- pridanie nového používateľa (bez zmien) -----
+// ----- pridanie nového používateľa -----
 window.addUser = async function() {
   const name = prompt("Zadaj meno používateľa:");
   if(!name) return;
