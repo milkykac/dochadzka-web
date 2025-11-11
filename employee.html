@@ -54,9 +54,10 @@ tr:nth-child(even){ background:#f8f9fa; }
     -moz-osx-font-smoothing: grayscale !important; /* Firefox */
     transform: translateZ(0); /* Zruší potenciálnu hardvérovú akceleráciu */
 }
+/* Upravené farby s !important pre vynútenie */
 .status-prichod { background: #198754 !important; color: white !important; }
 .status-odchod { background: #dc3545 !important; color: white !important; }
-.status-prestavka { background: #ffc107 !important; color: #333 !important; }
+.status-prestavka { background: #ffc107 !important; color: #333 !important; } /* ZMENENÉ NA #333 PRE LEPŠÍ KONTRAST */
 .status-pn { background: #6f42c1 !important; color: white !important; }
 
 .filter { margin-top: 10px; }
@@ -130,7 +131,7 @@ const firebaseConfig = {
   authDomain: "maturita-395fd.firebaseapp.com",
   databaseURL: "https://maturita-395fd-default-rtdb.firebaseio.com",
   projectId: "maturita-395fd",
-  storageBucket: "maturita-395fd.firebasestorage.app",
+  storageBucket: "maturita-395fd.firebaseapp.com",
   messagingSenderId: "754745500563",
   appId: "1:754745500563:web:74fd4d6ab5765ee788be66",
   measurementId: "G-F6KQQS48GD"
@@ -206,12 +207,15 @@ async function loadUserData() {
                 // Sformátovanie do ISO YYYY-MM-DD HH:MM
                 validIsoTime = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')} ${time}`;
             } else if (cleanTime.includes('T') && cleanTime.includes('-')) {
-                // Je to už ISO formát (napr. pridané cez admina), použijeme ho priamo
-                validIsoTime = cleanTime.replace('T', ' ');
-            } else {
-                // Nepoznaný formát, preskočíme
-                return;
-            }
+                // Je to už ISO formát (napr. pridané cez admina), použijeme ho priamo
+                validIsoTime = cleanTime.replace('T', ' ');
+            } else if (cleanTime.includes('-') && cleanTime.includes(':')) {
+                // Je to už YYYY-MM-DD HH:MM (napr. pridané cez admina), použijeme ho priamo
+                validIsoTime = cleanTime;
+            } else {
+                // Nepoznaný formát, preskočíme
+                return;
+            }
             // Koniec KĽÚČOVEJ OPRAVY
             
             // Normalizácia typu
@@ -226,6 +230,7 @@ async function loadUserData() {
             else if (cleanType.includes('pn')) recordType = 'pn';
             
             if (recordType) {
+                 // Zabezpečenie proti duplikátom pri rôznych dátových štruktúrach
                  const isDuplicate = records.some(r => r.cas === validIsoTime && r.stav === recordType);
                  if (!isDuplicate) {
                      records.push({
@@ -241,12 +246,24 @@ async function loadUserData() {
         allRecordsCache = records;
         
         // 5. AKTUALIZÁCIA STAVU
-        const mainStatusRecord = records.find(r => r.stav !== 'prestavka' && r.stav !== 'pn');
+        const lastValidLog = records.find(r => r.stav !== 'pn'); // PN nie je aktívny stav prítomnosti
         
-        const lastStatus = mainStatusRecord ? mainStatusRecord.stav.toUpperCase() : "Žiadny stav nezaznamenaný.";
-        const lastStatusClass = mainStatusRecord ? `status-${mainStatusRecord.stav}` : 'status-prichod'; 
+        let lastStatusText = "Žiadny stav nezaznamenaný.";
+        let lastStatusClass = '';
+
+        if (lastValidLog) {
+            lastStatusText = lastValidLog.stav.toUpperCase();
+            lastStatusClass = `status-${lastValidLog.stav}`;
+        } else {
+            // Kontrola, či je používateľ na PN
+            const lastPN = records.find(r => r.stav === 'pn');
+            if (lastPN) {
+                lastStatusText = "PN";
+                lastStatusClass = 'status-pn';
+            }
+        }
         
-        statusBox.innerHTML = `Posledný stav: <span class="status-badge ${lastStatusClass}">${lastStatus}</span>`;
+        statusBox.innerHTML = `Posledný stav: <span class="status-badge ${lastStatusClass}">${lastStatusText}</span>`;
 
         // 6. Vykreslenie všetkých sekcií
         renderTables(allRecordsCache);
@@ -282,11 +299,11 @@ function renderTables(records) {
       bodyEl.innerHTML = `<tr><td colspan="${colCount}">Žiadne záznamy</td></tr>`;
     } else {
       bodyEl.innerHTML = sectionRecords.map(z => {
-        // Formátujeme späť na D.M.RRRR HH:MM pre zobrazenie
+        // Formátujeme späť na DD.MM.RRRR HH:MM pre zobrazenie
         const datePart = z.cas.substring(0, 10).split('-');
         const timePart = z.cas.substring(11, 16);
         // YYYY-MM-DD -> DD.MM.YYYY
-        const visibleTime = `${datePart[2]}.${datePart[1]}.${datePart[0]} ${timePart}`; 
+        const visibleTime = `${datePart[2]}.${datePart[1]}.${datePart[0]} ${timePart}`; 
 
         const cls = `status-${z.stav}`;
         
@@ -330,7 +347,7 @@ window.exportTable = function(sectionNameId) {
     table.querySelectorAll("tbody tr").forEach(row => {
         const cols = Array.from(row.querySelectorAll("td")).map(td => {
             // Odstránime neviditeľné znaky z textu odznaku
-            const text = td.textContent.trim().replace(/\s\s+/g, ' '); 
+            const text = td.textContent.trim().replace(/\s\s+/g, ' '); 
             return `"${text}"`;
         });
         
@@ -379,3 +396,4 @@ loadUserData();
 </script>
 </body>
 </html>
+
