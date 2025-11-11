@@ -68,7 +68,6 @@ tr:nth-child(even){ background:#f8f9fa; }
 <input type="text" id="searchPrestavky" placeholder="Hľadať..." style="flex:2;">
 </div>
 <div id="prestavkyTable" class="loader">Načítavam dáta...</div>
-<button style="margin-top:10px;" onclick="addManualPrestavka()">Pridať prestávku</button>
 </section>
 
 <section id="pn">
@@ -89,7 +88,6 @@ tr:nth-child(even){ background:#f8f9fa; }
 <div id="newChipsContainer" class="loader">Načítavam čipy...</div>
 </section>
 
-<!-- MODAL -->
 <div id="changePasswordModal" class="modal">
 <div class="modal-content">
 <span id="closeModal" onclick="closeModal()">&times;</span>
@@ -100,11 +98,11 @@ tr:nth-child(even){ background:#f8f9fa; }
 </div>
 </div>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+import { getDatabase } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-analytics.js";
 
-<script>
 const firebaseConfig = {
   apiKey: "AIzaSyBsYrbYtP4E5blWbKlrJ6iI9v6YPAYYp0g",
   authDomain: "maturita-395fd.firebaseapp.com",
@@ -116,8 +114,9 @@ const firebaseConfig = {
   measurementId: "G-F6KQQS48GD"
 };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const analytics = getAnalytics(app);
 
 // Prepínanie sekcií
 document.querySelectorAll("nav button").forEach(btn=>{
@@ -146,7 +145,7 @@ function exportTable(id){
   a.click();
 }
 
-// Načítanie dát
+// Funkcia na načítanie dochádzky/prestaviek/PN
 async function loadAttendance(type, tableId, dateId, searchId){
   const el=document.getElementById(tableId);
   el.innerHTML="Načítavam dáta...";
@@ -156,36 +155,23 @@ async function loadAttendance(type, tableId, dateId, searchId){
     const snap=await db.ref("users").get();
     let html="<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>";
     snap.forEach(userSnap=>{
-      const user=userSnap.val();
-      const logs=user[type]||[];
-      logs.forEach(log=>{
-        const logDate=(log.cas||"").slice(0,10);
-        const name=user.name||"(bez mena)";
-        if((!dateFilter||logDate===dateFilter)&&(!search||name.toLowerCase().includes(search))){
-          html+=`<tr><td>${name}</td><td>${log.cas||"-"}</td><td>${log.typ||type}</td></tr>`;
+      const user = userSnap.val();
+      const logsObj = user[type] || {};
+      Object.keys(logsObj).forEach(key=>{
+        const log = logsObj[key];
+        const logDate = (log.cas || "").slice(0,10);
+        const name = user.name || "(bez mena)";
+        if((!dateFilter || logDate===dateFilter) && (!search || name.toLowerCase().includes(search))){
+          html += `<tr><td>${name}</td><td>${log.cas || "-"}</td><td>${log.typ || type}</td></tr>`;
         }
       });
     });
-    html+="</table>";
-    el.innerHTML=html;
-  }catch(e){el.innerHTML="Chyba pri načítaní dát.";}
-}
-
-// Pridať manuálnu prestávku
-async function addManualPrestavka(){
-  const name = prompt("Zadaj meno používateľa pre prestávku:");
-  if(!name) return;
-  const snap=await db.ref("users").get();
-  let uid=null;
-  snap.forEach(u=>{if(u.val().name===name)uid=u.key;});
-  if(!uid) return alert("Používateľ nenájdený!");
-  const timestamp = new Date().toISOString();
-  const newPrestavka = {cas: timestamp, typ:"prestávka", manual:true};
-  const ref = db.ref(`users/${uid}/prestavky`);
-  const prev = (await ref.get()).val()||[];
-  prev.push(newPrestavka);
-  await ref.set(prev);
-  loadSection("prestavky");
+    html += "</table>";
+    el.innerHTML = html;
+  } catch(e){
+    el.innerHTML="Chyba pri načítaní dát.";
+    console.error(e);
+  }
 }
 
 // Používatelia
@@ -215,8 +201,7 @@ async function loadNewChips(){
     const snap=await db.ref("newChips").get();
     el.innerHTML="";
     if(!snap.exists()){el.innerHTML="Žiadne nové čipy"; return;}
-    snap.forEach(c=>{
-      const chip=c.key;
+    Object.keys(snap.val()).forEach(chip=>{
       const div=document.createElement("div");
       div.className="new-chip";
       div.innerHTML=`${chip} <button onclick="assignChip('${chip}')">Priradiť</button> <button onclick="removeChip('${chip}')">Odstrániť</button>`;
@@ -228,21 +213,26 @@ async function loadNewChips(){
 // Pomocné funkcie
 async function assignChip(chipUid){
   const name=prompt("Zadaj meno používateľa:");
-  if(!name)return;
+  if(!name) return;
   const snap=await db.ref("users").get();
   let uid=null;
-  snap.forEach(u=>{if(u.val().name===name)uid=u.key;});
-  if(!uid)return alert("Používateľ nenájdený!");
+  snap.forEach(u=>{if(u.val().name===name) uid=u.key;});
+  if(!uid) return alert("Používateľ nenájdený!");
   await db.ref(`users/${uid}/chipUid`).set(chipUid);
   await db.ref(`newChips/${chipUid}`).remove();
   loadUsers(); loadNewChips();
 }
 async function removeChip(chipUid){
-  if(confirm("Naozaj odstrániť čip?")){await db.ref(`newChips/${chipUid}`).remove();loadNewChips();}
+  if(confirm("Naozaj odstrániť čip?")){await db.ref(`newChips/${chipUid}`).remove(); loadNewChips();}
 }
-async function removeUser(id){if(confirm("Odstrániť používateľa?")){await db.ref(`users/${id}`).remove();loadUsers();}}
+async function removeUser(id){
+  if(confirm("Odstrániť používateľa?")){await db.ref(`users/${id}`).remove(); loadUsers();}
+}
 function logout(){alert("Odhlásenie");}
-function openChangePassword(id){document.getElementById("changePasswordModal").style.display="flex";document.getElementById("changePasswordUserId").value=id;}
+function openChangePassword(id){
+  document.getElementById("changePasswordModal").style.display="flex";
+  document.getElementById("changePasswordUserId").value=id;
+}
 function closeModal(){document.getElementById("changePasswordModal").style.display="none";}
 async function saveNewPassword(){
   const id=document.getElementById("changePasswordUserId").value;
@@ -255,18 +245,20 @@ async function saveNewPassword(){
 
 // Sekcie
 function loadSection(id){
-  if(id==="dochadzka")loadAttendance("dochadzka","dochadzkaTable","dateDochadzka","searchDochadzka");
-  if(id==="prestavky")loadAttendance("prestavky","prestavkyTable","datePrestavky","searchPrestavky");
-  if(id==="pn")loadAttendance("pn","pnTable","datePN","searchPN");
-  if(id==="pouzivatelia"){loadUsers();loadNewChips();}
+  if(id==="dochadzka") loadAttendance("dochadzka","dochadzkaTable","dateDochadzka","searchDochadzka");
+  if(id==="prestavky") loadAttendance("prestavky","prestavkyTable","datePrestavky","searchPrestavky");
+  if(id==="pn") loadAttendance("pn","pnTable","datePN","searchPN");
+  if(id==="pouzivatelia"){ loadUsers(); loadNewChips(); }
 }
 
 // Inicializácia
 loadSection("dochadzka");
 ["dateDochadzka","searchDochadzka","datePrestavky","searchPrestavky","datePN","searchPN"].forEach(id=>{
-  document.getElementById(id).addEventListener("input",()=>{loadSection(document.querySelector("section.active").id);});
+  document.getElementById(id).addEventListener("input",()=>{ loadSection(document.querySelector("section.active").id); });
 });
 </script>
 </body>
 </html>
+
+
 
