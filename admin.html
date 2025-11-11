@@ -9,7 +9,7 @@
 /* --- Všeobecné a Layout štýly --- */
 body { font-family:'Poppins',sans-serif; margin:0; background:linear-gradient(135deg,#007bff,#6f42c1); min-height:100vh; color:#333; }
 header { background:#fff; padding:15px 25px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 3px 10px rgba(0,0,0,0.1); position:sticky; top:0; z-index:10; }
-h1 { color:#007bff; margin:0; font-size:22px; font-weight:700; } /* Tučnejšie písmo */
+h1 { color:#007bff; margin:0; font-size:22px; font-weight:700; }
 button { background:#007bff; border:none; color:white; padding:10px 16px; border-radius:8px; cursor:pointer; font-size:15px; font-weight:600; transition:0.3s; }
 button:hover { background:#0056b3; }
 nav { background:#fff; display:flex; justify-content:center; padding:10px; gap:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); position:sticky; top:70px; z-index:5; flex-wrap:wrap; }
@@ -32,15 +32,19 @@ th,td { border:1px solid #ddd; padding:12px; text-align:left; font-size:15px; }
 th { background:#007bff; color:white; font-weight:600; }
 tr:nth-child(even){ background:#f8f9fa; }
 
-/* --- VIZUÁLNE ODZNAKY (Sústredenie sa na farbu pozadia) --- */
+/* --- VIZUÁLNE ODZNAKY (EXTRÉMNE VYNÚTENIE VZHĽADU) --- */
 .status-badge {
-    font-weight: 700;
-    padding: 7px 14px; /* Väčší padding */
-    display: inline-block;
-    text-align: center;
-    min-width: 80px; 
-    white-space: nowrap; 
-    font-size: 16px; /* Väčší font */
+    font-weight: 700 !important;
+    padding: 7px 14px !important; 
+    display: inline-block !important;
+    text-align: center !important;
+    min-width: 80px !important; 
+    white-space: nowrap !important; 
+    font-size: 16px !important; 
+    /* ABSOLÚTNE VYNÚTENIE ODSTRÁNENIA TIEŇA */
+    text-shadow: none !important; 
+    text-shadow: 0 0 0 rgba(0, 0, 0, 0) !important;
+    border-radius: 50px !important; /* Vynútenie pilulkového tvaru */
 }
 
 /* Farby pozadia */
@@ -49,6 +53,13 @@ tr:nth-child(even){ background:#f8f9fa; }
 .status-prestavka { background: #ffc107 !important; } /* Sýta žltá */
 .status-pn { background: #6f42c1 !important; } 
 
+/* VYNÚTENIE FARBY TEXTU (pre max kontrast) */
+.status-prichod, .status-odchod, .status-pn {
+    color: white !important;
+}
+.status-prestavka {
+    color: #000000 !important; /* Čierna farba pre najlepší kontrast na žltej */
+}
 
 /* --- Modálne okno (Lepší kontrast a väčšie prvky) --- */
 .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); justify-content:center; align-items:center; z-index:100; }
@@ -57,7 +68,7 @@ tr:nth-child(even){ background:#f8f9fa; }
     padding:30px; 
     border-radius:12px; 
     width:90%; 
-    max-width:450px; /* Väčšie okno */
+    max-width:450px; 
     position:relative; 
     animation:fadeIn 0.3s; 
     box-shadow:0 10px 25px rgba(0,0,0,0.3);
@@ -66,7 +77,7 @@ tr:nth-child(even){ background:#f8f9fa; }
 .modal-content input{ 
     width:100%; 
     margin-top:10px; 
-    padding:12px; /* Väčší input */
+    padding:12px; 
     border:2px solid #ccc; 
     border-radius:8px; 
     font-size:16px; 
@@ -76,7 +87,7 @@ tr:nth-child(even){ background:#f8f9fa; }
     width:100%; 
     margin-top:15px; 
     border-radius:8px; 
-    padding:12px 0; /* Väčšie tlačidlá */
+    padding:12px 0; 
     font-weight:700; 
     font-size:16px;
     background:#007bff; 
@@ -88,7 +99,7 @@ tr:nth-child(even){ background:#f8f9fa; }
     position:absolute; 
     right:15px; 
     top:10px; 
-    font-size:30px; /* Väčšie X */
+    font-size:30px; 
     cursor:pointer; 
     color:#333; 
     font-weight:100;
@@ -272,11 +283,10 @@ async function loadAttendance(type, tableId, dateId, searchId){
     let tableBodyHtml = ""; 
     let found=false;
     
-    // Inline štýly, ktoré vynútia zobrazenie (Najvyššia priorita)
-    // text-shadow: none !important; je KĽÚČ k odstráneniu glitchu
+    // Inline štýly, ktoré vynútia zobrazenie (Najvyššia priorita, prebíjajú glitch)
     const badgeDefaultStyle = "border-radius: 50px !important; text-shadow: none !important; font-weight: 700 !important;";
     const defaultTextColor = "color: white !important;";
-    const prestavkaTextColor = "color: #212529 !important;"; // Takmer čierna
+    const prestavkaTextColor = "color: #000000 !important;"; // Čierna
 
     if(snap.exists()){
       snap.forEach(userSnap=>{
