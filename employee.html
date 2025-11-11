@@ -33,7 +33,7 @@ tr:nth-child(even){ background:#f8f9fa; }
 
 .status-box { background:#e9f2ff; color:#007bff; font-weight:600; padding:15px; border-radius:8px; text-align:center; margin-bottom:20px; border:1px solid #007bff;}
 
-/* --- VIZUÁLNE ODZNAKY (OPRAVENÉ CSS) --- */
+/* --- VIZUÁLNE ODZNAKY (EXTRÉMNE VYČISTENÉ A OPRAVENÉ) --- */
 .status-badge {
     font-weight: 700 !important;
     padding: 5px 10px !important;
@@ -42,10 +42,17 @@ tr:nth-child(even){ background:#f8f9fa; }
     text-align: center !important;
     min-width: 70px !important;
     white-space: nowrap !important;
-    /* KĽÚČOVÁ OPRAVA GLITCHU: ODSTRÁNI FAREBNÉ OBVRY */
+    
+    /* KĽÚČOVÉ OPRAVY GLITCHU - AGRESÍVNE VYPNUTIE VIZUÁLNYCH EFEKTOV */
     text-shadow: none !important;
-    filter: none !important; 
-    -webkit-text-stroke: 0px transparent !important;
+    box-shadow: none !important;
+    filter: none !important; 
+    -webkit-text-stroke: 0px transparent !important; /* WebKit */
+    
+    /* VYNÚTENIE ČISTÉHO RENDERU */
+    -webkit-font-smoothing: antialiased !important; /* Chrome, Safari */
+    -moz-osx-font-smoothing: grayscale !important; /* Firefox */
+    transform: translateZ(0); /* Zruší potenciálnu hardvérovú akceleráciu */
 }
 .status-prichod { background: #198754 !important; color: white !important; }
 .status-odchod { background: #dc3545 !important; color: white !important; }
@@ -321,7 +328,11 @@ window.exportTable = function(sectionNameId) {
     csv.push(header.join(","));
     
     table.querySelectorAll("tbody tr").forEach(row => {
-        const cols = Array.from(row.querySelectorAll("td")).map(td => `"${td.textContent.trim()}"`);
+        const cols = Array.from(row.querySelectorAll("td")).map(td => {
+            // Odstránime neviditeľné znaky z textu odznaku
+            const text = td.textContent.trim().replace(/\s\s+/g, ' '); 
+            return `"${text}"`;
+        });
         
         if (cols.length > 0 && cols[0].includes("Žiadne záznamy") === false) {
             csv.push(cols.join(","));
