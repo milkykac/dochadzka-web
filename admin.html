@@ -36,45 +36,44 @@ tr:nth-child(even){ background:#f8f9fa; }
 @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
 @media(max-width:768px){ header{flex-direction:column; text-align:center; gap:10px;} table{display:block; overflow-x:auto; white-space:nowrap;} }
 
-/* --- OPRAVENÉ A VYLEPŠENÉ VIZUÁLNE ŠTÝLY PRE STAVY (Dochádzka) --- */
+
 .status-badge {
-    font-weight: 700 !important; /* Ešte tučnejšie */
-    padding: 7px 14px !important; /* Väčší padding pre viac priestoru */
-    border-radius: 50px !important; /* Oveľa oblejší tvar - pilulka */
+    font-weight: 700 !important; /* Tučnejšie */
+    padding: 7px 14px !important; /* Väčší padding */
+    border-radius: 50px !important; /* Tvar pilulky */
     display: inline-block;
     text-align: center;
-    min-width: 80px; /* Trochu širšie */
+    min-width: 80px; 
     white-space: nowrap;
-    text-shadow: none !important; /* KĽÚČ: Odstránenie modrého glitch tieňa */
+    text-shadow: none !important; /* KĽÚČ: ODSTRÁNENIE NEŽIADUCEHO MODRÉHO TIEŇA */
     font-size: 16px !important;
 }
 
 /* PRÍCHOD: Zelená s bielym textom */
 .status-prichod { 
-    background: #198754 !important; /* Zelená (Bootstrap úspech) */
-    color: white !important; /* BIELA FARBA TEXTU */
+    background: #198754 !important;
+    color: white !important;
 } 
 
 /* ODCHOD: Červená s bielym textom */
 .status-odchod { 
-    background: #dc3545 !important; /* Červená (Bootstrap nebezpečenstvo) */
-    color: white !important; /* BIELA FARBA TEXTU */
+    background: #dc3545 !important;
+    color: white !important;
 } 
 
 /* PRESTÁVKA: Žltá s tmavým textom */
 .status-prestávka { 
-    background: #ffc107 !important; /* Sýta žltá (Bootstrap varovanie) */
-    color: #212529 !important; /* TMAVÁ FARBA TEXTU */
+    background: #ffc107 !important;
+    color: #212529 !important;
 }
 
 /* PN: Fialová s bielym textom */
 .status-pn { 
-    background: #6f42c1 !important; /* Fialová */
+    background: #6f42c1 !important;
     color: white !important;
 } 
 
 /* --- NOVÉ ŠTÝLY PRE POUŽÍVATEĽOV (ČIPY) --- */
-/* Aplikujeme rovnaké vizuálne vylepšenia aj na odznaky používateľov */
 .chip-status-assigned, .chip-status-unassigned {
     font-weight: 700 !important;
     padding: 7px 14px !important;
@@ -86,8 +85,8 @@ tr:nth-child(even){ background:#f8f9fa; }
     text-shadow: none !important;
     font-size: 16px !important;
 }
-.chip-status-assigned { background: #198754 !important; } /* Zelená pre priradený čip */
-.chip-status-unassigned { background: #6c757d !important; } /* Šedá pre nepriradený čip */
+.chip-status-assigned { background: #198754 !important; }
+.chip-status-unassigned { background: #6c757d !important; }
 .user-actions button { 
     background: transparent; 
     border: 1px solid #ddd;
@@ -103,8 +102,8 @@ tr:nth-child(even){ background:#f8f9fa; }
     border-color: #007bff;
     color: #007bff;
 }
-.user-actions button:first-child:hover { color: #dc3545; } /* Ikonka koša červená pri hover */
-/* ----------------------------------- */
+.user-actions button:first-child:hover { color: #dc3545; }
+
 </style>
 </head>
 <body>
