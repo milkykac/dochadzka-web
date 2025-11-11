@@ -30,6 +30,7 @@ body {
   align-items: center;
 }
 
+/* Hlavička */
 header {
   width: 100%;
   background: var(--accent);
@@ -43,14 +44,7 @@ header {
   z-index: 100;
   box-shadow: 0 4px 15px rgba(0,0,0,0.15);
 }
-
-header h1 {
-  font-weight: 600;
-  font-size: 22px;
-  margin: 0;
-  letter-spacing: 0.5px;
-}
-
+header h1 { font-weight: 600; font-size: 22px; margin: 0; }
 header button {
   background: #fff;
   color: var(--accent);
@@ -61,16 +55,10 @@ header button {
   font-weight: 600;
   transition: 0.3s;
 }
-header button:hover {
-  background: var(--accent-dark);
-  color: white;
-}
+header button:hover { background: var(--accent-dark); color: white; }
 
-nav {
-  display: flex;
-  gap: 10px;
-  margin: 20px 0 0 0;
-}
+/* Navigácia */
+nav { display: flex; gap: 10px; margin: 20px 0 0 0; }
 nav button {
   background: var(--accent);
   color: white;
@@ -79,11 +67,13 @@ nav button {
   padding: 8px 16px;
   cursor: pointer;
   font-weight: 500;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.15);
   transition: 0.3s;
 }
 nav button.active { background: var(--pn); }
 nav button:hover { background: var(--accent-dark); }
 
+/* Obsah */
 .container {
   max-width: 850px;
   width: 95%;
@@ -102,12 +92,11 @@ h2 {
   font-weight: 600;
 }
 
-.table-section {
-  display: none;
-  margin-top: 20px;
-}
+/* Sekcie */
+.table-section { display: none; margin-top: 20px; }
 .table-section.active { display: block; }
 
+/* Tabuľky */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -117,19 +106,12 @@ table {
   overflow: hidden;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
-th, td {
-  border: 1px solid var(--border);
-  padding: 10px;
-  text-align: center;
-}
-th {
-  background: var(--accent);
-  color: white;
-  font-weight: 500;
-}
+th, td { border: 1px solid var(--border); padding: 10px; text-align: center; }
+th { background: var(--accent); color: white; font-weight: 500; }
 tr:nth-child(even) { background: rgba(0,0,0,0.03); }
 tr:hover { background: rgba(0,0,0,0.08); }
 
+/* Statusy */
 .status-prichod, .status-odchod, .status-prestavka, .status-pn {
   font-weight: 600;
   padding: 3px 8px;
@@ -155,6 +137,7 @@ tr:hover { background: rgba(0,0,0,0.08); }
   box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
 }
 
+/* Tlačidlá */
 button.export-btn {
   margin-top: 10px;
   background: #28a745;
@@ -163,6 +146,7 @@ button.export-btn {
   color: white;
   padding: 8px 14px;
   font-weight: 500;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.15);
   cursor: pointer;
   transition: 0.3s;
 }
@@ -188,7 +172,7 @@ button.export-btn:hover { background: #218838; }
 </nav>
 
 <div class="container">
-  <div class="status-box" id="statusBox">Načítavam stav...</div>
+  <div id="statusBox" class="status-box">Načítavam stav...</div>
 
   <div class="table-section active" id="attendance">
     <h2>Dochádzka</h2>
@@ -231,11 +215,12 @@ const firebaseConfig = {
   authDomain: "maturita-395fd.firebaseapp.com",
   databaseURL: "https://maturita-395fd-default-rtdb.firebaseio.com",
   projectId: "maturita-395fd",
-  storageBucket: "maturita-395fd.appspot.com",
+  storageBucket: "maturita-395fd.firebasestorage.app",
   messagingSenderId: "754745500563",
   appId: "1:754745500563:web:74fd4d6ab5765ee788be66",
   measurementId: "G-F6KQQS48GD"
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
@@ -252,6 +237,7 @@ const statusBox = document.getElementById("statusBox");
 
 let allRecords = [];
 
+// Prepínanie sekcií
 document.querySelectorAll("nav button").forEach(btn=>{
   btn.onclick = ()=>{
     document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
@@ -261,20 +247,19 @@ document.querySelectorAll("nav button").forEach(btn=>{
   }
 });
 
-// Načítanie používateľa a záznamov
+// Načítanie používateľa
 get(ref(db, "users/" + userId)).then(snapshot => {
   if (!snapshot.exists()) { alert("Používateľ nenájdený!"); window.location.href = "index.html"; return; }
   const userData = snapshot.val();
   userNameEl.textContent = userData.name;
-  const chipUid = userData.chipUid;
 
-  get(ref(db, "dochadzka")).then(snapshot => {
+  // Načítanie všetkých záznamov dochádzky a filtrovanie podľa mena
+  get(ref(db, "dochadzka")).then(snap => {
     allRecords = [];
-    snapshot.forEach(childSnap => {
+    snap.forEach(childSnap => {
       const rec = childSnap.val();
-      if (rec.chipUid === chipUid) {
-        const stav = rec.typ.toUpperCase();
-        allRecords.push({cas: rec.cas, stav});
+      if(rec.meno === userData.name) {
+        allRecords.push({cas: rec.cas, stav: rec.typ.toUpperCase()});
       }
     });
     allRecords.sort((a,b)=> new Date(b.cas) - new Date(a.cas));
@@ -291,32 +276,33 @@ function renderTables() {
 
   let filtered = allRecords;
   const selectedDate = filterDate.value;
-  if (selectedDate) filtered = filtered.filter(r => r.cas.startsWith(selectedDate));
+  if(selectedDate) filtered = filtered.filter(r=>r.cas.startsWith(selectedDate));
 
-  const attendance = filtered.filter(r => ["PRICHOD","ODCHOD"].includes(r.stav));
-  const breaks = filtered.filter(r => r.stav === "PRESTAVKA");
-  const pn = filtered.filter(r => r.stav === "PN");
+  const attendance = filtered.filter(r=>["PRICHOD","ODCHOD"].includes(r.stav));
+  const breaks = filtered.filter(r=>r.stav==="PRESTAVKA");
+  const pn = filtered.filter(r=>r.stav==="PN");
 
-  if (!attendance.length) myAttendanceBody.innerHTML = "<tr><td colspan='2'>Žiadne záznamy</td></tr>";
-  else attendance.reverse().forEach(z => {
+  if(!attendance.length) myAttendanceBody.innerHTML="<tr><td colspan='2'>Žiadne záznamy</td></tr>";
+  else attendance.reverse().forEach(z=>{
     const cls = z.stav==="PRICHOD"?"status-prichod":"status-odchod";
     myAttendanceBody.innerHTML += `<tr><td>${z.cas}</td><td class="${cls}">${z.stav}</td></tr>`;
   });
 
-  if (!breaks.length) myBreaksBody.innerHTML = "<tr><td>Žiadne prestávky</td></tr>";
-  else breaks.reverse().forEach(z => myBreaksBody.innerHTML += `<tr><td class="status-prestavka">${z.cas}</td></tr>`);
+  if(!breaks.length) myBreaksBody.innerHTML="<tr><td>Žiadne prestávky</td></tr>";
+  else breaks.reverse().forEach(z=> myBreaksBody.innerHTML += `<tr><td class="status-prestavka">${z.cas}</td></tr>`);
 
-  if (!pn.length) myPNBody.innerHTML = "<tr><td>Žiadne PN</td></tr>";
-  else pn.reverse().forEach(z => myPNBody.innerHTML += `<tr><td class="status-pn">${z.cas}</td></tr>`);
+  if(!pn.length) myPNBody.innerHTML="<tr><td>Žiadne PN</td></tr>";
+  else pn.reverse().forEach(z=> myPNBody.innerHTML += `<tr><td class="status-pn">${z.cas}</td></tr>`);
 }
 
 filterDate.addEventListener("change", renderTables);
 
-document.getElementById("logoutBtn").addEventListener("click", () => {
+document.getElementById("logoutBtn").addEventListener("click", ()=>{
   localStorage.removeItem("uid");
   window.location.href = "index.html";
 });
 
+// Export do Excelu
 window.exportMyData = function() {
   const userName = userNameEl.textContent;
   const data = [
@@ -324,11 +310,11 @@ window.exportMyData = function() {
     ["Posledný stav", statusBox.textContent],
     [],
     ["Dochádzka (Príchod / Odchod)"], ["Čas","Stav"],
-    ...Array.from(document.querySelectorAll("#myAttendanceBody tr")).map(tr => Array.from(tr.querySelectorAll("td")).map(td=>td.textContent)),
+    ...Array.from(document.querySelectorAll("#myAttendanceBody tr")).map(tr=>Array.from(tr.querySelectorAll("td")).map(td=>td.textContent)),
     [], ["Prestávky"], ["Čas"],
-    ...Array.from(document.querySelectorAll("#myBreaksBody tr")).map(tr => Array.from(tr.querySelectorAll("td")).map(td=>td.textContent)),
+    ...Array.from(document.querySelectorAll("#myBreaksBody tr")).map(tr=>Array.from(tr.querySelectorAll("td")).map(td=>td.textContent)),
     [], ["PN"], ["Čas"],
-    ...Array.from(document.querySelectorAll("#myPNBody tr")).map(tr => Array.from(tr.querySelectorAll("td")).map(td=>td.textContent))
+    ...Array.from(document.querySelectorAll("#myPNBody tr")).map(tr=>Array.from(tr.querySelectorAll("td")).map(td=>td.textContent))
   ];
   const ws = XLSX.utils.aoa_to_sheet(data);
   const wb = XLSX.utils.book_new();
@@ -338,6 +324,8 @@ window.exportMyData = function() {
 </script>
 </body>
 </html>
+
+
 
 
 
