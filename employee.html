@@ -169,18 +169,14 @@ async function loadUserData() {
         const allPossibleLogs = [];
         
         // 1. Zber záznamov z OČAKÁVANÝCH PODUZLOV ("dochadzka", "prestavky", "pn")
-        // Týmto zozbierame dáta uložené pod štandardnou štruktúrou
         ["dochadzka", "prestavky", "pn"].forEach(type => {
             const logsObj = userData[type] || {};
             Object.values(logsObj).forEach(log => allPossibleLogs.push(log));
         });
         
         // 2. Zber záznamov z PLOCHÝCH/NEŠTANDARDNÝCH uzlov (priamo pod UID)
-        // Toto rieši Prestávky uložené mimo poduzlu 'prestavky'
         Object.values(userData).forEach(prop => {
             if (prop && prop.cas && prop.typ) {
-                // Pridávame len logy, ktoré majú čas a typ, a ktoré nie sú 'name', 'password', 'chipUid', atď.
-                // Na konci sa zbavíme duplikátov
                 allPossibleLogs.push(prop); 
             }
         });
@@ -190,7 +186,7 @@ async function loadUserData() {
             if (!log || !log.cas || !log.typ) return;
 
             let cleanTime = String(log.cas).replace(' ', 'T');
-            if (!cleanTime.includes('-')) return; // Zlý formát dátumu (napr. chýbajúci rok)
+            if (!cleanTime.includes('-')) return; 
 
             // Normalizácia typu: odstránenie diakritiky, malé písmená a hľadanie kľúčového slova
             const cleanType = String(log.typ)
@@ -200,11 +196,10 @@ async function loadUserData() {
             let recordType = null;
             if (cleanType.includes('prichod')) recordType = 'prichod';
             else if (cleanType.includes('odchod')) recordType = 'odchod';
-            else if (cleanType.includes('prestavka')) recordType = 'prestavka'; // Najrobustnejší filter pre Prestávku
+            else if (cleanType.includes('prestavka')) recordType = 'prestavka';
             else if (cleanType.includes('pn')) recordType = 'pn';
             
             if (recordType) {
-                 // Ošetrenie duplikátov: logy sa mohli objaviť dvakrát (štandardne a ako plochý)
                  const isDuplicate = records.some(r => r.cas === cleanTime && r.stav === recordType);
                  if (!isDuplicate) {
                      records.push({
@@ -219,9 +214,14 @@ async function loadUserData() {
         records.sort((a, b) => new Date(b.cas) - new Date(a.cas));
         allRecordsCache = records;
         
-        // 5. Aktualizácia stavu
-        const lastStatus = records.length ? records[0].stav.toUpperCase() : "Žiadny stav nezaznamenaný.";
-        const lastStatusClass = records.length ? `status-${records[0].stav}` : '';
+        // 5. AKTUALIZÁCIA STAVU (Opravená logika: Ignoruje Prestávky a PN)
+        // Nájdeme najnovší záznam, ktorý NIE JE "prestávka" ani "pn"
+        const mainStatusRecord = records.find(r => r.stav !== 'prestavka' && r.stav !== 'pn');
+        
+        const lastStatus = mainStatusRecord ? mainStatusRecord.stav.toUpperCase() : "Žiadny stav nezaznamenaný.";
+        // Použijeme "prichod" triedu, ak stav nie je nájdený/zaznamenaný (predvolené pre začiatok dňa)
+        const lastStatusClass = mainStatusRecord ? `status-${mainStatusRecord.stav}` : 'status-prichod'; 
+        
         statusBox.innerHTML = `Posledný stav: <span class="status-badge ${lastStatusClass}">${lastStatus}</span>`;
 
         // 6. Vykreslenie všetkých sekcií
