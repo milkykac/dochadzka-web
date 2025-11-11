@@ -200,8 +200,8 @@ const db = getDatabase(app);
 const currentUserId = localStorage.getItem("uid");
 
 if (!currentUserId || currentUserId !== "admin") {
-    alert("Prístup zamietnutý. Musíte sa prihlásiť ako Administrátor.");
-    window.location.href = "index.html";
+    alert("Prístup zamietnutý. Musíte sa prihlásiť ako Administrátor.");
+    window.location.href = "index.html";
 }
 // ---------------------------------------------
 
@@ -282,7 +282,7 @@ window.addLog = async function(type, typ){
   }
 };
 
-// ----- ZJEDNOTENÁ funkcia načítania dochádzky/prestávok/pn -----
+// ----- ZJEDNOTENÁ funkcia načítania dochádzky/prestávok/pn (Opravená farba odznaku) -----
 async function loadAttendance(type, tableId, dateId, searchId){
   const el = document.getElementById(tableId);
   el.innerHTML='<div class="loader">Načítavam dáta...</div>'; 
@@ -296,28 +296,30 @@ async function loadAttendance(type, tableId, dateId, searchId){
     let found=false;
     
     if(snap.exists()){
+      const allLogs = [];
+      
       snap.forEach(userSnap=>{
         const user = userSnap.val();
         const logsObj = user[type] || {}; 
         const userName = user.name || "(bez mena)";
         
-        if(Object.keys(logsObj).length === 0) return;
-        
-        const sortedKeys = Object.keys(logsObj).sort((a, b) => {
-          const logA = logsObj[a];
-          const logB = logsObj[b];
-          // Triedenie podľa času (najnovší navrchu)
-          return new Date(logB.cas) - new Date(logA.cas); 
-        });
-
-        sortedKeys.forEach(key=>{
+        Object.keys(logsObj).forEach(key=>{
           const log = logsObj[key];
+          allLogs.push({ ...log, userName, key });
+        });
+      });
+      
+      // Triedenie podľa času (najnovší navrchu)
+      allLogs.sort((a, b) => new Date(b.cas) - new Date(a.cas)); 
+
+      allLogs.forEach(log=>{
           const logTime = log.cas || "-";
           const logDate = logTime.slice(0,10); 
-          // Dôležité: Normalizujeme typ na malé písmená a bez diakritiky
-          // Použijeme diakritiku pre zobrazenie, ale pre CSS triedu použijeme normalizovaný typ
+          
+          // !!! OPRAVENÉ: Používame log.typ (prichod/odchod/prestavka) na určenie triedy,
+          //              a nie iba názov sekcie (type)!
           const rawType = (log.typ||type).toLowerCase();
-          const normalizedType = rawType.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); // pre CSS triedu
+          const normalizedType = rawType.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
             
           // Priradenie CSS triedy
           let statusClass = '';
@@ -328,19 +330,18 @@ async function loadAttendance(type, tableId, dateId, searchId){
             
           // Filtrácia
           const isDateMatch = !dateFilter || logDate === dateFilter;
-          const isNameMatch = !search || userName.toLowerCase().includes(search);
+          const isNameMatch = !search || log.userName.toLowerCase().includes(search);
           
           if(isDateMatch && isNameMatch){ 
             // Vykreslenie s 3 stĺpcami (Meno, Čas, Typ) - POUŽÍVAME IBA CSS TRIEDU
             tableBodyHtml += `<tr>
-                <td>${userName}</td> 
+                <td>${log.userName}</td> 
                 <td>${logTime}</td>
                 <td><span class="status-badge ${statusClass}">${rawType.toUpperCase()}</span></td>
             </tr>`;
             found=true;
           }
         });
-      });
       
       // Hlavička tabuľky pre 3 stĺpce je rovnaká
       let finalHtml = "<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>";
@@ -360,6 +361,7 @@ async function loadAttendance(type, tableId, dateId, searchId){
     }
   } catch(e){ el.innerHTML="Chyba pri načítaní dát. Viac info v konzole (F12)."; console.error(e); }
 }
+
 
 // ----- Zvyšné funkcie pre Používateľov (bez zmien) -----
 
@@ -492,3 +494,4 @@ function loadSection(id){
 
 </body>
 </html>
+
