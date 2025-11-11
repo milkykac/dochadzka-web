@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin panel – Dochádzka</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 /* --- Všeobecné a Layout štýly --- */
 body { font-family:'Poppins',sans-serif; margin:0; background:linear-gradient(135deg,#007bff,#6f42c1); min-height:100vh; color:#333; }
@@ -45,16 +44,9 @@ tr:nth-child(even){ background:#f8f9fa; }
     font-size: 16px !important; 
     border-radius: 50px !important;
     
-    /* KĽÚČOVÉ OPRAVY GLITCHU - AGRESÍVNE VYPNUTIE VIZUÁLNYCH EFEKTOV */
+    /* KĽÚČOVÁ OPRAVA GLITCHU: Odstránenie akéhokoľvek tieňa */
     text-shadow: none !important; 
     box-shadow: none !important;
-    filter: none !important; 
-    -webkit-text-stroke: 0px transparent !important; /* WebKit/Chrome */
-    
-    /* VYNÚTENIE ČISTÉHO RENDERU */
-    -webkit-font-smoothing: antialiased !important; /* Chrome, Safari */
-    -moz-osx-font-smoothing: grayscale !important; /* Firefox */
-    transform: translateZ(0); /* Zruší potenciálnu hardvérovú akceleráciu */
 }
 
 /* Farby pozadia a textu */
@@ -202,12 +194,6 @@ const db = getDatabase(app);
 
 // --- Inicializácia pri načítaní DOM ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Kontrola administrátora (Pridaná pre bezpečnosť)
-    if (localStorage.getItem("uid") !== "admin") {
-        alert("Prístup zamietnutý. Musíte sa prihlásiť ako administrátor.");
-        window.location.href = "index.html"; 
-    }
-
     document.querySelectorAll("nav button").forEach(btn=>{
         btn.addEventListener("click",()=>{
             document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
@@ -221,7 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadSection("dochadzka"); 
 });
 
-window.logout = () => { localStorage.removeItem("uid"); window.location.href="index.html"; };
+window.logout = () => { window.location.href="index.html"; };
 
 window.exportTable = function(id){
   const container = document.getElementById(id);
@@ -233,7 +219,7 @@ window.exportTable = function(id){
   // Prechádzame len viditeľné riadky tabuľky
   table.querySelectorAll("tr").forEach(row=>{
     // Používame innerText, ktorý ignoruje HTML, ale rešpektuje viditeľný text
-    const cols=[...row.querySelectorAll("th,td")].map(td=>`"${td.innerText.trim().replace(/\s\s+/g, ' ')}"`); 
+    const cols=[...row.querySelectorAll("th,td")].map(td=>`"${td.innerText.trim()}"`); 
     csv.push(cols.join(","));
   });
   const blob=new Blob([csv.join("\n")],{type:"text/csv;charset=utf-8;"}); 
@@ -257,7 +243,7 @@ window.addLog = async function(type, typ){
     await new Promise(res => setTimeout(res, 500)); 
 
     const now = new Date();
-    // Správny ISO-like formát YYYY-MM-DD HH:MM pre databázu
+    // Správny formát YYYY-MM-DD HH:MM
     const timestamp = now.toISOString().slice(0,10) + " " +
                       now.getHours().toString().padStart(2,"0") + ":" +
                       now.getMinutes().toString().padStart(2,"0");
@@ -282,7 +268,7 @@ window.addLog = async function(type, typ){
   }
 };
 
-// ----- ZJEDNOTENÁ funkcia načítania dochádzky/prestávok/pn -----
+// ----- ZJEDNOTENÁ funkcia načítania dochádzky/prestávok/pn (OPRAVENÁ VIZUALIZÁCIA) -----
 async function loadAttendance(type, tableId, dateId, searchId){
   const el = document.getElementById(tableId);
   el.innerHTML='<div class="loader">Načítavam dáta...</div>'; 
@@ -314,8 +300,8 @@ async function loadAttendance(type, tableId, dateId, searchId){
           const log = logsObj[key];
           const logTime = log.cas || "-";
           const logDate = logTime.slice(0,10); 
-          
           // Dôležité: Normalizujeme typ na malé písmená a bez diakritiky
+          // Použijeme diakritiku pre zobrazenie, ale pre CSS triedu použijeme normalizovaný typ
           const rawType = (log.typ||type).toLowerCase();
           const normalizedType = rawType.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); // pre CSS triedu
             
