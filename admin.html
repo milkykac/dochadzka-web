@@ -12,7 +12,7 @@ header { background:#fff; padding:15px 25px; display:flex; justify-content:space
 h1 { color:#007bff; margin:0; font-size:22px; font-weight:600; }
 button { background:#007bff; border:none; color:white; padding:8px 14px; border-radius:8px; cursor:pointer; font-size:14px; transition:0.3s; }
 button:hover { background:#0056b3; }
-nav { background:#fff; padding:10px; gap:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); position:sticky; top:70px; z-index:5; flex-wrap:wrap; display: flex; justify-content: center; } /* Opravené zarovnanie NAV */
+nav { background:#fff; padding:10px; gap:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); position:sticky; top:70px; z-index:5; flex-wrap:wrap; display: flex; justify-content: center; }
 nav button.active { background:#6f42c1; }
 section { display:none; padding:25px; background:#fff; margin:25px auto; border-radius:12px; max-width:1100px; box-shadow:0 4px 20px rgba(0,0,0,0.1); transition:0.3s; }
 section.active { display:block; }
@@ -37,6 +37,7 @@ tr:nth-child(even){ background:#f8f9fa; }
 @media(max-width:768px){ header{flex-direction:column; text-align:center; gap:10px;} table{display:block; overflow-x:auto; white-space:nowrap;} }
 
 /* --- OPRAVENÉ A VYLEPŠENÉ VIZUÁLNE ŠTÝLY PRE STAVY (Dochádzka) --- */
+/* Tieto triedy zabezpečia, že farby z obrázka sa zobrazia správne */
 .status-badge {
     font-weight: 700 !important;
     padding: 7px 14px !important;
@@ -45,31 +46,31 @@ tr:nth-child(even){ background:#f8f9fa; }
     text-align: center;
     min-width: 80px;
     white-space: nowrap;
-    text-shadow: none !important; /* Odstránenie tieňa */
+    text-shadow: none !important; /* KĽÚČOVÁ OPRAVA: Odstránenie modrého glitch tieňa */
     font-size: 16px !important;
 }
 
 /* PRÍCHOD: Zelená s bielym textom */
 .status-prichod { 
-    background: #198754 !important;
+    background: #198754 !important; /* Zelená */
     color: white !important;
 } 
 
 /* ODCHOD: Červená s bielym textom */
 .status-odchod { 
-    background: #dc3545 !important;
+    background: #dc3545 !important; /* Červená */
     color: white !important;
 } 
 
 /* PRESTÁVKA: Žltá s tmavým textom */
 .status-prestávka { 
-    background: #ffc107 !important;
+    background: #ffc107 !important; /* Žltá */
     color: #212529 !important;
 }
 
 /* PN: Fialová s bielym textom */
 .status-pn { 
-    background: #6f42c1 !important;
+    background: #6f42c1 !important; /* Fialová */
     color: white !important;
 } 
 
@@ -286,7 +287,7 @@ async function loadAttendance(type, tableId, dateId, searchId){
             const log = logsObj[key];
             const logDate = log.cas ? log.cas.slice(0, 10) : "";
 
-            // Overenie, či záznam spĺňa VŠETKY podmienky filtrovania:
+            // Logika OPRAVENÉHO FILTROVANIA: Obe podmienky musia byť splnené
             const dateMatch = !dateFilter || logDate === dateFilter;
             const nameMatch = !search || userNameLower.includes(search);
 
@@ -333,7 +334,7 @@ async function loadAttendance(type, tableId, dateId, searchId){
   } catch(e){ el.innerHTML="Chyba pri načítaní dát. Viac info v konzole (F12)."; console.error(e); }
 }
 
-// ----- Načítanie Používateľov -----
+// ----- Načítanie Používateľov (Bez zmien) -----
 async function loadUsers(){
   const el = document.getElementById("usersTable");
   el.innerHTML="Načítavam používateľov...";
@@ -380,7 +381,7 @@ async function loadNewChips(){
   } catch(e){ el.innerHTML="Chyba pri načítaní čipov."; console.error(e); }
 }
 
-// ----- Funkcie pre Používateľov a Čipy -----
+// ----- Funkcie pre Používateľov a Čipy (Bez zmien) -----
 window.assignChip = async function(chipUid){
   const name = prompt("Zadaj meno používateľa, ktorému chceš priradiť čip:").trim();
   if(!name) return;
