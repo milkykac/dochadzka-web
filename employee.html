@@ -172,7 +172,7 @@ async function loadUserData() {
     // 3. Triedenie (od najnovšieho)
     records.sort((a, b) => new Date(b.cas) - new Date(a.cas));
 
-    // 4. Uloženie do cache a aktualizácia stavu
+    // 4. Uloženie do cache a aktualizácia stavu (s farebným odznakom)
     allRecordsCache = records;
     const lastStatus = records.length ? records[0].stav.toUpperCase() : "Žiadny stav nezaznamenaný.";
     const lastStatusClass = records.length ? `status-${records[0].stav}` : '';
@@ -201,7 +201,7 @@ function renderTables(records) {
   const filterPrestavky = document.getElementById("datePrestavky").value;
   const filterPN = document.getElementById("datePN").value;
 
-  // Pomocná funkcia pre renderovanie jednej sekcie (UPRAVENÉ)
+  // Pomocná funkcia pre renderovanie jednej sekcie
   const renderSection = (bodyEl, type, filterDate, expectedStav) => {
     let filtered = records;
     
@@ -215,13 +215,14 @@ function renderTables(records) {
       bodyEl.innerHTML = `<tr><td colspan="${type === 'dochadzka' ? 2 : 1}">Žiadne záznamy</td></tr>`;
     } else {
       bodyEl.innerHTML = sectionRecords.map(z => {
-        const visibleTime = z.cas.replace('T', ' '); // Formát pre zobrazenie
+        const visibleTime = z.cas.replace('T', ' '); // Formát pre zobrazenie (2025-11-11 18:00)
         const cls = `status-${z.stav}`;
         
         if (type === 'dochadzka') {
+          // Dochádzka má 2 stĺpce
           return `<tr><td>${visibleTime}</td><td><span class="status-badge ${cls}">${z.stav.toUpperCase()}</span></td></tr>`;
         } else {
-          // Pre Prestávky a PN sa čas zobrazuje v stĺpci, s farebným odznakom pre typ
+          // Prestávky a PN majú 1 stĺpec, čas je vo farebnom odznaku
           return `<tr><td><span class="status-badge ${cls}">${visibleTime}</span></td></tr>`;
         }
       }).join("");
@@ -234,40 +235,49 @@ function renderTables(records) {
 }
 
 
-// --- Export do CSV (Prispôsobená funkcia) ---
-window.exportTable = function(tableId) {
-  const sectionEl = document.getElementById(tableId).closest('section');
-  const table = sectionEl.querySelector('table');
-  
-  if(!table) return alert("Žiadne dáta na export.");
-
-  const userName = userNameEl.textContent;
-  const sectionName = sectionEl.querySelector('h2').textContent.trim();
-
-  let csv = [];
-  
-  // Hlavička súboru
-  csv.push(`"Typ záznamu","${sectionName.split('(')[0].trim()}"`);
-  csv.push(`"Používateľ","${userName}"`);
-  csv.push("");
-
-  // Hlavičky tabuľky
-  const header = Array.from(table.querySelectorAll("thead th")).map(th => `"${th.innerText.trim()}"`);
-  csv.push(header.join(","));
-
-  // Dáta riadkov
-  table.querySelectorAll("tbody tr").forEach(row => {
-    const cols = Array.from(row.querySelectorAll("td")).map(td => `"${td.textContent.trim()}"`);
-    if (cols.length > 0 && cols[0].includes("Žiadne záznamy") === false) {
-      csv.push(cols.join(","));
-    }
-  });
-
-  const blob = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `${sectionName.replace(/[^a-zA-Z0-9]/g, '_')}_${userName}.csv`;
-  a.click();
+// --- Export do CSV (Prispôsobená funkcia - OPRAVENÁ) ---
+window.exportTable = function(sectionNameId) {
+    // 1. Nájdenie elementu sekcie (napr. <section id="prestavky">)
+    const sectionEl = document.getElementById(sectionNameId); 
+    
+    // 2. Nájdenie celého elementu tabuľky <table> v rámci sekcie
+    const table = sectionEl ? sectionEl.querySelector('table') : null;
+    
+    if(!table) return alert("Žiadne dáta na export alebo tabuľka nebola nájdená.");
+    
+    // Získanie mena používateľa a názvu sekcie
+    const userName = userNameEl.textContent;
+    // Získa H2 názov sekcie a odstráni veci v zátvorkách (napr. "(Príchod/Odchod)")
+    const sectionTitle = sectionEl.querySelector('h2').textContent.trim(); 
+    
+    let csv = [];
+    
+    // Hlavička súboru
+    csv.push(`"Typ záznamu","${sectionTitle.split('(')[0].trim()}"`);
+    csv.push(`"Používateľ","${userName}"`);
+    csv.push("");
+    
+    // Hlavičky tabuľky
+    const header = Array.from(table.querySelectorAll("thead th")).map(th => `"${th.innerText.trim()}"`);
+    csv.push(header.join(","));
+    
+    // Dáta riadkov
+    table.querySelectorAll("tbody tr").forEach(row => {
+        // Použijeme textContent z bunky. Ak bunka obsahuje span (odznak), zoberie len text.
+        const cols = Array.from(row.querySelectorAll("td")).map(td => `"${td.textContent.trim()}"`);
+        
+        // Ak bunka obsahuje len 'Žiadne záznamy', riadok sa neexportuje.
+        if (cols.length > 0 && cols[0].includes("Žiadne záznamy") === false) {
+            csv.push(cols.join(","));
+        }
+    });
+    
+    // Vytvorenie a stiahnutie súboru
+    const blob = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${sectionTitle.replace(/[^a-zA-Z0-9]/g, '_')}_${userName}.csv`;
+    a.click();
 };
 
 // --- Listenery ---
@@ -305,75 +315,3 @@ loadUserData();
 </script>
 </body>
 </html>
-// --- Export do CSV (Prispôsobená funkcia) ---
-window.exportTable = function(tableId) {
-  const sectionEl = document.getElementById(tableId);
-  const table = sectionEl.closest('section').querySelector('table');
-  
-  if(!table) return alert("Žiadne dáta na export.");
-
-  const userName = userNameEl.textContent;
-  const sectionName = sectionEl.closest('section').querySelector('h2').textContent.trim();
-
-  let csv = [];
-  
-  // Hlavička súboru
-  csv.push(`"Typ záznamu","${sectionName}"`);
-  csv.push(`"Používateľ","${userName}"`);
-  csv.push("");
-
-  // Hlavičky tabuľky
-  const header = Array.from(table.querySelectorAll("thead th")).map(th => `"${th.innerText.trim()}"`);
-  csv.push(header.join(","));
-
-  // Dáta riadkov
-  table.querySelectorAll("tbody tr").forEach(row => {
-    const cols = Array.from(row.querySelectorAll("td")).map(td => `"${td.textContent.trim()}"`);
-    if (cols.length > 0 && cols[0].includes("Žiadne záznamy") === false) {
-      csv.push(cols.join(","));
-    }
-  });
-
-  const blob = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `${sectionName.replace(/[^a-zA-Z0-9]/g, '_')}_${userName}.csv`;
-  a.click();
-};
-
-// --- Listenery ---
-
-// Odhlásenie
-document.getElementById("logoutBtn").addEventListener("click", () => {
-  localStorage.removeItem("uid");
-  window.location.href = "index.html";
-});
-
-// Navigačná logika
-document.querySelectorAll("nav button").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    document.querySelectorAll("section").forEach(sec => sec.classList.remove("active"));
-    document.getElementById(btn.dataset.target).classList.add("active");
-  });
-});
-
-// Filtre (pri zmene akéhokoľvek filtra opätovne vykresliť dáta z cache)
-document.getElementById("dateDochadzka").addEventListener("change", () => renderTables(allRecordsCache));
-document.getElementById("datePrestavky").addEventListener("change", () => renderTables(allRecordsCache));
-document.getElementById("datePN").addEventListener("change", () => renderTables(allRecordsCache));
-
-// Handler pre export (viazaný na data-export-table atribút)
-document.querySelectorAll(".export-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    exportTable(btn.dataset.exportTable);
-  });
-});
-
-// --- Spustenie aplikácie ---
-loadUserData();
-</script>
-</body>
-</html>
-
