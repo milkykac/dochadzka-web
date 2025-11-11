@@ -234,7 +234,6 @@ async function loadUserData() {
       return;
     }
 
-    // Načítaj všetky záznamy dochádzky
     const logsSnap = await get(ref(db, "dochadzka"));
     const chipToUserSnap = await get(ref(db, "chipToUser"));
     const chipMap = {};
@@ -249,14 +248,15 @@ async function loadUserData() {
           if(logs){
             Object.values(logs).forEach(log => {
               if(log && log.typ && log.cas){
-                records.push({cas: log.cas, stav: log.typ.toUpperCase()});
+                const cas = log.cas.replace(' ', 'T');
+                records.push({ cas, stav: log.typ.toLowerCase() });
               }
             });
           }
         }
       });
       records.sort((a,b) => new Date(b.cas) - new Date(a.cas));
-      statusBox.textContent = records.length ? "Posledný stav: " + records[0].stav : "Žiadny stav nezaznamenaný.";
+      statusBox.textContent = records.length ? "Posledný stav: " + records[0].stav.toUpperCase() : "Žiadny stav nezaznamenaný.";
     } else {
       statusBox.textContent = "Žiadne záznamy v databáze.";
     }
@@ -276,18 +276,18 @@ function renderTables(allRecords){
     filtered = filtered.filter(r => r.cas.startsWith(filterDate.value));
   }
 
-  const attendance = filtered.filter(r => ["PRICHOD","ODCHOD"].includes(r.stav));
+  const attendance = filtered.filter(r => ["prichod","odchod"].includes(r.stav));
   if(!attendance.length) myAttendanceBody.innerHTML = "<tr><td colspan='2'>Žiadne záznamy</td></tr>";
   else myAttendanceBody.innerHTML = attendance.map(z=>{
-    const cls = z.stav==="PRICHOD"?"status-prichod":"status-odchod";
-    return `<tr><td>${z.cas}</td><td class="${cls}">${z.stav}</td></tr>`;
+    const cls = z.stav === "prichod" ? "status-prichod" : "status-odchod";
+    return `<tr><td>${z.cas}</td><td class="${cls}">${z.stav.toUpperCase()}</td></tr>`;
   }).join("");
 
-  const breaks = filtered.filter(r => r.stav==="PRESTAVKA");
+  const breaks = filtered.filter(r => r.stav === "prestavka");
   if(!breaks.length) myBreaksBody.innerHTML = "<tr><td>Žiadne prestávky</td></tr>";
   else myBreaksBody.innerHTML = breaks.map(z=>`<tr><td class="status-prestavka">${z.cas}</td></tr>`).join("");
 
-  const pn = filtered.filter(r => r.stav==="PN");
+  const pn = filtered.filter(r => r.stav === "pn");
   if(!pn.length) myPNBody.innerHTML = "<tr><td>Žiadne PN</td></tr>";
   else myPNBody.innerHTML = pn.map(z=>`<tr><td class="status-pn">${z.cas}</td></tr>`).join("");
 }
@@ -330,3 +330,4 @@ document.querySelectorAll("nav button").forEach(btn=>{
 </script>
 </body>
 </html>
+
