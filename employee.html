@@ -33,7 +33,7 @@ tr:nth-child(even){ background:#f8f9fa; }
 
 .status-box { background:#e9f2ff; color:#007bff; font-weight:600; padding:15px; border-radius:8px; text-align:center; margin-bottom:20px; border:1px solid #007bff;}
 
-/* --- VIZUÁLNE ODZNAKY (EXTRÉMNE VYČISTENÉ A OPRAVENÉ) --- */
+/* --- VIZUÁLNE ODZNAKY (KĽÚČOVÉ OPRAVY GLITCHU) --- */
 .status-badge {
     font-weight: 700 !important;
     padding: 5px 10px !important;
@@ -42,22 +42,34 @@ tr:nth-child(even){ background:#f8f9fa; }
     text-align: center !important;
     min-width: 70px !important;
     white-space: nowrap !important;
+    font-size: 14px !important; /* Upravil som veľkosť pre lepšie zobrazenie */
     
-    /* KĽÚČOVÉ OPRAVY GLITCHU - AGRESÍVNE VYPNUTIE VIZUÁLNYCH EFEKTOV */
+    /* MAXIMÁLNE VYNÚTENIE ODSTRÁNENIA TIEŇOV A MODREJ FARBY */
     text-shadow: none !important;
     box-shadow: none !important;
     filter: none !important; 
-    -webkit-text-stroke: 0px transparent !important; /* WebKit */
+    -webkit-text-stroke: 0px transparent !important; 
+    color: inherit !important; /* Dedenie farby z rodičovskej triedy */
+
+    /* Zabezpečenie proti prebíjajúcemu sa hyperlinku/modrej farbe */
+    text-decoration: none !important; 
+    background-color: inherit !important; 
     
     /* VYNÚTENIE ČISTÉHO RENDERU */
-    -webkit-font-smoothing: antialiased !important; /* Chrome, Safari */
-    -moz-osx-font-smoothing: grayscale !important; /* Firefox */
-    transform: translateZ(0); /* Zruší potenciálnu hardvérovú akceleráciu */
+    -webkit-font-smoothing: antialiased !important; 
+    -moz-osx-font-smoothing: grayscale !important; 
+    transform: translateZ(0); 
 }
+/* Špecifické farby stavov */
 .status-prichod { background: #198754 !important; color: white !important; }
 .status-odchod { background: #dc3545 !important; color: white !important; }
 .status-prestavka { background: #ffc107 !important; color: #333 !important; }
 .status-pn { background: #6f42c1 !important; color: white !important; }
+
+/* Zabezpečenie textu buniek (td) proti modrej farbe, ak by nebol obalený pilulkou */
+#dochadzkaTable td, #prestavkyTable td, #pnTable td {
+    color: #333;
+}
 
 .filter { margin-top: 10px; }
 .filter input { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; }
@@ -183,7 +195,7 @@ async function loadUserData() {
             Object.values(logsObj).forEach(log => allPossibleLogs.push(log));
         });
         
-        // 2. Zber záznamov z PLOCHÝCH/NEŠTANDARDNÝCH uzlov
+        // 2. Zber záznamov z PLOCHÝCH/NEŠTANDARDNÝCH uzlov (pre staršie/iné logy)
         Object.values(userData).forEach(prop => {
             if (prop && prop.cas && prop.typ) {
                 allPossibleLogs.push(prop); 
@@ -206,15 +218,14 @@ async function loadUserData() {
                 // Sformátovanie do ISO YYYY-MM-DD HH:MM
                 validIsoTime = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')} ${time}`;
             } else if (cleanTime.includes('T') && cleanTime.includes('-')) {
-                // Je to už ISO formát (napr. pridané cez admina), použijeme ho priamo
-                validIsoTime = cleanTime.replace('T', ' ');
-            } else {
-                // Nepoznaný formát, preskočíme
-                return;
-            }
-            // Koniec KĽÚČOVEJ OPRAVY
+                // Je to už ISO formát, použijeme ho priamo
+                validIsoTime = cleanTime.replace('T', ' ');
+            } else {
+                // Nepoznaný formát, preskočíme
+                return;
+            }
             
-            // Normalizácia typu
+            // Normalizácia typu (odstránenie diakritiky)
             const cleanType = String(log.typ)
                 .normalize("NFD").replace(/[\u0300-\u036f]/g, "") 
                 .toLowerCase();
@@ -226,6 +237,7 @@ async function loadUserData() {
             else if (cleanType.includes('pn')) recordType = 'pn';
             
             if (recordType) {
+                 // Zabránenie duplikátom (ak sa záznam vyskytuje vo viacerých vetvách)
                  const isDuplicate = records.some(r => r.cas === validIsoTime && r.stav === recordType);
                  if (!isDuplicate) {
                      records.push({
@@ -241,9 +253,10 @@ async function loadUserData() {
         allRecordsCache = records;
         
         // 5. AKTUALIZÁCIA STAVU
-        const mainStatusRecord = records.find(r => r.stav !== 'prestavka' && r.stav !== 'pn');
+        // Najnovší záznam Príchod/Odchod/PN (prestávky sa nezapočítavajú do hlavného statusu)
+        const mainStatusRecord = records.find(r => r.stav !== 'prestavka'); 
         
-        const lastStatus = mainStatusRecord ? mainStatusRecord.stav.toUpperCase() : "Žiadny stav nezaznamenaný.";
+        const lastStatus = mainStatusRecord ? mainStatusRecord.stav.toUpperCase() : "Žiadny stav nezaznamenaný";
         const lastStatusClass = mainStatusRecord ? `status-${mainStatusRecord.stav}` : 'status-prichod'; 
         
         statusBox.innerHTML = `Posledný stav: <span class="status-badge ${lastStatusClass}">${lastStatus}</span>`;
@@ -286,7 +299,7 @@ function renderTables(records) {
         const datePart = z.cas.substring(0, 10).split('-');
         const timePart = z.cas.substring(11, 16);
         // YYYY-MM-DD -> DD.MM.YYYY
-        const visibleTime = `${datePart[2]}.${datePart[1]}.${datePart[0]} ${timePart}`; 
+        const visibleTime = `${datePart[2]}.${datePart[1]}.${datePart[0]} ${timePart}`; 
 
         const cls = `status-${z.stav}`;
         
@@ -330,7 +343,7 @@ window.exportTable = function(sectionNameId) {
     table.querySelectorAll("tbody tr").forEach(row => {
         const cols = Array.from(row.querySelectorAll("td")).map(td => {
             // Odstránime neviditeľné znaky z textu odznaku
-            const text = td.textContent.trim().replace(/\s\s+/g, ' '); 
+            const text = td.textContent.trim().replace(/\s\s+/g, ' '); 
             return `"${text}"`;
         });
         
