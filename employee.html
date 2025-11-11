@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-/* --- Štýly (z predchádzajúcich verzií) --- */
+/* --- Štýly --- */
 body { font-family:'Poppins',sans-serif; margin:0; background:linear-gradient(135deg,#f4f5f7,#e0e0e0); min-height:100vh; color:#333; display:flex; flex-direction:column; align-items:center;}
 header { background:#007bff; padding:15px 25px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 3px 10px rgba(0,0,0,0.1); width:100%; color:white; position:sticky; top:0; z-index:10; }
 h1 { margin:0; font-size:22px; font-weight:600; }
@@ -181,6 +181,7 @@ async function loadUserData() {
                     const recordType = String(log.typ).toLowerCase();
                     
                     // Zbierame len relevantné typy a kontrolujeme, či typ sedí
+                    // (Používame slice(0, -1) na odstránenie 's' z dochadzka/prestavky/pn)
                     if (recordType === type.slice(0, -1) || (type === "dochadzka" && (recordType === "prichod" || recordType === "odchod"))) {
                         records.push({
                             cas: cleanTime,
@@ -196,12 +197,12 @@ async function loadUserData() {
         Object.values(userData).forEach(log => {
              if (log && log.cas && log.typ) {
                  const recordType = String(log.typ).toLowerCase();
-                 // Hľadáme tie, ktoré sme už nenašli v kroku 1 (hlavne prestávky a pn)
+                 // Hľadáme tie, ktoré sme už nenašli v kroku 1
                  if (recordType === "prestavka" || recordType === "pn") {
                      let cleanTime = String(log.cas).replace(' ', 'T');
                      if (!cleanTime.includes('-')) return;
                      
-                     // Ak sa záznam s rovnakým časom už nenašiel, pridáme ho
+                     // Vyhneme sa duplikátom: Ak záznam s rovnakým časom a typom už existuje, preskočíme ho.
                      if (!records.some(r => r.cas === cleanTime && r.stav === recordType)) {
                           records.push({
                              cas: cleanTime,
@@ -347,3 +348,4 @@ loadUserData();
 </script>
 </body>
 </html>
+
