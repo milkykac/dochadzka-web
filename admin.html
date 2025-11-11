@@ -37,7 +37,6 @@ tr:nth-child(even){ background:#f8f9fa; }
 @media(max-width:768px){ header{flex-direction:column; text-align:center; gap:10px;} table{display:block; overflow-x:auto; white-space:nowrap;} }
 
 /* --- OPRAVENÉ A VYLEPŠENÉ VIZUÁLNE ŠTÝLY PRE STAVY (Dochádzka) --- */
-/* Tieto triedy zabezpečia, že farby z obrázka sa zobrazia správne */
 .status-badge {
     font-weight: 700 !important;
     padding: 7px 14px !important;
@@ -46,26 +45,27 @@ tr:nth-child(even){ background:#f8f9fa; }
     text-align: center;
     min-width: 80px;
     white-space: nowrap;
-    text-shadow: none !important; /* KĽÚČOVÁ OPRAVA: Odstránenie modrého glitch tieňa */
+    text-shadow: none !important; /* KĽÚČOVÁ OPRAVA: Odstránenie glitch tieňa */
+    color: inherit !important; /* KĽÚČOVÁ OPRAVA: Dedenie farby, aby nebola modrá */
     font-size: 16px !important;
 }
 
 /* PRÍCHOD: Zelená s bielym textom */
 .status-prichod { 
     background: #198754 !important; /* Zelená */
-    color: white !important;
+    color: white !important; /* Zabezpečí biely text */
 } 
 
 /* ODCHOD: Červená s bielym textom */
 .status-odchod { 
     background: #dc3545 !important; /* Červená */
-    color: white !important;
+    color: white !important; /* Zabezpečí biely text */
 } 
 
 /* PRESTÁVKA: Žltá s tmavým textom */
 .status-prestávka { 
     background: #ffc107 !important; /* Žltá */
-    color: #212529 !important;
+    color: #212529 !important; /* Zabezpečí tmavý text */
 }
 
 /* PN: Fialová s bielym textom */
@@ -73,6 +73,13 @@ tr:nth-child(even){ background:#f8f9fa; }
     background: #6f42c1 !important; /* Fialová */
     color: white !important;
 } 
+
+/* DODATOČNÉ ZABEZPEČENIE PROTI MODRÉMU TEXTU */
+#dochadzkaTable td, 
+#prestavkyTable td, 
+#pnTable td {
+    color: #333; /* Predvolená farba textu bunky (pre ne-pilulkové položky) */
+}
 
 /* --- NOVÉ ŠTÝLY PRE POUŽÍVATEĽOV (ČIPY) --- */
 .chip-status-assigned, .chip-status-unassigned {
@@ -182,6 +189,7 @@ tr:nth-child(even){ background:#f8f9fa; }
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
 import { getDatabase, ref, get, set, child, push } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
+// !!! NAHRADTE TOTO VLASTNYMI UDAJMI Z FIREBASE !!!
 const firebaseConfig = {
   apiKey: "AIzaSyBsYrbYtP4E5blWbKlrJ6iI9v6YPAYYp0g",
   authDomain: "maturita-395fd.firebaseapp.com",
@@ -263,13 +271,13 @@ window.addLog = async function(type, typ){
   }
 };
 
-// ----- OPRAVENÁ FUNKCIA pre načítanie (FILTROVANIE DÁTUM + MENO) -----
+// ----- FUNKCIA pre načítanie (FILTROVANIE DÁTUM + MENO) -----
 async function loadAttendance(type, tableId, dateId, searchId){
   const el = document.getElementById(tableId);
   el.innerHTML="Načítavam dáta...";
   const dateFilter = document.getElementById(dateId)?.value;
   // Zabezpečí, že ak je filter prázdny, vyhľadávame v celom texte (prázdny reťazec)
-  const search = document.getElementById(searchId)?.value.toLowerCase().trim() || ""; 
+  const search = document.getElementById(searchId)?.value.toLowerCase().trim() || ""; 
 
   try{
     const snap = await get(ref(db, "users"));
@@ -287,7 +295,7 @@ async function loadAttendance(type, tableId, dateId, searchId){
             const log = logsObj[key];
             const logDate = log.cas ? log.cas.slice(0, 10) : "";
 
-            // Logika OPRAVENÉHO FILTROVANIA: Obe podmienky musia byť splnené
+            // Logika FILTROVANIA: Obe podmienky musia byť splnené
             const dateMatch = !dateFilter || logDate === dateFilter;
             const nameMatch = !search || userNameLower.includes(search);
 
@@ -308,7 +316,8 @@ async function loadAttendance(type, tableId, dateId, searchId){
         allLogs.forEach(entry => {
           const log = entry.log;
           const rawType = (log.typ || type).toLowerCase();
-          const logTyp = rawType.replace('á', 'a'); // Normalizácia pre CSS triedu
+          // Normalizácia pre CSS triedu (napr. 'prestávka' -> 'prestavka')
+          const logTyp = rawType.replace('á', 'a'); 
 
           let statusClass = '';
           if (logTyp === 'prichod') statusClass = 'status-prichod';
@@ -316,6 +325,7 @@ async function loadAttendance(type, tableId, dateId, searchId){
           else if (logTyp === 'prestávka' || logTyp === 'prestavka') statusClass = 'status-prestávka';
           else if (logTyp === 'pn') statusClass = 'status-pn';
 
+          // Kľúčové: Vizuálna oprava je zabezpečená triedou status-badge a CSS
           html += `<tr>
             <td>${entry.name}</td>
             <td>${log.cas || '-'}</td>
