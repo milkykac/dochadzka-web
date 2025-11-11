@@ -18,32 +18,32 @@
   --prestavka: #ffc107;
   --pn: #6f42c1;
 }
-body { font-family:'Poppins',sans-serif; margin:0; padding:0; background:var(--bg); color:var(--text); display:flex; flex-direction:column; align-items:center; }
-header { width:100%; background:var(--accent); color:white; padding:15px 25px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; box-shadow:0 4px 15px rgba(0,0,0,0.15); }
-header h1 { font-weight:600; font-size:22px; margin:0; }
-header button { background:#fff; color:var(--accent); border:none; border-radius:8px; padding:8px 14px; cursor:pointer; font-weight:600; transition:0.3s; }
-header button:hover { background:var(--accent-dark); color:white; }
+body { font-family: 'Poppins', sans-serif; margin:0; padding:0; background:var(--bg); color:var(--text); display:flex; flex-direction:column; align-items:center;}
+header { width:100%; background:var(--accent); color:white; padding:15px 25px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; box-shadow:0 4px 15px rgba(0,0,0,0.15);}
+header h1 { font-weight:600; font-size:22px; margin:0;}
+header button { background:#fff; color:var(--accent); border:none; border-radius:8px; padding:8px 14px; cursor:pointer; font-weight:600; transition:0.3s;}
+header button:hover { background:var(--accent-dark); color:white;}
 nav { display:flex; gap:10px; margin:20px 0 0 0; }
 nav button { background:var(--accent); color:white; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; font-weight:500; box-shadow:0 3px 6px rgba(0,0,0,0.15); transition:0.3s; }
-nav button.active { background:var(--pn); }
-nav button:hover { background:var(--accent-dark); }
-.container { max-width:850px; width:95%; background:var(--card); margin:25px auto 40px auto; padding:25px 30px; border-radius:16px; box-shadow:0 6px 25px rgba(0,0,0,0.1); }
-h2 { color:var(--accent); border-bottom:3px solid var(--accent); padding-bottom:6px; margin-top:0; font-weight:600; }
-.table-section { display:none; margin-top:20px; }
-.table-section.active { display:block; }
-table { width:100%; border-collapse:collapse; margin-top:10px; font-size:15px; border-radius:10px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.1); }
-th, td { border:1px solid var(--border); padding:10px; text-align:center; }
-th { background:var(--accent); color:white; font-weight:500; }
-tr:nth-child(even) { background: rgba(0,0,0,0.03); }
-tr:hover { background: rgba(0,0,0,0.08); }
-.status-prichod, .status-odchod, .status-prestavka, .status-pn { font-weight:600; padding:3px 8px; border-radius:12px; display:inline-block; color:white; }
-.status-prichod { background:var(--prichod); }
-.status-odchod { background:var(--odchod); }
-.status-prestavka { background:var(--prestavka); }
-.status-pn { background:var(--pn); }
-.status-box { margin:10px 0 20px; font-weight:600; padding:12px; border-radius:12px; text-align:center; background:#e9f2ff; font-size:16px; color:var(--accent); border:1px solid var(--accent); box-shadow:inset 0 0 5px rgba(0,0,0,0.1); }
-button.export-btn { margin-top:10px; background:#28a745; border:none; border-radius:8px; color:white; padding:8px 14px; font-weight:500; box-shadow:0 3px 6px rgba(0,0,0,0.15); cursor:pointer; transition:0.3s; }
-button.export-btn:hover { background:#218838; }
+nav button.active { background:var(--pn);}
+nav button:hover { background:var(--accent-dark);}
+.container { max-width:850px; width:95%; background:var(--card); margin:25px auto 40px auto; padding:25px 30px; border-radius:16px; box-shadow:0 6px 25px rgba(0,0,0,0.1);}
+h2 { color:var(--accent); border-bottom:3px solid var(--accent); padding-bottom:6px; margin-top:0; font-weight:600;}
+.table-section { display:none; margin-top:20px;}
+.table-section.active { display:block;}
+table { width:100%; border-collapse:collapse; margin-top:10px; font-size:15px; border-radius:10px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.1);}
+th,td { border:1px solid var(--border); padding:10px; text-align:center;}
+th { background:var(--accent); color:white; font-weight:500;}
+tr:nth-child(even){ background:rgba(0,0,0,0.03);}
+tr:hover{ background:rgba(0,0,0,0.08);}
+.status-prichod,.status-odchod,.status-prestavka,.status-pn { font-weight:600; padding:3px 8px; border-radius:12px; display:inline-block; color:white;}
+.status-prichod{ background:var(--prichod);}
+.status-odchod{ background:var(--odchod);}
+.status-prestavka{ background:var(--prestavka);}
+.status-pn{ background:var(--pn);}
+.status-box { margin:10px 0 20px; font-weight:600; padding:12px; border-radius:12px; text-align:center; background:#e9f2ff; font-size:16px; color:var(--accent); border:1px solid var(--accent); box-shadow:inset 0 0 5px rgba(0,0,0,0.1);}
+button.export-btn { margin-top:10px; background:#28a745; border:none; border-radius:8px; color:white; padding:8px 14px; font-weight:500; box-shadow:0 3px 6px rgba(0,0,0,0.15); cursor:pointer; transition:0.3s;}
+button.export-btn:hover { background:#218838;}
 .filter { margin:10px 0 0 0; }
 .filter input { padding:6px 10px; border-radius:6px; border:1px solid var(--border); width:160px; }
 </style>
@@ -99,7 +99,7 @@ button.export-btn:hover { background:#218838; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBsYrbYtP4E5blWbKlrJ6iI9v6YPAYp0g",
@@ -114,7 +114,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-const userId = localStorage.getItem("uid");
+const userId = localStorage.getItem("uid"); // musí byť uložené pri prihlásení
 const myAttendanceBody = document.getElementById("myAttendanceBody");
 const myBreaksBody = document.getElementById("myBreaksBody");
 const myPNBody = document.getElementById("myPNBody");
@@ -122,17 +122,14 @@ const userNameEl = document.getElementById("userName");
 const filterDate = document.getElementById("filterDate");
 const statusBox = document.getElementById("statusBox");
 
-if(!userId){
-  alert("Nie si prihlásený!");
-  window.location.href = "index.html";
-} else if(userId === "admin"){
-  window.location.href = "admin.html";
-}
+if(!userId){ alert("Nie si prihlásený!"); window.location.href="index.html"; }
+else if(userId === "admin"){ window.location.href="admin.html"; }
 
 async function loadUserData() {
   try {
     const userSnap = await get(ref(db, "users/" + userId));
-    if(!userSnap.exists()) return;
+    if(!userSnap.exists()){ alert("Používateľ nenájdený!"); window.location.href="index.html"; return; }
+
     const userData = userSnap.val();
     userNameEl.textContent = userData.name || "(bez mena)";
     const chipUid = userData.chipUid;
@@ -147,16 +144,17 @@ async function loadUserData() {
     if(logsSnap.exists()){
       logsSnap.forEach(logSnap=>{
         const log = logSnap.val();
-        if(logSnap.key === chipUid || log.chipUid === chipUid){
-          records.push({cas: log.cas, stav: log.typ.toLowerCase()});
+        if(log && log.typ){ // iba platné záznamy
+          records.push({cas: log.cas, stav: log.typ.toUpperCase()});
         }
       });
       records.sort((a,b)=>new Date(b.cas) - new Date(a.cas));
-      statusBox.textContent = records.length>0 ? "Posledný stav: " + records[0].stav.toUpperCase() : "Žiadny stav nezaznamenaný.";
+      statusBox.textContent = records.length>0 ? "Posledný stav: " + records[0].stav : "Žiadny stav nezaznamenaný.";
     } else {
       statusBox.textContent = "Žiadne záznamy v databáze.";
     }
     renderTables(records);
+
   } catch(e){
     console.error(e);
     statusBox.textContent = "Chyba pri načítaní dát!";
@@ -170,23 +168,17 @@ function renderTables(allRecords){
     filtered = filtered.filter(r => r.cas.startsWith(filterDate.value));
   }
 
-  const attendance = filtered.filter(r => ["prichod","odchod"].includes(r.stav));
-  if(!attendance.length) myAttendanceBody.innerHTML = "<tr><td colspan='2'>Žiadne záznamy</td></tr>";
-  else myAttendanceBody.innerHTML = attendance.map(z=>{
-    const cls = z.stav==="prichod"?"status-prichod":"status-odchod";
-    return `<tr><td>${z.cas}</td><td class="${cls}">${z.stav.toUpperCase()}</td></tr>`;
-  }).join("");
+  const attendance = filtered.filter(r => ["PRICHOD","ODCHOD"].includes(r.stav));
+  myAttendanceBody.innerHTML = attendance.length ? attendance.map(z=>`<tr><td>${z.cas}</td><td class="${z.stav==="PRICHOD"?"status-prichod":"status-odchod"}">${z.stav}</td></tr>`).join("") : "<tr><td colspan='2'>Žiadne záznamy</td></tr>";
 
-  const breaks = filtered.filter(r => r.stav==="prestávka");
-  if(!breaks.length) myBreaksBody.innerHTML = "<tr><td>Žiadne prestávky</td></tr>";
-  else myBreaksBody.innerHTML = breaks.map(z=>`<tr><td class="status-prestavka">${z.cas}</td></tr>`).join("");
+  const breaks = filtered.filter(r => r.stav==="PRESTAVKA");
+  myBreaksBody.innerHTML = breaks.length ? breaks.map(z=>`<tr><td class="status-prestavka">${z.cas}</td></tr>`).join("") : "<tr><td>Žiadne prestávky</td></tr>";
 
-  const pn = filtered.filter(r => r.stav==="pn");
-  if(!pn.length) myPNBody.innerHTML = "<tr><td>Žiadne PN</td></tr>";
-  else myPNBody.innerHTML = pn.map(z=>`<tr><td class="status-pn">${z.cas}</td></tr>`).join("");
+  const pn = filtered.filter(r => r.stav==="PN");
+  myPNBody.innerHTML = pn.length ? pn.map(z=>`<tr><td class="status-pn">${z.cas}</td></tr>`).join("") : "<tr><td>Žiadne PN</td></tr>";
 }
 
-filterDate.addEventListener("change", loadUserData);
+filterDate.addEventListener("change", ()=> loadUserData());
 
 document.getElementById("logoutBtn").addEventListener("click", ()=>{
   localStorage.removeItem("uid");
@@ -222,6 +214,7 @@ document.querySelectorAll("nav button").forEach(btn=>{
   }
 });
 </script>
-
 </body>
 </html>
+
+
