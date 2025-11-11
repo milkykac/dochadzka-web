@@ -152,21 +152,33 @@ window.exportTable = function(id){
   a.click();
 };
 
-// ----- pridanie logu dochadzka / prestavka -----
+// ----- pridanie logu prestávky (tlačidlo + priloženie čipu) -----
 window.addLog = async function(type, typ){
-  const chipUid = prompt("Zadaj čip používateľa:");
+  if(typ !== "prestávka") return; // len prestávky cez toto
+  alert("Ready. Stlač tlačidlo a prilož čip pre prestávku.");
+
+  const chipUid = prompt("Zadaj čip používateľa:"); // simulácia priloženia
   if(!chipUid) return;
+
   try {
     const snap = await get(child(ref(db), `chipToUser/${chipUid}`));
     if(!snap.exists()){ alert("Čip nie je priradený!"); return; }
     const userId = snap.val();
-    const timestamp = new Date().toISOString().slice(0,16); // rok-mesiac-deň hodina:min
+
+    // Delay 1 sekunda pre simuláciu "čakám na priloženie čipu"
+    await new Promise(res => setTimeout(res, 1000));
+
+    const now = new Date();
+    const timestamp = now.toISOString().slice(0,10) + " " +
+                      now.getHours().toString().padStart(2,"0") + ":" +
+                      now.getMinutes().toString().padStart(2,"0");
+
     let path = `users/${userId}/${type}`;
-    await push(ref(db, path), { cas: timestamp, typ: typ, manual:true });
-    alert(`Zaznamenané: ${typ} o ${timestamp}`);
-    loadSection("dochadzka");
-    if(type==="prestavky") loadSection("prestavky");
-  } catch(e){ alert("Chyba pri pridávaní logu."); console.error(e); }
+    await push(ref(db, path), { cas: timestamp, typ: typ, manual:true, meno: (await get(ref(db, `users/${userId}/name`))).val() });
+
+    alert(`Prestávka zaznamenaná o ${timestamp}`);
+    loadSection("prestavky");
+  } catch(e){ alert("Chyba pri pridávaní prestávky."); console.error(e); }
 };
 
 // ----- načítanie dochádzky / prestávok -----
@@ -326,8 +338,10 @@ function loadSection(id){
 loadSection("dochadzka");
 </script>
 
+
 </body>
 </html>
+
 
 
 
