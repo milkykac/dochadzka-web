@@ -57,6 +57,7 @@ header button {
   border: none;
   border-radius: 8px;
   padding: 8px 14px;
+  margin-left: 10px;
   cursor: pointer;
   font-weight: 600;
   transition: 0.3s;
@@ -202,7 +203,7 @@ button.export-btn:hover { background: #218838; }
 </nav>
 
 <div class="container">
-  <div id="statusBox" class="status-box">Načítavam stav...</div>
+  <div class="status-box" id="statusBox">Načítavam stav...</div>
 
   <div class="table-section active" id="attendance">
     <h2>Dochádzka</h2>
@@ -250,6 +251,7 @@ const firebaseConfig = {
   appId: "1:754745500563:web:74fd4d6ab5765ee788be66",
   measurementId: "G-F6KQQS48GD"
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
@@ -266,7 +268,6 @@ const statusBox = document.getElementById("statusBox");
 
 let allRecords = [];
 
-// Prepínanie sekcií
 document.querySelectorAll("nav button").forEach(btn=>{
   btn.onclick = ()=>{
     document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
@@ -276,31 +277,32 @@ document.querySelectorAll("nav button").forEach(btn=>{
   }
 });
 
-// Načítanie používateľa
-get(ref(db, "users/" + userId)).then(snapshot => {
-  if (!snapshot.exists()) { alert("Používateľ nenájdený!"); window.location.href = "index.html"; return; }
-  const userData = snapshot.val();
-  userNameEl.textContent = userData.name;
+// Načítanie používateľa a záznamov
+get(ref(db, "users/" + userId)).then(userSnap => {
+  if (!userSnap.exists()) { alert("Používateľ nenájdený!"); window.location.href = "index.html"; return; }
+  const userData = userSnap.val();
   const chipUid = userData.chipUid;
+  userNameEl.textContent = userData.name;
 
-  // Načítanie dochádzky
   onValue(ref(db, "dochadzka"), snap => {
-    myAttendanceBody.innerHTML = "";
-    myBreaksBody.innerHTML = "";
-    myPNBody.innerHTML = "";
     allRecords = [];
-
-    if (!snap.exists()) { 
-      myAttendanceBody.innerHTML = "<tr><td colspan='2'>Žiadne záznamy</td></tr>"; 
-      return; 
-    }
-
     snap.forEach(childSnap => {
       const record = childSnap.val();
-      if (record.chipUid === chipUid) allRecords.push(record);
+      if (record.chipUid === chipUid) {
+        allRecords.push(record);
+      }
     });
 
-    renderTables();
+    if (!allRecords.length) {
+      myAttendanceBody.innerHTML = "<tr><td colspan='2'>Žiadne záznamy</td></tr>";
+      myBreaksBody.innerHTML = "<tr><td>Žiadne prestávky</td></tr>";
+      myPNBody.innerHTML = "<tr><td>Žiadne PN</td></tr>";
+      statusBox.textContent = "Žiadny stav nezaznamenaný.";
+    } else {
+      renderTables();
+      const last = allRecords[allRecords.length-1];
+      statusBox.textContent = "Posledný stav: " + (last.typ.toUpperCase() || "Neznámy");
+    }
   });
 });
 
@@ -309,8 +311,8 @@ function renderTables() {
   myBreaksBody.innerHTML = "";
   myPNBody.innerHTML = "";
 
-  const selectedDate = filterDate.value;
   let filtered = allRecords;
+  const selectedDate = filterDate.value;
   if (selectedDate) filtered = filtered.filter(r => r.cas.startsWith(selectedDate));
 
   const attendance = filtered.filter(r => ["prichod","odchod"].includes(r.typ.toLowerCase()));
@@ -328,10 +330,6 @@ function renderTables() {
 
   if (!pn.length) myPNBody.innerHTML = "<tr><td>Žiadne PN</td></tr>";
   else pn.reverse().forEach(z => myPNBody.innerHTML += `<tr><td class="status-pn">${z.cas}</td></tr>`);
-
-  // Posledný stav
-  const lastRecord = filtered[filtered.length-1];
-  statusBox.textContent = lastRecord ? "Posledný stav: " + lastRecord.typ.toUpperCase() : "Žiadny stav nezaznamenaný.";
 }
 
 filterDate.addEventListener("change", renderTables);
@@ -341,7 +339,6 @@ document.getElementById("logoutBtn").addEventListener("click", () => {
   window.location.href = "index.html";
 });
 
-// Export do Excelu
 window.exportMyData = function() {
   const userName = userNameEl.textContent;
   const data = [
@@ -363,5 +360,3 @@ window.exportMyData = function() {
 </script>
 </body>
 </html>
-
-
