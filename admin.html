@@ -87,7 +87,10 @@ tr:nth-child(even){ background:#f8f9fa; }
 
 <section id="pouzivatelia">
   <h2>Používatelia</h2>
-  <button class="export-btn" onclick="exportTable('usersTable')">Exportovať do CSV</button>
+  <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap;">
+    <button class="export-btn" onclick="exportTable('usersTable')">Exportovať do CSV</button>
+    <button class="export-btn" style="background:#007bff;" onclick="addUser()">Pridať používateľa</button>
+  </div>
   <div id="usersTable" class="loader">Načítavam používateľov...</div>
   <h3>Nepriradené čipy</h3>
   <div id="newChipsContainer" class="loader">Načítavam čipy...</div>
@@ -157,7 +160,7 @@ window.addLog = async function(type, typ){
     const snap = await get(child(ref(db), `chipToUser/${chipUid}`));
     if(!snap.exists()){ alert("Čip nie je priradený!"); return; }
     const userId = snap.val();
-    const timestamp = new Date().toISOString();
+    const timestamp = new Date().toISOString().slice(0,16); // rok-mesiac-deň hodina:min
     let path = `users/${userId}/${type}`;
     await push(ref(db, path), { cas: timestamp, typ: typ, manual:true });
     alert(`Zaznamenané: ${typ} o ${timestamp}`);
@@ -290,6 +293,29 @@ window.saveNewPassword = async function(){
   catch(e){ alert("Chyba pri zmene hesla."); console.error(e); }
 };
 
+// ----- pridanie nového používateľa -----
+window.addUser = async function() {
+  const name = prompt("Zadaj meno používateľa:");
+  if(!name) return;
+
+  const password = prompt("Zadaj heslo:");
+  if(!password) return;
+
+  try {
+    const newUserRef = push(ref(db, "users"));
+    await set(newUserRef, {
+      name: name,
+      password: password,
+      chipUid: null
+    });
+    alert("Používateľ pridaný.");
+    loadUsers();
+  } catch(e) {
+    alert("Chyba pri pridávaní používateľa.");
+    console.error(e);
+  }
+};
+
 function loadSection(id){
   if(id==="dochadzka") loadAttendance("dochadzka","dochadzkaTable","dateDochadzka","searchDochadzka");
   if(id==="prestavky") loadAttendance("prestavky","prestavkyTable","datePrestavky","searchPrestavky");
@@ -302,6 +328,8 @@ loadSection("dochadzka");
 
 </body>
 </html>
+
+
 
 
 
