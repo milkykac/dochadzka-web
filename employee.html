@@ -108,21 +108,21 @@ tr:nth-child(even){ background:#f8f9fa; }
 
 /* --- VIZUÁLNE ODZNAKY (OPRAVA GLITCHU) --- */
 .status-badge {
-    /* Všeobecné vynútenie */
-    font-weight: 700 !important;
-    padding: 7px 14px !important; 
-    display: inline-block !important;
-    text-align: center !important;
-    min-width: 80px !important; 
-    white-space: nowrap !important; 
-    font-size: 16px !important; 
-    border-radius: 50px !important;
-    line-height: 1.2 !important; 
+    /* Všeobecné vynútenie */
+    font-weight: 700 !important;
+    padding: 7px 14px !important; 
+    display: inline-block !important;
+    text-align: center !important;
+    min-width: 80px !important; 
+    white-space: nowrap !important; 
+    font-size: 16px !important; 
+    border-radius: 50px !important;
+    line-height: 1.2 !important; 
 
-    /* KĽÚČOVÁ ZÁRUKA OPRAVY GLITCHU */
-    text-shadow: none !important;  
-    box-shadow: none !important;  
-    border: none !important; 
+    /* KĽÚČOVÁ ZÁRUKA OPRAVY GLITCHU */
+    text-shadow: none !important;  
+    box-shadow: none !important;  
+    border: none !important; 
     -webkit-text-stroke: 0px !important; /* Pre Chrome/Safari */
 }
 
@@ -206,14 +206,14 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebas
 import { getDatabase, ref, get, child, push, set } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBsYrbYtP4E5blWbKlrJ6iI9v6YPAYYp0g",
-  authDomain: "maturita-395fd.firebaseapp.com",
-  databaseURL: "https://maturita-395fd-default-rtdb.firebaseio.com",
-  projectId: "maturita-395fd",
-  storageBucket: "maturita-395fd.firebasestorage.app",
-  messagingSenderId: "754745500563",
-  appId: "1:754745500563:web:74fd4d6ab5765ee788be66",
-  measurementId: "G-F6KQQS48GD"
+    apiKey: "AIzaSyBsYrbYtP4E5blWbKlrJ6iI9v6YPAYYp0g",
+    authDomain: "maturita-395fd.firebaseapp.com",
+    databaseURL: "https://maturita-395fd-default-rtdb.firebaseio.com",
+    projectId: "maturita-395fd",
+    storageBucket: "maturita-395fd.firebasestorage.app",
+    messagingSenderId: "754745500563",
+    appId: "1:754745500563:web:74fd4d6ab5765ee788be66",
+    measurementId: "G-F6KQQS48GD"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -313,8 +313,8 @@ window.recordLog = async function(type, typ) {
     try {
         const now = new Date();
         const timestamp = now.toISOString().slice(0,10) + " " +
-                          now.getHours().toString().padStart(2,"0") + ":" +
-                          now.getMinutes().toString().padStart(2,"0");
+                              now.getHours().toString().padStart(2,"0") + ":" +
+                              now.getMinutes().toString().padStart(2,"0");
 
         const path = `users/${currentUserId}/${type}`;
 
@@ -380,7 +380,7 @@ window.loadUserLogs = async function(type){
     const tableId = type + "Table";
     const dateId = "date" + type.charAt(0).toUpperCase() + type.slice(1);
     const el = document.getElementById(tableId);
-    el.innerHTML='<div class="loader">Načítavam dáta...</div>'; 
+    el.innerHTML='<div class="loader">Načítavam dáta...</div>'; 
 
     const dateFilter = document.getElementById(dateId)?.value;
     
@@ -399,7 +399,7 @@ window.loadUserLogs = async function(type){
             
             logs.forEach(log => {
                 const logTime = log.cas || "-";
-                const logDate = logTime.slice(0,10); 
+                const logDate = logTime.slice(0,10); 
                 const rawType = (log.typ||type).toLowerCase();
                 const normalizedType = rawType.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                 
@@ -441,24 +441,25 @@ window.loadUserLogs = async function(type){
 }
 
 window.exportTable = function(id){
-  const container = document.getElementById(id);
-  if (!container) return alert("Kontajner tabuľky nebol nájdený.");
-  const table = container.querySelector("table");
-  
-  if(!table) return alert("Žiadne dáta na export.");
-  let csv=[];
-  table.querySelectorAll("tr").forEach(row=>{
-    const cols=[...row.querySelectorAll("th,td")].map(td=>`"${td.innerText.trim()}"`); 
-    csv.push(cols.join(","));
-  });
-  const blob=new Blob([csv.join("\n")],{type:"text/csv;charset=utf-8;"}); 
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download=`${id}_${currentUserName}.csv`;
-  a.click();
+    const container = document.getElementById(id);
+    if (!container) return alert("Kontajner tabuľky nebol nájdený.");
+    const table = container.querySelector("table");
+    
+    if(!table) return alert("Žiadne dáta na export.");
+    let csv=[];
+    table.querySelectorAll("tr").forEach(row=>{
+        const cols=[...row.querySelectorAll("th,td")].map(td=>`"${td.innerText.trim()}"`); 
+        csv.push(cols.join(","));
+    });
+    const blob=new Blob([csv.join("\n")],{type:"text/csv;charset=utf-8;"}); 
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);
+    a.download=`${id}_${currentUserName}.csv`;
+    a.click();
 };
 </script>
 
 
 </body>
 </html>
+
