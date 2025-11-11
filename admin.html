@@ -109,14 +109,13 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebas
 import { getDatabase, ref, get, set, child } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBsYrbYtP4E5blWbKlrJ6iI9v6YPAYYp0g",
-  authDomain: "maturita-395fd.firebaseapp.com",
-  databaseURL: "https://maturita-395fd-default-rtdb.firebaseio.com",
-  projectId: "maturita-395fd",
-  storageBucket: "maturita-395fd.firebasestorage.app",
-  messagingSenderId: "754745500563",
-  appId: "1:754745500563:web:74fd4d6ab5765ee788be66",
-  measurementId: "G-F6KQQS48GD"
+  apiKey: "TVOJ_API_KEY",
+  authDomain: "TVOJ_AUTH_DOMAIN",
+  databaseURL: "TVOJ_DATABASE_URL",
+  projectId: "TVOJ_PROJECT_ID",
+  storageBucket: "TVOJ_BUCKET",
+  messagingSenderId: "TVOJ_SENDER_ID",
+  appId: "TVOJ_APP_ID"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -134,9 +133,8 @@ document.querySelectorAll("nav button").forEach(btn=>{
 });
 
 // ========== FUNKCIE ==========
-window.logout = function() {
-  window.location.href = "index.html";
-};
+
+window.logout = function() { window.location.href = "index.html"; };
 
 window.exportTable = function(id){
   const table=document.getElementById(id).querySelector("table");
@@ -157,104 +155,77 @@ window.addLog = async function(type){
   const chipUid = prompt("Zadaj čip používateľa:");
   if(!chipUid) return;
   try {
-    const dbRef = ref(db);
-    const snap = await get(child(dbRef, `chipToUser/${chipUid}`));
+    const snap = await get(ref(db, `chipToUser/${chipUid}`));
     if(!snap.exists()){ alert("Čip nie je priradený!"); return; }
-    const uid = snap.val();
+    const userId = snap.val();
     const timestamp = new Date().toISOString();
-    let path = `users/${uid}/dochadzka`;
-    if(type==="prestávka") path = `users/${uid}/prestavky`;
+    let path = `users/${userId}/dochadzka`;
+    if(type==="prestávka") path = `users/${userId}/prestavky`;
     await set(ref(db, `${path}/${Date.now()}`), { cas: timestamp, typ: type, manual: true });
     alert(`Zaznamenané: ${type} o ${timestamp}`);
     loadSection("dochadzka");
     if(type==="prestávka") loadSection("prestavky");
-  } catch(e) {
-    alert("Chyba pri pridávaní logu.");
-    console.error(e);
-  }
+  } catch(e) { alert("Chyba pri pridávaní logu."); console.error(e); }
 };
 
-// ======= Load Attendance (s menom namiesto UID) =======
 async function loadAttendance(type, tableId, dateId, searchId){
   const el = document.getElementById(tableId);
   el.innerHTML = "Načítavam dáta...";
   const dateFilter = document.getElementById(dateId)?.value;
   const search = document.getElementById(searchId)?.value.toLowerCase()||"";
+
   try{
     const usersSnap = await get(ref(db, "users"));
+    if(!usersSnap.exists()){ el.innerHTML = "<tr><td colspan='3'>Žiadne záznamy</td></tr>"; return; }
+
     let html = "<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>";
-    if(usersSnap.exists()){
-      usersSnap.forEach(userSnap=>{
-        const user = userSnap.val();
-        const userName = user.name || "(bez mena)";
-        const logsObj = user[type] || {};
-        const keys = Object.keys(logsObj).sort();
-        keys.forEach(key=>{
-          const log = logsObj[key];
-          const logDate = (log.cas||"").slice(0,10);
-          if((!dateFilter || logDate===dateFilter) && (!search || userName.toLowerCase().includes(search))){
-            html += `<tr><td>${userName}</td><td>${log.cas||"-"}</td><td>${log.typ||type}</td></tr>`;
-          }
-        });
+    usersSnap.forEach(userSnap=>{
+      const user = userSnap.val();
+      const logsObj = user[type] || {};
+      Object.keys(logsObj).sort().forEach(key=>{
+        const log = logsObj[key];
+        const logDate = (log.cas||"").slice(0,10);
+        const name = user.name || "(bez mena)";
+        if((!dateFilter || logDate === dateFilter) && (!search || name.toLowerCase().includes(search))){
+          const timeStr = new Date(log.cas).toLocaleString("sk-SK", { day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit", second:"2-digit" });
+          html += `<tr><td>${name}</td><td>${timeStr}</td><td>${log.typ || type}</td></tr>`;
+        }
       });
-    } else {
-      html += "<tr><td colspan='3'>Žiadne záznamy</td></tr>";
-    }
+    });
     html += "</table>";
     el.innerHTML = html;
-  } catch(e){
-    el.innerHTML = "Chyba pri načítaní dát.";
-    console.error(e);
-  }
+  } catch(e){ el.innerHTML="Chyba pri načítaní dát."; console.error(e); }
 }
 
-// ======= Load Users (s menom a čipom) =======
-async function loadUsers() {
+async function loadUsers(){
   const el = document.getElementById("usersTable");
   el.innerHTML = "Načítavam používateľov...";
   try {
     const usersSnap = await get(ref(db, "users"));
     const chipToUserSnap = await get(ref(db, "chipToUser"));
-    if (!usersSnap.exists()) { 
-      el.innerHTML = "Žiadni používatelia."; 
-      return; 
-    }
-
-    // Vytvoríme mapu chip -> uid
     const chipMap = {};
-    if (chipToUserSnap.exists()) {
-      chipToUserSnap.forEach(c => {
-        chipMap[c.key] = c.val();
-      });
-    }
+    if(chipToUserSnap.exists()) chipToUserSnap.forEach(c => { chipMap[c.val()] = c.key; });
 
-    let html = "<table><tr><th>Meno</th><th>Čip</th><th>Akcie</th></tr>";
-    usersSnap.forEach(u => {
-      const user = u.val();
-      const uid = u.key;
-      const name = user.name || "(bez mena)";
-      let chip = user.chipUid || Object.keys(chipMap).find(c => chipMap[c] === uid) || "-";
+    if(!usersSnap.exists()){ el.innerHTML = "Žiadni používatelia."; return; }
 
+    let html="<table><tr><th>Meno</th><th>Čip</th><th>Akcie</th></tr>";
+    usersSnap.forEach(u=>{
+      const d = u.val();
+      const chip = d.chipUid || Object.keys(chipToUserSnap.val()||{}).find(k=>chipToUserSnap.val()[k]===u.key) || "-";
       html += `<tr>
-        <td>${name}</td>
+        <td>${d.name || "(bez mena)"}</td>
         <td>${chip}</td>
         <td>
-          <button onclick="removeUser('${uid}')">🗑️</button>
-          <button onclick="openChangePassword('${uid}')">🔑</button>
+          <button onclick="removeUser('${u.key}')">🗑️</button>
+          <button onclick="openChangePassword('${u.key}')">🔑</button>
         </td>
       </tr>`;
     });
-
     html += "</table>";
     el.innerHTML = html;
-
-  } catch (e) {
-    el.innerHTML = "Chyba pri načítaní používateľov.";
-    console.error(e);
-  }
+  } catch(e){ el.innerHTML="Chyba pri načítaní používateľov."; console.error(e); }
 }
 
-// ======= New Chips =======
 async function loadNewChips(){
   const el = document.getElementById("newChipsContainer");
   el.innerHTML = "Načítavam čipy...";
@@ -270,29 +241,22 @@ async function loadNewChips(){
         <button onclick="removeChip('${chip}')">Odstrániť</button>`;
       el.appendChild(div);
     });
-  } catch(e){
-    el.innerHTML="Chyba pri načítaní čipov.";
-    console.error(e);
-  }
+  } catch(e){ el.innerHTML="Chyba pri načítaní čipov."; console.error(e); }
 }
 
-// ======= Assign / Remove Chip =======
 window.assignChip = async function(chipUid){
   const name = prompt("Zadaj meno používateľa:");
   if(!name) return;
   try {
     const snap = await get(ref(db, "users"));
     let uid=null;
-    snap.forEach(u=>{if(u.val().name===name) uid=u.key;});
+    snap.forEach(u=>{ if(u.val().name===name) uid=u.key; });
     if(!uid) return alert("Používateľ nenájdený!");
     await set(ref(db, `users/${uid}/chipUid`), chipUid);
     await set(ref(db, `chipToUser/${chipUid}`), uid);
     await set(ref(db, `newChips/${chipUid}`), null);
     loadUsers(); loadNewChips();
-  } catch(e){
-    alert("Chyba pri priraďovaní čipu.");
-    console.error(e);
-  }
+  } catch(e){ alert("Chyba pri priraďovaní čipu."); console.error(e); }
 };
 
 window.removeChip = async function(chipUid){
@@ -302,7 +266,6 @@ window.removeChip = async function(chipUid){
   }
 };
 
-// ======= Remove User / Change Password =======
 window.removeUser = async function(id){
   if(confirm("Odstrániť používateľa?")){
     await set(ref(db, `users/${id}`), null);
@@ -315,25 +278,16 @@ window.openChangePassword = function(id){
   document.getElementById("changePasswordUserId").value=id;
 };
 
-window.closeModal = function(){
-  document.getElementById("changePasswordModal").style.display="none";
-};
+window.closeModal = function(){ document.getElementById("changePasswordModal").style.display="none"; };
 
 window.saveNewPassword = async function(){
-  const id=document.getElementById("changePasswordUserId").value;
-  const pass=document.getElementById("newPassword").value.trim();
+  const id = document.getElementById("changePasswordUserId").value;
+  const pass = document.getElementById("newPassword").value.trim();
   if(!pass) return alert("Zadaj nové heslo.");
-  try{
-    await set(ref(db, `users/${id}/password`), pass);
-    alert("Heslo zmenené.");
-    closeModal();
-  } catch(e){
-    alert("Chyba pri zmene hesla.");
-    console.error(e);
-  }
+  try{ await set(ref(db, `users/${id}/password`), pass); alert("Heslo zmenené."); closeModal(); }
+  catch(e){ alert("Chyba pri zmene hesla."); console.error(e); }
 };
 
-// ======= Load Section =======
 function loadSection(id){
   if(id==="dochadzka") loadAttendance("dochadzka","dochadzkaTable","dateDochadzka","searchDochadzka");
   if(id==="prestavky") loadAttendance("prestavky","prestavkyTable","datePrestavky","searchPrestavky");
@@ -341,9 +295,9 @@ function loadSection(id){
   if(id==="pouzivatelia"){ loadUsers(); loadNewChips(); }
 }
 
-// Inicialne nahratie sekcie
 loadSection("dochadzka");
 </script>
 
 </body>
 </html>
+
