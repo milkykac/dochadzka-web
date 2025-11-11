@@ -198,16 +198,13 @@ const firebaseConfig = {
   projectId: "maturita-395fd",
   storageBucket: "maturita-395fd.firebasestorage.app",
   messagingSenderId: "754745500563",
-  appId: "1:754745500563:web:74fd4d6ab5765ee788be66",
-  measurementId: "G-F6KQQS48GD"
+  appId: "1:754745500563:web:74fd4d6ab5765ee788be66"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 const userId = localStorage.getItem("uid");
-if(!userId){ alert("Nie si prihlásený!"); window.location.href="index.html"; }
-
 const myAttendanceBody = document.getElementById("myAttendanceBody");
 const myBreaksBody = document.getElementById("myBreaksBody");
 const myPNBody = document.getElementById("myPNBody");
@@ -215,78 +212,93 @@ const userNameEl = document.getElementById("userName");
 const filterDate = document.getElementById("filterDate");
 const statusBox = document.getElementById("statusBox");
 
-let allRecords = [];
+if(!userId){
+  alert("Nie si prihlásený!");
+  window.location.href = "index.html";
+} else if(userId === "admin"){
+  window.location.href = "admin.html";
+}
 
-// Prepínanie sekcií
-document.querySelectorAll("nav button").forEach(btn=>{
-  btn.onclick = ()=>{
-    document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
-    btn.classList.add("active");
-    document.querySelectorAll(".table-section").forEach(sec=>sec.classList.remove("active"));
-    document.getElementById(btn.dataset.target).classList.add("active");
+async function loadUserData() {
+  try {
+    const snap = await get(ref(db, "users/" + userId));
+    if(!snap.exists()){
+      alert("Používateľ nenájdený!");
+      window.location.href = "index.html";
+      return;
+    }
+    const userData = snap.val();
+    userNameEl.textContent = userData.name || "(bez mena)";
+    const chipUid = userData.chipUid;
+    if(!chipUid){
+      statusBox.textContent = "Čip nie je priradený!";
+      renderTables([]);
+      return;
+    }
+
+    const logsSnap = await get(ref(db, "dochadzka/" + chipUid));
+    let records = [];
+    if(logsSnap.exists()){
+      logsSnap.forEach(childSnap => {
+        if(childSnap.key !== "posledny_stav"){
+          const rec = childSnap.val();
+          records.push({cas: rec.cas, stav: rec.typ.toUpperCase()});
+        }
+      });
+      records.sort((a,b) => new Date(b.cas) - new Date(a.cas));
+      if(records.length>0){
+        statusBox.textContent = "Posledný stav: " + records[0].stav;
+      } else {
+        statusBox.textContent = "Žiadny stav nezaznamenaný.";
+      }
+    } else {
+      statusBox.textContent = "Žiadne záznamy v databáze.";
+    }
+    renderTables(records);
+
+  } catch(e){
+    console.error(e);
+    statusBox.textContent = "Chyba pri načítaní dát!";
+    renderTables([]);
   }
-});
+}
 
-document.getElementById("logoutBtn").addEventListener("click", ()=> {
+function renderTables(allRecords){
+  let filtered = allRecords;
+  if(filterDate.value){
+    filtered = filtered.filter(r => r.cas.startsWith(filterDate.value));
+  }
+
+  const attendance = filtered.filter(r => ["PRICHOD","ODCHOD"].includes(r.stav));
+  if(!attendance.length) myAttendanceBody.innerHTML = "<tr><td colspan='2'>Žiadne záznamy</td></tr>";
+  else myAttendanceBody.innerHTML = attendance.map(z=>{
+    const cls = z.stav==="PRICHOD"?"status-prichod":"status-odchod";
+    return `<tr><td>${z.cas}</td><td class="${cls}">${z.stav}</td></tr>`;
+  }).join("");
+
+  const breaks = filtered.filter(r => r.stav==="PRESTAVKA");
+  if(!breaks.length) myBreaksBody.innerHTML = "<tr><td>Žiadne prestávky</td></tr>";
+  else myBreaksBody.innerHTML = breaks.map(z=>`<tr><td class="status-prestavka">${z.cas}</td></tr>`).join("");
+
+  const pn = filtered.filter(r => r.stav==="PN");
+  if(!pn.length) myPNBody.innerHTML = "<tr><td>Žiadne PN</td></tr>";
+  else myPNBody.innerHTML = pn.map(z=>`<tr><td class="status-pn">${z.cas}</td></tr>`).join("");
+}
+
+filterDate.addEventListener("change", ()=> loadUserData());
+
+document.getElementById("logoutBtn").addEventListener("click", ()=>{
   localStorage.removeItem("uid");
   window.location.href="index.html";
 });
 
-// Načítanie používateľa a jeho záznamov
-async function loadRecords(){
-  const snap = await get(ref(db, "users/" + userId));
-  if(!snap.exists()){ alert("Používateľ nenájdený!"); window.location.href="index.html"; return; }
-  const userData = snap.val();
-  userNameEl.textContent = userData.name;
-  const chipUid = userData.chipUid;
-
-  const logSnap = await get(ref(db, "dochadzka/" + chipUid));
-  allRecords = [];
-  logSnap.forEach(childSnap=>{
-    const rec = childSnap.val();
-    if(childSnap.key!=="posledny_stav") allRecords.push({cas: rec.cas, stav: rec.typ.toUpperCase()});
-  });
-  allRecords.sort((a,b)=> new Date(b.cas)-new Date(a.cas));
-  if(allRecords.length>0) statusBox.textContent = "Posledný stav: " + allRecords[0].stav;
-  else statusBox.textContent = "Žiadny stav nezaznamenaný.";
-  renderTables();
-}
-
-function renderTables(){
-  myAttendanceBody.innerHTML="";
-  myBreaksBody.innerHTML="";
-  myPNBody.innerHTML="";
-
-  let filtered = allRecords;
-  const selectedDate = filterDate.value;
-  if(selectedDate) filtered = filtered.filter(r=>r.cas.startsWith(selectedDate));
-
-  const attendance = filtered.filter(r=>["PRICHOD","ODCHOD"].includes(r.stav));
-  const breaks = filtered.filter(r=>r.stav==="PRESTAVKA");
-  const pn = filtered.filter(r=>r.stav==="PN");
-
-  if(!attendance.length) myAttendanceBody.innerHTML="<tr><td colspan='2'>Žiadne záznamy</td></tr>";
-  else attendance.reverse().forEach(z=>{
-    const cls = z.stav==="PRICHOD"?"status-prichod":"status-odchod";
-    myAttendanceBody.innerHTML += `<tr><td>${z.cas}</td><td class="${cls}">${z.stav}</td></tr>`;
-  });
-
-  if(!breaks.length) myBreaksBody.innerHTML="<tr><td>Žiadne prestávky</td></tr>";
-  else breaks.reverse().forEach(z=>myBreaksBody.innerHTML += `<tr><td class="status-prestavka">${z.cas}</td></tr>`);
-
-  if(!pn.length) myPNBody.innerHTML="<tr><td>Žiadne PN</td></tr>";
-  else pn.reverse().forEach(z=>myPNBody.innerHTML += `<tr><td class="status-pn">${z.cas}</td></tr>`);
-}
-
-filterDate.addEventListener("change", renderTables);
-
-// Export
-window.exportMyData = function(){
+window.exportMyData = function() {
   const userName = userNameEl.textContent;
   const data = [
     ["Zamestnanec", userName],
     ["Posledný stav", statusBox.textContent],
-    [], ["Dochádzka (Príchod / Odchod)"], ["Čas","Stav"],
+    [],
+    ["Dochádzka (Príchod / Odchod)"], ["Čas","Stav"],
     ...Array.from(document.querySelectorAll("#myAttendanceBody tr")).map(tr=>Array.from(tr.querySelectorAll("td")).map(td=>td.textContent)),
     [], ["Prestávky"], ["Čas"],
     ...Array.from(document.querySelectorAll("#myBreaksBody tr")).map(tr=>Array.from(tr.querySelectorAll("td")).map(td=>td.textContent)),
@@ -299,8 +311,16 @@ window.exportMyData = function(){
   XLSX.writeFile(wb, `Dochadzka_${userName}.xlsx`);
 }
 
-loadRecords();
+loadUserData();
+
+document.querySelectorAll("nav button").forEach(btn=>{
+  btn.onclick = ()=>{
+    document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    document.querySelectorAll(".table-section").forEach(sec=>sec.classList.remove("active"));
+    document.getElementById(btn.dataset.target).classList.add("active");
+  }
+});
 </script>
 </body>
 </html>
-
