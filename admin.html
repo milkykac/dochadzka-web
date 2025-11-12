@@ -6,7 +6,6 @@
 <title>Admin panel – Dochádzka</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 <style>
-/* PÔVODNÉ ŠTÝLY */
 body { font-family:'Poppins',sans-serif; margin:0; background:linear-gradient(135deg,#007bff,#6f42c1); min-height:100vh; color:#333; }
 header { background:#fff; padding:15px 25px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 3px 10px rgba(0,0,0,0.1); position:sticky; top:0; z-index:10; }
 h1 { color:#007bff; margin:0; font-size:22px; font-weight:600; }
@@ -36,52 +35,23 @@ tr:nth-child(even){ background:#f8f9fa; }
 @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
 @media(max-width:768px){ header{flex-direction:column; text-align:center; gap:10px;} table{display:block; overflow-x:auto; white-space:nowrap;} }
 
-/* --- OPRAVENÉ A VYLEPŠENÉ VIZUÁLNE ŠTÝLY PRE STAVY (Dochádzka) --- */
 .status-badge {
     font-weight: 700 !important;
     padding: 7px 14px !important;
-    border-radius: 50px !important; /* Tvar pilulky */
+    border-radius: 50px !important;
     display: inline-block;
     text-align: center;
     min-width: 80px;
     white-space: nowrap;
-    text-shadow: none !important; /* KĽÚČOVÁ OPRAVA: Odstránenie glitch tieňa */
-    color: inherit !important; /* KĽÚČOVÁ OPRAVA: Dedenie farby, aby nebola modrá */
+    color: inherit !important;
     font-size: 16px !important;
 }
+.status-prichod { background: #198754 !important; color: white !important; } 
+.status-odchod { background: #dc3545 !important; color: white !important; } 
+.status-prestávka, .status-prestavka { background: #ffc107 !important; color: #212529 !important; }
+.status-pn { background: #6f42c1 !important; color: white !important; }
 
-/* PRÍCHOD: Zelená s bielym textom */
-.status-prichod { 
-    background: #198754 !important; /* Zelená */
-    color: white !important; /* Zabezpečí biely text */
-} 
-
-/* ODCHOD: Červená s bielym textom */
-.status-odchod { 
-    background: #dc3545 !important; /* Červená */
-    color: white !important; /* Zabezpečí biely text */
-} 
-
-/* PRESTÁVKA: Žltá s tmavým textom */
-.status-prestávka { 
-    background: #ffc107 !important; /* Žltá */
-    color: #212529 !important; /* Zabezpečí tmavý text */
-}
-
-/* PN: Fialová s bielym textom */
-.status-pn { 
-    background: #6f42c1 !important; /* Fialová */
-    color: white !important;
-} 
-
-/* DODATOČNÉ ZABEZPEČENIE PROTI MODRÉMU TEXTU */
-#dochadzkaTable td, 
-#prestavkyTable td, 
-#pnTable td {
-    color: #333; /* Predvolená farba textu bunky (pre ne-pilulkové položky) */
-}
-
-/* --- NOVÉ ŠTÝLY PRE POUŽÍVATEĽOV (ČIPY) --- */
+#dochadzkaTable td, #prestavkyTable td, #pnTable td { color: #333; }
 .chip-status-assigned, .chip-status-unassigned {
     font-weight: 700 !important;
     padding: 7px 14px !important;
@@ -90,7 +60,6 @@ tr:nth-child(even){ background:#f8f9fa; }
     text-align: center;
     min-width: 80px;
     white-space: nowrap;
-    text-shadow: none !important;
     font-size: 16px !important;
 }
 .chip-status-assigned { background: #198754 !important; }
@@ -111,7 +80,6 @@ tr:nth-child(even){ background:#f8f9fa; }
     color: #007bff;
 }
 .user-actions button:first-child:hover { color: #dc3545; }
-/* ----------------------------------- */
 </style>
 </head>
 <body>
@@ -189,7 +157,6 @@ tr:nth-child(even){ background:#f8f9fa; }
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
 import { getDatabase, ref, get, set, child, push } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
-// !!! NAHRADTE TOTO VLASTNYMI UDAJMI Z FIREBASE !!!
 const firebaseConfig = {
   apiKey: "AIzaSyBsYrbYtP4E5blWbKlrJ6iI9v6YPAYYp0g",
   authDomain: "maturita-395fd.firebaseapp.com",
@@ -204,19 +171,17 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// --- Inicializácia pri načítaní DOM ---
 document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll("nav button").forEach(btn=>{
-        btn.addEventListener("click",()=>{
-            document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
-            btn.classList.add("active");
-            document.querySelectorAll("section").forEach(sec=>sec.classList.remove("active"));
-            document.getElementById(btn.dataset.target).classList.add("active");
-            loadSection(btn.dataset.target);
-        });
+  document.querySelectorAll("nav button").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      document.querySelectorAll("section").forEach(sec=>sec.classList.remove("active"));
+      document.getElementById(btn.dataset.target).classList.add("active");
+      loadSection(btn.dataset.target);
     });
-    // Predvolené načítanie dochádzky pri štarte
-    loadSection("dochadzka"); 
+  });
+  loadSection("dochadzka");
 });
 
 window.logout = () => { window.location.href="index.html"; };
@@ -236,26 +201,19 @@ window.exportTable = function(id){
   a.click();
 };
 
-// ----- pridanie logu (prestávka, príchod, odchod) -----
 window.addLog = async function(type, typ){
   alert("Ready. Zadaj čip používateľa.");
-
-  const chipUid = prompt("Zadaj čip používateľa:"); // simulácia priloženia čipu
+  const chipUid = prompt("Zadaj čip používateľa:");
   if(!chipUid) return;
-
   try {
     const snap = await get(child(ref(db), `chipToUser/${chipUid}`));
     if(!snap.exists()){ alert("Čip nie je priradený!"); return; }
     const userId = snap.val();
-
     await new Promise(res => setTimeout(res, 1000));
-
     const now = new Date();
-    // Použitie ISO formátu pre jednoduchšie triedenie a konzistenciu (YYYY-MM-DD HH:MM)
     const timestamp = now.toISOString().slice(0,10) + " " +
                       now.getHours().toString().padStart(2,"0") + ":" +
                       now.getMinutes().toString().padStart(2,"0");
-
     let path = `users/${userId}/${type}`;
     await push(ref(db, path), { 
       cas: timestamp, 
@@ -263,110 +221,80 @@ window.addLog = async function(type, typ){
       manual: true, 
       meno: (await get(ref(db, `users/${userId}/name`))).val() 
     });
-
     alert(`${typ.charAt(0).toUpperCase() + typ.slice(1)} zaznamenaný o ${timestamp}`);
     loadSection(type === "prestavky" ? "prestavky" : "dochadzka");
-  } catch(e){ 
-    alert("Chyba pri pridávaní záznamu."); 
-    console.error(e); 
-  }
+  } catch(e){ alert("Chyba pri pridávaní záznamu."); console.error(e); }
 };
 
-
-// ----- FUNKCIA pre načítanie (FILTROVANIE DÁTUM + MENO) - OPRAVENÉ FILTRE A PARSOVANIE DÁTUMU -----
 async function loadAttendance(type, tableId, dateId, searchId){
   const el = document.getElementById(tableId);
   el.innerHTML="Načítavam dáta...";
-  // Získanie filtrov, normalizácia pre bezpečné porovnávanie
   const dateFilter = document.getElementById(dateId)?.value || "";
   const search = document.getElementById(searchId)?.value.toLowerCase().trim() || ""; 
 
   try{
     const snap = await get(ref(db, "users"));
     let html="<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>";
-    
+    let entriesFound = false;
+
     if(snap.exists()){
-      // Premenná na sledovanie, či sme našli aspoň jeden záznam
-      let entriesFound = false; 
-      
       snap.forEach(userSnap=>{
         const user = userSnap.val();
         const logsObj = user[type] || {};
         const userName = user.name || "(bez mena)";
         const userNameLower = userName.toLowerCase();
 
-        Object.keys(logsObj).forEach(key => {
-            const log = logsObj[key];
+        Object.keys(logsObj).forEach(key=>{
+          const log = logsObj[key];
+          if(!log || !log.cas) return;
 
-            // --- ZAČIATOK NOVEJ LOGIKY (Prevzaté zo zamestnanec.html) ---
-            // Táto logika zaisťuje, že aj dátumy vo formáte "DD.MM.YYYY" budú správne filtrované
-            if (!log || !log.cas) return; // Preskočiť, ak chýba záznam alebo čas
+          let cleanTime = String(log.cas);
+          let validIsoDate = "";
 
-            let cleanTime = String(log.cas);
-            let validIsoDate = ""; // Potrebujeme len dátumovú časť pre filter
+          const matchDot = cleanTime.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+          if(matchDot){
+            const [_, d, m, y] = matchDot;
+            validIsoDate = `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+          } else if(cleanTime.match(/^\d{4}-\d{2}-\d{2}/)){
+            validIsoDate = cleanTime.substring(0,10);
+          } else {
+            return;
+          }
 
-            // Regex pre "DD.MM.YYYY" (ignoruje čas)
-            const dateRegex = /(\d{1,2})\.(\d{1,2})\.(\d{4})/; 
-            const match = cleanTime.match(dateRegex);
+          const dateMatch = !dateFilter || validIsoDate === dateFilter;
+          const nameMatch = !search || userNameLower.includes(search);
+          if(!dateMatch || !nameMatch) return;
 
-            if (match) {
-                // Formát je "DD.MM.YYYY ..."
-                const [full, day, month, year] = match;
-                validIsoDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-            } else if (cleanTime.includes('-')) {
-                // Predpokladaný formát "YYYY-MM-DD ..."
-                validIsoDate = cleanTime.substring(0, 10);
-            } else {
-                // Neznámy formát, preskočiť
-                return; 
-            }
-            // --- KONIEC NOVEJ LOGIKY ---
+          entriesFound = true;
 
-            // Pôvodná filtračná premenná, teraz používa normalizovaný dátum
-            const logDate = validIsoDate;
+          const rawType = (log.typ || type).toLowerCase();
+          const logTyp = rawType.replace('á','a'); 
+          let statusClass = '';
+          if (logTyp === 'prichod') statusClass = 'status-prichod';
+          else if (logTyp === 'odchod') statusClass = 'status-odchod';
+          else if (logTyp === 'prestavka' || logTyp === 'prestávka') statusClass = 'status-prestávka';
+          else if (logTyp === 'pn') statusClass = 'status-pn';
 
-            // Logika FILTROVANIA: Obe podmienky musia byť splnené
-            const dateMatch = !dateFilter || logDate === dateFilter;
-            const nameMatch = !search || userNameLower.includes(search);
-
-            if (dateMatch && nameMatch) {
-              entriesFound = true; // Našli sme záznam
-              
-              const rawType = (log.typ || type).toLowerCase();
-              // Normalizácia pre CSS triedu (napr. 'prestávka' -> 'prestavka')
-              const logTyp = rawType.replace('á', 'a'); 
-
-              let statusClass = '';
-              if (logTyp === 'prichod') statusClass = 'status-prichod';
-              else if (logTyp === 'odchod') statusClass = 'status-odchod';
-              else if (logTyp === 'prestávka' || logTyp === 'prestavka') statusClass = 'status-prestávka';
-              else if (logTyp === 'pn') statusClass = 'status-pn';
-
-              // Vizuálna oprava je zabezpečená triedou status-badge a CSS
-              html += `<tr>
-                <td>${userName}</td>
-                <td>${log.cas || '-'}</td> <td><span class="status-badge ${statusClass}">${rawType.toUpperCase()}</span></td>
-              </tr>`;
-            }
+          html += `<tr>
+            <td>${userName}</td>
+            <td>${log.cas}</td>
+            <td><span class="status-badge ${statusClass}">${rawType.toUpperCase()}</span></td>
+          </tr>`;
         });
       });
-      
-      // Ak sa po prejdení všetkých záznamov nenašiel žiadny, ktorý by vyhovoval filtru
-      if (!entriesFound) {
-        html += '<tr><td colspan="3">Žiadne záznamy podľa filtra.</td></tr>';
-      }
-      
+
+      if(!entriesFound) html += '<tr><td colspan="3">Žiadne záznamy podľa filtra.</td></tr>';
       html += "</table>";
       el.innerHTML = html;
-
     } else {
       el.innerHTML = '<table><tr><td colspan="3">Žiadni používatelia v databáze.</td></tr></table>';
     }
-  } catch(e){ el.innerHTML="Chyba pri načítaní dát. Viac info v konzole (F12)."; console.error(e); }
+  } catch(e){
+    el.innerHTML="Chyba pri načítaní dát.";
+    console.error(e);
+  }
 }
 
-
-// ----- Načítanie Používateľov (Bez zmien) -----
 async function loadUsers(){
   const el = document.getElementById("usersTable");
   el.innerHTML="Načítavam používateľov...";
@@ -413,7 +341,6 @@ async function loadNewChips(){
   } catch(e){ el.innerHTML="Chyba pri načítaní čipov."; console.error(e); }
 }
 
-// ----- Funkcie pre Používateľov a Čipy (Bez zmien) -----
 window.assignChip = async function(chipUid){
   const name = prompt("Zadaj meno používateľa, ktorému chceš priradiť čip:").trim();
   if(!name) return;
@@ -423,7 +350,7 @@ window.assignChip = async function(chipUid){
     snap.forEach(u=>{ 
       if((u.val().name||"").toLowerCase()===name.toLowerCase()) uid=u.key; 
     });
-    if(!uid) return alert("Používateľ nenájdený. Musí presne sedieť s menom.");
+    if(!uid) return alert("Používateľ nenájdený.");
     await set(ref(db, `users/${uid}/chipUid`), chipUid);
     await set(ref(db, `chipToUser/${chipUid}`), uid);
     await set(ref(db, `newChips/${chipUid}`), null);
@@ -441,15 +368,10 @@ window.removeChip = async function(chipUid){
 
 window.removeUser = async function(id){
   if(confirm("Odstrániť používateľa a jeho dochádzku?")){
-    // Získanie UID čipu, ak existuje, aby sme ho mohli odstrániť z chipToUser
     const userSnap = await get(ref(db, `users/${id}`));
     const chipUid = userSnap.val()?.chipUid;
-    
     await set(ref(db, `users/${id}`), null);
-    if (chipUid) {
-        await set(ref(db, `chipToUser/${chipUid}`), null);
-    }
-    
+    if (chipUid) await set(ref(db, `chipToUser/${chipUid}`), null);
     alert("Používateľ odstránený.");
     loadUsers();
   }
@@ -479,18 +401,12 @@ window.saveNewPassword = async function(){
 window.addUser = async function() {
   const name = prompt("Zadaj meno nového používateľa:").trim();
   if(!name) return;
-
   const password = prompt(`Zadaj heslo pre ${name}:`).trim();
   if(!password) return;
   if(password.length < 4) return alert("Heslo musí mať aspoň 4 znaky.");
-
   try {
     const newUserRef = push(ref(db, "users"));
-    await set(newUserRef, {
-      name: name,
-      password: password,
-      chipUid: null
-    });
+    await set(newUserRef, { name: name, password: password, chipUid: null });
     alert(`Používateľ ${name} bol pridaný.`);
     loadUsers();
   } catch(e) {
@@ -499,7 +415,6 @@ window.addUser = async function() {
   }
 };
 
-// Hlavná funkcia pre prepínanie sekcií
 function loadSection(id){
   if(id==="dochadzka") loadAttendance("dochadzka","dochadzkaTable","dateDochadzka","searchDochadzka");
   else if(id==="prestavky") loadAttendance("prestavky","prestavkyTable","datePrestavky","searchPrestavky");
@@ -510,3 +425,6 @@ function loadSection(id){
 
 </body>
 </html>
+
+
+
