@@ -194,6 +194,15 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
+// Hlavná funkcia pre prepínanie sekcií - ZMENENÁ NA GLOBÁLNU
+window.loadSection = function(id){
+  if(id==="dochadzka") loadAttendance("dochadzka","dochadzkaTable","dateDochadzka","searchDochadzka");
+  else if(id==="prestavky") loadAttendance("prestavky","prestavkyTable","datePrestavky","searchPrestavky");
+  else if(id==="pn") loadAttendance("pn","pnTable","datePN","searchPN");
+  else if(id==="pouzivatelia"){ loadUsers(); loadNewChips(); }
+}
+
+
 // --- Inicializácia pri načítaní DOM ---
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll("nav button").forEach(btn=>{
@@ -202,11 +211,11 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.classList.add("active");
             document.querySelectorAll("section").forEach(sec=>sec.classList.remove("active"));
             document.getElementById(btn.dataset.target).classList.add("active");
-            loadSection(btn.dataset.target);
+            window.loadSection(btn.dataset.target); // <-- VOLANIE GLOBÁLNEJ FUNKCIE
         });
     });
     // Predvolené načítanie dochádzky pri štarte
-    loadSection("dochadzka"); 
+    window.loadSection("dochadzka"); // <-- VOLANIE GLOBÁLNEJ FUNKCIE
 });
 
 window.logout = () => { window.location.href="index.html"; };
@@ -219,7 +228,7 @@ window.exportTable = function(id){
     const cols=[...row.querySelectorAll("th,td")].map(td=>`"${td.innerText.trim()}"`);
     csv.push(cols.join(","));
   });
-  const blob=new Blob([csv.join("\n")],{type:"text/csv;charset=utf-8;"});
+  const blob=new Blob([csv.join("\n")],{type:"text/csv;charset=utf-utf-8;"});
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
   a.download=`${id}.csv`;
@@ -255,7 +264,7 @@ window.addLog = async function(type, typ){
     });
 
     alert(`${typ.charAt(0).toUpperCase() + typ.slice(1)} zaznamenaný o ${timestamp}`);
-    loadSection(type === "prestavky" ? "prestavky" : "dochadzka");
+    window.loadSection(type === "prestavky" ? "prestavky" : "dochadzka");
   } catch(e){ 
     alert("Chyba pri pridávaní záznamu."); 
     console.error(e); 
@@ -284,73 +293,82 @@ async function loadAttendance(type, tableId, dateId, searchId){
         const userName = user.name || "(bez mena)";
         const userNameLower = userName.toLowerCase();
 
-        // === KĽÚČOVÁ ZMENA ===
-        // Nepozeráme sa len do user[type], ale prehľadáme VŠETKY záznamy používateľa
-        // aby sme našli aj tie, ktoré nie sú v priečinkoch "dochadzka", "pn" atď.
-        Object.values(user).forEach(log => {
+        // Prehľadávame VŠETKY vlastnosti (priame aj pod-priečinky) používateľa
+        Object.values(user).forEach(logsEntry => {
             
-            // --- KROK 1: Overenie, či je to platný záznam ---
-            if (!log || !log.cas || !log.typ) return; // Toto nie je platný záznam
-
-            const rawType = (log.typ || "").toLowerCase();
-            const logTyp = rawType.replace('á', 'a'); // Normalizácia (prestávka -> prestavka)
-
-            // --- KROK 2: Kontrola, či záznam patrí do tejto sekcie ---
-            // 'type' je názov sekcie: 'dochadzka', 'prestavky', 'pn'
-            // 'logTyp' je reálny typ záznamu: 'prichod', 'odchod', 'prestavka', 'pn'
-            let isRelevantType = false;
-            if (type === 'dochadzka' && (logTyp === 'prichod' || logTyp === 'odchod')) {
-                isRelevantType = true;
-            } else if (type === 'prestavky' && logTyp === 'prestavka') {
-                isRelevantType = true;
-            } else if (type === 'pn' && logTyp === 'pn') {
-                isRelevantType = true;
-            }
-
-            // Ak záznam nepatrí na túto kartu (napr. sme na "PN" ale log je "prichod")), preskočíme ho
-            if (!isRelevantType) return; 
-
-            // --- KROK 3: Normalizácia DÁTUMU (logika z zamestnanec.html) ---
-            let cleanTime = String(log.cas);
-            let validIsoDate = ""; // Dátum vo formáte YYYY-MM-DD
-            
-            // Regex pre "DD.MM.YYYY"
-            const dateRegex = /(\d{1,2})\.(\d{1,2})\.(\d{4})/; 
-            const match = cleanTime.match(dateRegex);
-
-            if (match) {
-                // Formát je "DD.MM.YYYY ..."
-                const [full, day, month, year] = match;
-                validIsoDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-            } else if (cleanTime.includes('-')) {
-                // Predpokladaný formát "YYYY-MM-DD ..."
-                validIsoDate = cleanTime.substring(0, 10);
+            // Kontrola, či ide o objekt s viacerými logmi (dochadzka, prestavky, pn)
+            // alebo o jeden priamy záznam, ak databáza nie je konzistentná
+            let logs;
+            if (typeof logsEntry === 'object' && logsEntry !== null && !Array.isArray(logsEntry)) {
+                // Ak je to priečinok (dochadzka, prestavky atď.), prejdeme jeho kľúče/hodnoty
+                logs = Object.values(logsEntry);
+            } else if (typeof logsEntry === 'object' && logsEntry !== null && logsEntry.cas && logsEntry.typ) {
+                // Ak je to jeden priamy záznam, spracujeme ho ako jednoelementové pole
+                logs = [logsEntry];
             } else {
-                // Neznámy formát, pre istotu preskočíme (alebo zalogujeme chybu)
-                return; 
+                return; // Preskočíme, nie je to záznam dochádzky
             }
-            
-            const logDate = validIsoDate;
 
-            // --- KROK 4: Aplikovanie filtrov (Meno + Dátum) ---
-            const dateMatch = !dateFilter || logDate === dateFilter;
-            const nameMatch = !search || userNameLower.includes(search);
+            logs.forEach(log => {
 
-            if (dateMatch && nameMatch) {
-              entriesFound = true; // Našli sme záznam
-              
-              let statusClass = '';
-              if (logTyp === 'prichod') statusClass = 'status-prichod';
-              else if (logTyp === 'odchod') statusClass = 'status-odchod';
-              else if (logTyp === 'prestávka' || logTyp === 'prestavka') statusClass = 'status-prestávka';
-              else if (logTyp === 'pn') statusClass = 'status-pn';
+                // --- KROK 1: Overenie, či je to platný záznam ---
+                if (!log || !log.cas || !log.typ) return; // Toto nie je platný záznam
 
-              // Vizuálna oprava je zabezpečená triedou status-badge a CSS
-              html += `<tr>
-                <td>${userName}</td>
-                <td>${log.cas || '-'}</td> <td><span class="status-badge ${statusClass}">${rawType.toUpperCase()}</span></td>
-              </tr>`;
-            }
+                const rawType = (log.typ || "").toLowerCase();
+                const logTyp = rawType.replace('á', 'a'); // Normalizácia (prestávka -> prestavka)
+
+                // --- KROK 2: Kontrola, či záznam patrí do tejto sekcie ---
+                let isRelevantType = false;
+                if (type === 'dochadzka' && (logTyp === 'prichod' || logTyp === 'odchod')) {
+                    isRelevantType = true;
+                } else if (type === 'prestavky' && logTyp === 'prestavka') {
+                    isRelevantType = true;
+                } else if (type === 'pn' && logTyp === 'pn') {
+                    isRelevantType = true;
+                }
+
+                if (!isRelevantType) return; 
+
+                // --- KROK 3: Normalizácia DÁTUMU (logika pre oba formáty) ---
+                let cleanTime = String(log.cas);
+                let validIsoDate = ""; // Dátum vo formáte YYYY-MM-DD
+                
+                // Regex pre "DD.MM.YYYY"
+                const dateRegex = /(\d{1,2})\.(\d{1,2})\.(\d{4})/; 
+                const match = cleanTime.match(dateRegex);
+
+                if (match) {
+                    // Formát je "DD.MM.YYYY ..."
+                    const [full, day, month, year] = match;
+                    validIsoDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+                } else if (cleanTime.includes('-')) {
+                    // Predpokladaný formát "YYYY-MM-DD ..."
+                    validIsoDate = cleanTime.substring(0, 10);
+                } else {
+                    return; 
+                }
+                
+                const logDate = validIsoDate;
+
+                // --- KROK 4: Aplikovanie filtrov (Meno + Dátum) ---
+                const dateMatch = !dateFilter || logDate === dateFilter;
+                const nameMatch = !search || userNameLower.includes(search);
+
+                if (dateMatch && nameMatch) {
+                  entriesFound = true; // Našli sme záznam
+                  
+                  let statusClass = '';
+                  if (logTyp === 'prichod') statusClass = 'status-prichod';
+                  else if (logTyp === 'odchod') statusClass = 'status-odchod';
+                  else if (logTyp === 'prestávka' || logTyp === 'prestavka') statusClass = 'status-prestávka';
+                  else if (logTyp === 'pn') statusClass = 'status-pn';
+
+                  html += `<tr>
+                    <td>${userName}</td>
+                    <td>${log.cas || '-'}</td> <td><span class="status-badge ${statusClass}">${rawType.toUpperCase()}</span></td>
+                  </tr>`;
+                }
+            });
         }); // Koniec Object.values(user).forEach
       }); // Koniec snap.forEach
       
@@ -369,7 +387,7 @@ async function loadAttendance(type, tableId, dateId, searchId){
 }
 
 
-// ----- Načítanie Používateľov (Bez zmien) -----
+// ----- Načítanie Používateľov -----
 async function loadUsers(){
   const el = document.getElementById("usersTable");
   el.innerHTML="Načítavam používateľov...";
@@ -416,7 +434,7 @@ async function loadNewChips(){
   } catch(e){ el.innerHTML="Chyba pri načítaní čipov."; console.error(e); }
 }
 
-// ----- Funkcie pre Používateľov a Čipy (Bez zmien) -----
+// ----- Funkcie pre Používateľov a Čipy (Globálne) -----
 window.assignChip = async function(chipUid){
   const name = prompt("Zadaj meno používateľa, ktorému chceš priradiť čip:").trim();
   if(!name) return;
@@ -501,19 +519,10 @@ window.addUser = async function() {
     console.error(e);
   }
 };
-
-// Hlavná funkcia pre prepínanie sekcií
-function loadSection(id){
-  if(id==="dochadzka") loadAttendance("dochadzka","dochadzkaTable","dateDochadzka","searchDochadzka");
-  else if(id==="prestavky") loadAttendance("prestavky","prestavkyTable","datePrestavky","searchPrestavky");
-  else if(id==="pn") loadAttendance("pn","pnTable","datePN","searchPN");
-  else if(id==="pouzivatelia"){ loadUsers(); loadNewChips(); }
-}
 </script>
 
 </body>
 </html>
-
 
 
 
