@@ -30,7 +30,6 @@ table {
     margin-top:15px; 
     border-radius:8px; 
     overflow:hidden; 
-    /* box-shadow:0 2px 5px rgba(0,0,0,0.1); -- Zrušenie tieňa pre istotu */
     border: none; /* Úplné zrušenie hlavného okraja tabuľky */
 }
 
@@ -58,6 +57,7 @@ tbody tr:last-child td {
 th { background:#007bff; color:white; font-weight:600; }
 tr:nth-child(even){ background:#f8f9fa; }
 
+/* Tlačidlo premenované na Exportovať do XLSX */
 .export-btn{ margin-top:15px; background:#28a745; border:none; color:white; border-radius:8px; padding:8px 14px; cursor:pointer; font-weight:600; }
 .export-btn:hover{ background:#1e7e34; }
 
@@ -123,7 +123,7 @@ tr:nth-child(even){ background:#f8f9fa; }
 <section id="dochadzka" class="active">
     <div id="statusBox" class="status-box">Načítavam stav...</div>
     <h2>Dochádzka (Príchod/Odchod)</h2>
-    <button class="export-btn" data-export-table="dochadzka">Exportovať do CSV</button>
+    <button class="export-btn" data-export-table="dochadzka">Exportovať do XLSX</button>
     <div class="filter">
         <label for="dateDochadzka">Filtrovať podľa dátumu:</label>
         <input type="date" id="dateDochadzka">
@@ -136,7 +136,7 @@ tr:nth-child(even){ background:#f8f9fa; }
 
 <section id="prestavky">
     <h2>Prestávky</h2>
-    <button class="export-btn" data-export-table="prestavky">Exportovať do CSV</button>
+    <button class="export-btn" data-export-table="prestavky">Exportovať do XLSX</button>
     <div class="filter">
         <label for="datePrestavky">Filtrovať podľa dátumu:</label>
         <input type="date" id="datePrestavky">
@@ -149,7 +149,7 @@ tr:nth-child(even){ background:#f8f9fa; }
 
 <section id="pn">
     <h2>PN</h2>
-    <button class="export-btn" data-export-table="pn">Exportovať do CSV</button>
+    <button class="export-btn" data-export-table="pn">Exportovať do XLSX</button>
     <div class="filter">
         <label for="datePN">Filtrovať podľa dátumu:</label>
         <input type="date" id="datePN">
@@ -365,74 +365,88 @@ function renderTables(records) {
 }
 
 
-// --- OPRAVENÁ FUNKCIA: Export do CSV s podporou UTF-8 BOM pre Excel ---
+// --- NOVÁ FUNKCIA: Export do skutočného XLSX formátu ---
 window.exportTable = function(sectionType) {
     const userName = userNameEl.textContent;
     let filterDate, expectedStav, sectionTitle;
-    let csv = [];
+    let header = [];
+    let fileNameBase;
 
     // --- Krok 1: Definovanie filtrov a hlavičiek na základe typu sekcie ---
     if (sectionType === 'dochadzka') {
         filterDate = document.getElementById("dateDochadzka").value;
         expectedStav = ["prichod", "odchod"];
         sectionTitle = "Dochádzka (Príchod/Odchod)";
-        csv.push(`"Čas","Typ"`);
+        header = ["Čas", "Typ"];
+        fileNameBase = "dochadzka";
     } else if (sectionType === 'prestavky') {
         filterDate = document.getElementById("datePrestavky").value;
         expectedStav = ["prestavka"];
         sectionTitle = "Prestávky";
-        csv.push(`"Čas","Typ"`);
+        header = ["Čas", "Typ"]; // Používame rovnakú štruktúru pre dáta
+        fileNameBase = "prestavky";
     } else if (sectionType === 'pn') {
         filterDate = document.getElementById("datePN").value;
         expectedStav = ["pn"];
         sectionTitle = "PN";
-        csv.push(`"Čas","Typ"`);
+        header = ["Čas", "Typ"]; // Používame rovnakú štruktúru pre dáta
+        fileNameBase = "pn";
     } else {
         return alert("Neznámy typ sekcie pre export.");
     }
     
-    // Metadáta
-    csv.unshift(`"Používateľ","${userName}"`);
-    csv.unshift(`"Typ záznamu","${sectionTitle}"`);
-    csv.push(""); // Prázdny riadok
-
-    // --- Krok 2: Filtrácia dát (rovnaká ako v renderTables) ---
+    // --- Krok 2: Filtrácia dát ---
     let filteredRecords = allRecordsCache;
     if(filterDate) {
         filteredRecords = filteredRecords.filter(r => r.cas.substring(0, 10) === filterDate);
     }
     const sectionRecords = filteredRecords.filter(r => expectedStav.includes(r.stav));
 
-    // --- Krok 3: Generovanie riadkov CSV ---
+    // --- Krok 3: Generovanie dátového poľa pre XLSX ---
+    // Pridáme nadpis
+    const exportData = [
+        ["Typ záznamu:", sectionTitle],
+        ["Používateľ:", userName],
+        [], // Prázdny riadok
+        header // Hlavička tabuľky
+    ];
+    
+    // Pridanie záznamov
     if (sectionRecords.length === 0) {
-        csv.push(`"Žiadne záznamy",""`);
+        exportData.push(["Žiadne záznamy", ""]);
     } else {
         sectionRecords.forEach(z => {
-            // Používame casDisplay pre zobrazenie v CSV (DD.MM.YYYY HH:MM)
-            const timePart = z.casDisplay; 
-            const typePart = z.stav.toUpperCase();
-            csv.push(`"${timePart}","${typePart}"`);
+            // Používame casDisplay a stav
+            exportData.push([
+                z.casDisplay,
+                z.stav.toUpperCase()
+            ]);
         });
     }
 
-    // --- Krok 4: Stiahnutie súboru ---
+    // --- Krok 4: Export XLSX ---
     
-    // Pridanie BOM (Byte Order Mark) na začiatok reťazca, aby Excel rozpoznal UTF-8
-    const BOM = "\ufeff";
-    const csvContent = BOM + csv.join("\n");
+    // 1. Vytvorenie pracovného zošita
+    const wb = XLSX.utils.book_new();
     
-    // Vytvorenie Blob objektu s opraveným obsahom
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    
-    // Generovanie bezpečného mena súboru
+    // 2. Vytvorenie hárku z dátového poľa
+    const ws = XLSX.utils.aoa_to_sheet(exportData);
+
+    // 3. Pridanie hárku do zošita
+    XLSX.utils.book_append_sheet(wb, ws, "Dochádzka");
+
+    // 4. Stiahnutie súboru
     const safeUserName = userName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-    const safeSectionTitle = sectionTitle.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-    const fileName = `${safeSectionTitle}_${safeUserName}_export.csv`;
-    a.download = fileName;
+    const fileName = `${fileNameBase}_${safeUserName}_export.xlsx`;
     
-    a.click();
+    XLSX.writeFile(wb, fileName);
+    
+    // Zmeníme text tlačidla na upozornenie, že sa sťahuje
+    const btn = document.querySelector(`[data-export-table="${sectionType}"]`);
+    if(btn) {
+        btn.textContent = "Súbor stiahnutý!";
+        setTimeout(() => btn.textContent = "Exportovať do XLSX", 2000); // Už je to XLSX, nie CSV
+    }
 };
 
 // --- Listenery ---
