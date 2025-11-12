@@ -47,6 +47,13 @@ tr:nth-child(even){ background:#f8f9fa; }
     color: white !important; /* Predvolená farba textu pre pilulku */
     font-size: 14px !important;
 }
+/* Menší štýl pilulky pre Prestávky/PN v jedinom stĺpci, aby sa zmestila */
+.status-badge.small {
+    padding: 4px 10px !important;
+    min-width: 60px;
+    font-size: 11px !important;
+    margin-left: 10px;
+}
 .status-prichod { 
     background: #198754 !important; /* Zelená */
 } 
@@ -252,7 +259,7 @@ async function loadUserData() {
     }
 }
 
-// --- Vykreslenie tabuliek (Pridané status-badge triedy) ---
+// --- Vykreslenie tabuliek (Pridané vizuály pre všetky sekcie) ---
 function renderTables(records) {
   const dochadzkaTable = document.getElementById("dochadzkaTable");
   const prestavkyTable = document.getElementById("prestavkyTable");
@@ -288,20 +295,19 @@ function renderTables(records) {
 
         
         if (type === 'dochadzka') {
-          // Dochádzka: 2 stĺpce - Zobrazujeme pilulku
+          // Dochádzka: 2 stĺpce - Použijeme veľkú pilulku
           return `<tr>
               <td>${visibleTime}</td>
               <td><span class="status-badge ${statusClass}">${z.stav.toUpperCase()}</span></td>
           </tr>`;
         } else {
-          // Prestávky a PN: 1 stĺpec (Len čas)
-          // Pre Prestávky zmeníme:
-          if (type === 'prestavky') {
-            return `<tr><td>${visibleTime} <span class="status-badge ${statusClass}" style="margin-left: 10px; font-size: 10px;">${z.stav.toUpperCase()}</span></td></tr>`;
-          }
-          
-          // PN zostane len čas, ak nemá vlastný stĺpec
-          return `<tr><td>${visibleTime}</td></tr>`;
+          // Prestávky a PN: 1 stĺpec - Použijeme čas + malú pilulku v tom istom <td>
+          return `<tr>
+                <td>
+                    ${visibleTime}
+                    <span class="status-badge small ${statusClass}">${z.stav.toUpperCase()}</span>
+                </td>
+            </tr>`;
         }
       }).join("");
     }
@@ -335,19 +341,33 @@ window.exportTable = function(sectionNameId) {
     
     table.querySelectorAll("tbody tr").forEach(row => {
         const cols = Array.from(row.querySelectorAll("td")).map(td => {
-            // Extrahujeme len text, bez pilulky, aby CSV bolo čisté
             let text = td.textContent.trim().replace(/\s\s+/g, ' '); 
             
-            // Ak bunka obsahuje pilulku (napr. v Prestávkach), odstránime jej text z hlavného textu
             const badge = td.querySelector('.status-badge');
             if (badge) {
-                text = text.replace(badge.textContent, '').trim();
+                // Pre Prestávky/PN: extrahujeme Cas a Typ (pilulku) do dvoch stĺpcov
+                const timePart = text.replace(badge.textContent, '').trim();
+                const typePart = badge.textContent.trim();
+                return [timePart, typePart]; // Vrátime pole pre CSV
             }
-            return `"${text}"`;
+            // Pre Dochádzku (Typ už je v samostatnom stĺpci v HTML)
+            return [`"${text}"`]; // Vrátime pole, aby sa dali zjednotiť
         });
+        
+        // Zjednotenie stĺpcov: Pre Prestávky/PN to budú 2 stĺpce, pre Dochádzku 1 alebo 2
+        let finalCols = [];
+        cols.flat().forEach(item => {
+            if (item !== null && item !== undefined) {
+                if (typeof item === 'string' && item.startsWith('"')) {
+                    finalCols.push(item);
+                } else if (typeof item === 'string') {
+                    finalCols.push(`"${item}"`);
+                }
+            }
+        });
         
-        if (cols.length > 0 && cols[0].includes("Žiadne záznamy") === false) {
-            csv.push(cols.join(","));
+        if (finalCols.length > 0 && finalCols[0].includes("Žiadne záznamy") === false) {
+            csv.push(finalCols.join(","));
         }
     });
     
@@ -390,4 +410,3 @@ loadUserData();
 </script>
 </body>
 </html>
-
