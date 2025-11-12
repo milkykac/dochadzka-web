@@ -1,3 +1,17 @@
+Ďakujem za upozornenie. Chápem, že funkcia exportu do CSV (window.exportTable) v Zamestnaneckom paneli nefunguje správne, hoci vizuál tabuľky je už opravený.
+
+Hlavný problém je, že exportná funkcia bola napísaná tak, aby hľadala tabuľku na základe ID sekcie, nie ID tela tabuľky (tbody).
+
+Riešenie:
+
+Opravím funkciu window.exportTable tak, aby správne získavala dáta priamo z premennej allRecordsCache a používala rovnakú filtračnú logiku ako renderTables, čím zaistím, že export bude vždy obsahovať len aktuálne, filtrované dáta. Je to spoľahlivejší prístup ako pokúšať sa parsovať HTML kód tabuľky, obzvlášť pre formát Prestávok a PN, kde je čas a typ v jednej bunke.
+
+Upravím volanie funkcie exportu v listenery, aby správne odovzdávala typ sekcie.
+
+Tu je opravený a zjednodušený kód pre Zamestnanecký panel:
+
+HTML
+
 <!DOCTYPE html>
 <html lang="sk">
 <head>
@@ -183,7 +197,7 @@ const userId = localStorage.getItem("uid");
 const userNameEl = document.getElementById("userName");
 const statusBox = document.getElementById("statusBox");
 const debugUidEl = document.getElementById("debugUid"); 
-let allRecordsCache = [];
+let allRecordsCache = []; // Zásobník všetkých záznamov
 
 // --- Overenie a presmerovanie ---
 if (!userId) {
@@ -234,6 +248,7 @@ async function loadUserData() {
 
             let cleanTime = String(log.cas);
             let validIsoTime = cleanTime;
+            let displayTime = cleanTime; // Pre zobrazenie
 
             // Regex pre formát DD.MM.YYYY HH:MM
             const dateRegex = /(\d{1,2})\.(\d{1,2})\.(\d{4}) (\d{1,2}:\d{1,2})/;
@@ -241,12 +256,23 @@ async function loadUserData() {
 
             if (match) {
                 const [full, day, month, year, time] = match;
+                // ISO pre triedenie
                 validIsoTime = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')} ${time}`;
+                // Formát pre zobrazenie
+                displayTime = `${day.padStart(2, '0')}.${month.padStart(2, '0')}.${year} ${time}`;
             } else if (cleanTime.includes('T') && cleanTime.includes('-')) {
                 validIsoTime = cleanTime.replace('T', ' '); // ISO format
+                // Formát pre zobrazenie
+                const [date, time] = validIsoTime.split(' ');
+                const [y, m, d] = date.split('-');
+                displayTime = `${d.padStart(2, '0')}.${m.padStart(2, '0')}.${y} ${time.substring(0, 5)}`;
             } else if (cleanTime.includes('-') && cleanTime.length >= 16) {
-                validIsoTime = cleanTime; // Predpokladáme YYYY-MM-DD HH:MM
-            } else {
+                validIsoTime = cleanTime; // Predpokladáme YYYY-MM-DD HH:MM
+                // Formát pre zobrazenie
+                const [date, time] = validIsoTime.split(' ');
+                const [y, m, d] = date.split('-');
+                displayTime = `${d.padStart(2, '0')}.${m.padStart(2, '0')}.${y} ${time.substring(0, 5)}`;
+            } else {
                 return;
             }
             
@@ -261,11 +287,11 @@ async function loadUserData() {
             else if (cleanType.includes('pn')) recordType = 'pn';
             
             if (recordType) {
-                 // Zabránenie duplikátom pri rôznych logoch s rovnakým časom (napr. prichod a prestavka)
                  const isDuplicate = records.some(r => r.cas === validIsoTime && r.stav === recordType);
                  if (!isDuplicate) {
                      records.push({
-                         cas: validIsoTime, 
+                         cas: validIsoTime, // ISO formát pre triedenie/filtrovanie
+                         casDisplay: displayTime, // Formát DD.MM.YYYY HH:MM pre zobrazenie/export
                          stav: recordType,
                      });
                  }
@@ -307,6 +333,7 @@ function renderTables(records) {
     let filtered = records;
     
     if(filterDate) {
+      // Používame ISO čas pre filtrovanie (r.cas)
       filtered = filtered.filter(r => r.cas.substring(0, 10) === filterDate);
     }
     
@@ -316,13 +343,8 @@ function renderTables(records) {
       bodyEl.innerHTML = `<tr><td colspan="${colCount}">Žiadne záznamy</td></tr>`;
     } else {
       bodyEl.innerHTML = sectionRecords.map(z => {
-        // Formátovanie pre zobrazenie DD. MM. YYYY HH:MM
-        let displayTime = z.cas;
-        if (z.cas.includes('-') && z.cas.length >= 16) {
-            const [date, time] = z.cas.split(' ');
-            const [y, m, d] = date.split('-');
-            displayTime = `${d.padStart(2, '0')}.${m.padStart(2, '0')}.${y} ${time}`;
-        }
+        // Vždy používame casDisplay
+        const displayTime = z.casDisplay;
 
         let statusClass = '';
         if (z.stav === 'prichod') statusClass = 'status-prichod';
@@ -332,19 +354,19 @@ function renderTables(records) {
 
         
         if (type === 'dochadzka') {
-          // Dochádzka: 2 stĺpce - Použijeme veľkú pilulku
+          // Dochádzka: 2 stĺpce
           return `<tr>
               <td>${displayTime}</td>
               <td><span class="status-badge ${statusClass}">${z.stav.toUpperCase()}</span></td>
           </tr>`;
         } else {
-          // Prestávky a PN: 1 stĺpec - Použijeme čas + malú pilulku v tom istom <td>
+          // Prestávky a PN: 1 stĺpec
           return `<tr>
-                <td>
-                    ${displayTime}
-                    <span class="status-badge small ${statusClass}">${z.stav.toUpperCase()}</span>
-                </td>
-            </tr>`;
+                <td>
+                    ${displayTime}
+                    <span class="status-badge small ${statusClass}">${z.stav.toUpperCase()}</span>
+                </td>
+            </tr>`;
         }
       }).join("");
     }
@@ -357,72 +379,65 @@ function renderTables(records) {
 }
 
 
-// --- OPRAVENÁ FUNKCIA: Export do CSV ---
-window.exportTable = function(sectionNameId) {
-    const sectionEl = document.getElementById(sectionNameId); 
-    const table = sectionEl ? sectionEl.querySelector('table') : null;
-    
-    if(!table) return alert("Žiadne dáta na export alebo tabuľka nebola nájdená.");
-    
-    const userName = userNameEl.textContent;
-    // Odstránenie textu v zátvorkách pre titulok (napr. "(Príchod/Odchod)")
-    const sectionTitle = sectionEl.querySelector('h2').textContent.trim().replace(/\s*\(.*\)/, ''); 
-    
-    let csv = [];
-    
-    // Metadáta
-    csv.push(`"Typ záznamu","${sectionTitle}"`);
-    csv.push(`"Používateľ","${userName}"`);
-    csv.push("");
-    
-    // Hlavička CSV
-    let header;
-    if (sectionNameId === 'prestavkyTable' || sectionNameId === 'pnTable') {
-        // Pre Prestávky a PN vytvoríme 2 stĺpce v CSV
-        header = ["Čas", "Typ záznamu"];
-    } else {
-        // Pre Dochádzku použijeme existujúce hlavičky
-        header = Array.from(table.querySelectorAll("thead th")).map(th => th.innerText.trim());
-    }
-    csv.push(header.map(h => `"${h}"`).join(","));
-    
-    // Dáta riadkov
-    table.querySelectorAll("tbody tr").forEach(row => {
-        const cols = Array.from(row.querySelectorAll("td"));
-        
-        // Kontrola, či ide o riadok "Žiadne záznamy"
-        if (cols[0] && cols[0].textContent.includes("Žiadne záznamy")) {
-            return; 
-        }
+// --- OPRAVENÁ FUNKCIA: Export do CSV (Používa priamo dáta a filtračnú logiku) ---
+window.exportTable = function(sectionType) {
+    const userName = userNameEl.textContent;
+    let filterDate, expectedStav, sectionTitle;
+    let csv = [];
 
-        // Ak má tabuľka len 1 stĺpec (Prestávky/PN)
-        if (cols.length === 1) {
-            const td = cols[0];
-            const badge = td.querySelector('.status-badge');
-            
-            if (badge) {
-                // Extrahujeme typ (text pilulky)
-                const typePart = badge.textContent.trim();
-                // Extrahujeme čas (text bez textu pilulky)
-                const timePart = td.textContent.replace(badge.textContent, '').trim();
-                csv.push(`"${timePart}","${typePart}"`);
-            }
-        } 
-        // Ak má tabuľka 2 stĺpce (Dochádzka)
-        else if (cols.length > 1) {
-             const timePart = cols[0].textContent.trim();
-             // Získame text z pilulky, ak existuje, inak len text z td
-             const typePart = cols[1].querySelector('.status-badge')?.textContent.trim() || cols[1].textContent.trim();
-             csv.push(`"${timePart}","${typePart}"`);
-        }
-    });
-    
-    const blob = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    // Zabezpečenie správneho názvu súboru
-    a.download = `${sectionTitle.replace(/[^a-zA-Z0-9]/g, '_')}_${userName}_export.csv`;
-    a.click();
+    // --- Krok 1: Definovanie filtrov a hlavičiek na základe typu sekcie ---
+    if (sectionType === 'dochadzka') {
+        filterDate = document.getElementById("dateDochadzka").value;
+        expectedStav = ["prichod", "odchod"];
+        sectionTitle = "Dochádzka (Príchod/Odchod)";
+        csv.push(`"Čas","Typ"`);
+    } else if (sectionType === 'prestavky') {
+        filterDate = document.getElementById("datePrestavky").value;
+        expectedStav = ["prestavka"];
+        sectionTitle = "Prestávky";
+        csv.push(`"Čas","Typ"`);
+    } else if (sectionType === 'pn') {
+        filterDate = document.getElementById("datePN").value;
+        expectedStav = ["pn"];
+        sectionTitle = "PN";
+        csv.push(`"Čas","Typ"`);
+    } else {
+        return alert("Neznámy typ sekcie pre export.");
+    }
+    
+    // Metadáta
+    csv.unshift(`"Používateľ","${userName}"`);
+    csv.unshift(`"Typ záznamu","${sectionTitle}"`);
+    csv.push(""); // Prázdny riadok
+
+    // --- Krok 2: Filtrácia dát (rovnaká ako v renderTables) ---
+    let filteredRecords = allRecordsCache;
+    if(filterDate) {
+        filteredRecords = filteredRecords.filter(r => r.cas.substring(0, 10) === filterDate);
+    }
+    const sectionRecords = filteredRecords.filter(r => expectedStav.includes(r.stav));
+
+    // --- Krok 3: Generovanie riadkov CSV ---
+    if (sectionRecords.length === 0) {
+        csv.push(`"Žiadne záznamy",""`);
+    } else {
+        sectionRecords.forEach(z => {
+            // Používame casDisplay pre zobrazenie v CSV (DD.MM.YYYY HH:MM)
+            const timePart = z.casDisplay; 
+            const typePart = z.stav.toUpperCase();
+            csv.push(`"${timePart}","${typePart}"`);
+        });
+    }
+
+    // --- Krok 4: Stiahnutie súboru ---
+    const blob = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    
+    const fileName = `${sectionTitle.replace(/[^a-zA-Z0-9]/g, '_')}_${userName}_export.csv`;
+    a.download = fileName.replace(/ /g, '_').toLowerCase();
+    
+    a.click();
 };
 
 // --- Listenery ---
@@ -448,8 +463,8 @@ document.getElementById("datePN").addEventListener("change", () => renderTables(
 
 document.querySelectorAll(".export-btn").forEach(btn => {
   btn.addEventListener("click", () => {
-    // Používame ID tabuľky, ktoré je z dátového atribútu + "Table"
-    exportTable(btn.dataset.exportTable + "Table"); 
+    // Odovzdávame len dátový atribút 'dochadzka', 'prestavky' alebo 'pn'
+    exportTable(btn.dataset.exportTable); 
   });
 });
 
@@ -458,5 +473,3 @@ loadUserData();
 </script>
 </body>
 </html>
-
-
