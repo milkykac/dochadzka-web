@@ -273,7 +273,7 @@ window.addLog = async function(type, typ){
 };
 
 
-// ----- FUNKCIA pre načítanie (FILTROVANIE DÁTUM + MENO) - OPRAVENÉ FILTRE (BEZ TRIEDENIA) -----
+// ----- FUNKCIA pre načítanie (FILTROVANIE DÁTUM + MENO) - OPRAVENÉ FILTRE A PARSOVANIE DÁTUMU -----
 async function loadAttendance(type, tableId, dateId, searchId){
   const el = document.getElementById(tableId);
   el.innerHTML="Načítavam dáta...";
@@ -297,7 +297,33 @@ async function loadAttendance(type, tableId, dateId, searchId){
 
         Object.keys(logsObj).forEach(key => {
             const log = logsObj[key];
-            const logDate = log.cas ? log.cas.slice(0, 10) : ""; // Dátum vo formáte YYYY-MM-DD
+
+            // --- ZAČIATOK NOVEJ LOGIKY (Prevzaté zo zamestnanec.html) ---
+            // Táto logika zaisťuje, že aj dátumy vo formáte "DD.MM.YYYY" budú správne filtrované
+            if (!log || !log.cas) return; // Preskočiť, ak chýba záznam alebo čas
+
+            let cleanTime = String(log.cas);
+            let validIsoDate = ""; // Potrebujeme len dátumovú časť pre filter
+
+            // Regex pre "DD.MM.YYYY" (ignoruje čas)
+            const dateRegex = /(\d{1,2})\.(\d{1,2})\.(\d{4})/; 
+            const match = cleanTime.match(dateRegex);
+
+            if (match) {
+                // Formát je "DD.MM.YYYY ..."
+                const [full, day, month, year] = match;
+                validIsoDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+            } else if (cleanTime.includes('-')) {
+                // Predpokladaný formát "YYYY-MM-DD ..."
+                validIsoDate = cleanTime.substring(0, 10);
+            } else {
+                // Neznámy formát, preskočiť
+                return; 
+            }
+            // --- KONIEC NOVEJ LOGIKY ---
+
+            // Pôvodná filtračná premenná, teraz používa normalizovaný dátum
+            const logDate = validIsoDate;
 
             // Logika FILTROVANIA: Obe podmienky musia byť splnené
             const dateMatch = !dateFilter || logDate === dateFilter;
@@ -319,8 +345,7 @@ async function loadAttendance(type, tableId, dateId, searchId){
               // Vizuálna oprava je zabezpečená triedou status-badge a CSS
               html += `<tr>
                 <td>${userName}</td>
-                <td>${log.cas || '-'}</td>
-                <td><span class="status-badge ${statusClass}">${rawType.toUpperCase()}</span></td>
+                <td>${log.cas || '-'}</td> <td><span class="status-badge ${statusClass}">${rawType.toUpperCase()}</span></td>
               </tr>`;
             }
         });
@@ -482,7 +507,6 @@ function loadSection(id){
   else if(id==="pouzivatelia"){ loadUsers(); loadNewChips(); }
 }
 </script>
-
 
 </body>
 </html>
