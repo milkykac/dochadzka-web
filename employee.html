@@ -5,137 +5,460 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dochádzka – Zamestnanec</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-/* --- ZOSÚLADENÉ ŠTÝLY S ADMIN PANELOM --- */
-body { font-family:'Poppins',sans-serif; margin:0; background:linear-gradient(135deg,#007bff,#6f42c1); min-height:100vh; color:#333; display:flex; flex-direction:column; align-items:center;}
-header { background:#007bff; padding:15px 25px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 3px 10px rgba(0,0,0,0.1); width:100%; color:white; position:sticky; top:0; z-index:10; }
-h1 { margin:0; font-size:22px; font-weight:700; }
-header button { background:#fff; border:none; color:#007bff; padding:8px 14px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; transition:0.3s; }
-header button:hover { background:#e2e6ea; }
-
-nav { background:#fff; display:flex; justify-content:center; padding:10px; gap:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); position:sticky; top:65px; z-index:5; flex-wrap:wrap; width:100%; max-width:1100px; border-radius:0 0 12px 12px; }
-nav button { background:#007bff; border:none; color:white; padding:8px 14px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; transition:0.3s; }
-nav button.active { background:#6f42c1; }
-nav button:hover { background:#0056b3; }
-
-section { display:none; padding:25px; background:#fff; margin:25px auto; border-radius:12px; max-width:1100px; width:95%; box-shadow:0 4px 20px rgba(0,0,0,0.1); transition:0.3s; }
-section.active { display:block; }
-h2 { color:#007bff; margin-top:0; border-bottom:2px solid #007bff; padding-bottom:5px; font-weight:600; }
-
-table { 
-    width:100%; 
-    border-collapse:collapse; 
-    margin-top:15px; 
-    border-radius:8px; 
-    overflow:hidden; 
-    border: none; 
+/* --- ZOSÚLADENÉ ŠTÝLY S ADMIN PANELOM A VIZUÁLNYM NÁVRHOM --- */
+body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    /* NOVÉ: Jemný gradient s tmavšou modrou */
+    background: linear-gradient(135deg, #0f4c81, #0c2a4e);
+    min-height: 100vh;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 50px; /* Pre mobilné zariadenia */
 }
-th,td { 
-    border:1px solid #ddd; 
-    padding:10px; 
-    text-align:center; 
-    font-size:14px; 
-    color: #333; 
+
+header {
+    background: #007bff;
+    padding: 15px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-sizing: border-box; /* Zahrnúť padding do šírky */
 }
+
+h1 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+header button {
+    background: #fff;
+    border: none;
+    color: #007bff;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: 0.3s;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+header button:hover {
+    background: #e2e6ea;
+    transform: translateY(-1px);
+}
+
+nav {
+    background: #fff;
+    display: flex;
+    justify-content: center;
+    padding: 10px;
+    gap: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    position: relative; /* Zmenené na relative, ak nie je potrebné sticky */
+    top: 0; /* Upravené */
+    z-index: 5;
+    flex-wrap: wrap;
+    width: 95%; /* Zmenené na percentá */
+    max-width: 1100px;
+    border-radius: 0 0 12px 12px;
+    margin-top: 20px; /* Pridané pre medzeru pod headerom */
+}
+
+nav button {
+    background: #f0f0f0; /* Jemné pozadie pre neaktívne */
+    border: none;
+    color: #333; /* Tmavší text */
+    padding: 10px 18px; /* Väčší padding */
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px; /* Väčší font */
+    font-weight: 600;
+    transition: 0.3s;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+nav button.active {
+    background: #007bff; /* Modrá pre aktívnu */
+    color: white;
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3); /* Jemný tieň */
+}
+
+nav button:hover:not(.active) {
+    background: #e0e0e0;
+    transform: translateY(-1px);
+}
+
+section {
+    display: none;
+    padding: 30px; /* Väčší padding */
+    background: #fff;
+    margin: 25px auto;
+    border-radius: 12px;
+    max-width: 1100px;
+    width: 95%;
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15); /* Výraznejší tieň */
+    transition: 0.3s;
+}
+
+section.active {
+    display: block;
+}
+
+h2 {
+    color: #007bff;
+    margin-top: 0;
+    border-bottom: 2px solid #e0e0e0; /* Jemnejšia linka */
+    padding-bottom: 10px; /* Väčší padding */
+    font-weight: 600;
+    font-size: 20px;
+    margin-bottom: 25px; /* Väčšia medzera pod h2 */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px; /* Väčšia medzera */
+    border-radius: 10px; /* Zaoblené rohy tabuľky */
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08); /* Jemný tieň tabuľky */
+}
+
+th,
 td {
-    border-top: none; 
-    border-bottom: 1px solid #ddd; 
+    border: 1px solid #eee; /* Jemnejšie orámovanie */
+    padding: 12px 10px; /* Väčší padding */
+    text-align: center;
+    font-size: 14px;
+    color: #333;
 }
-tbody tr:first-child td {
-    border-top: 1px solid #ddd;
-}
-tbody tr:last-child td {
-    border-bottom: none;
-}
-th { background:#007bff; color:white; font-weight:600; }
-tr:nth-child(even){ background:#f8f9fa; }
 
-/* Tlačidlo premenované na Exportovať do XLSX */
-.export-btn{ margin-top:15px; background:#28a745; border:none; color:white; border-radius:8px; padding:8px 14px; cursor:pointer; font-weight:600; transition: background 0.3s; }
-.export-btn:hover{ background:#1e7e34; }
-.export-btn:disabled{ background:#6c757d; cursor: not-allowed; }
+th {
+    background: #007bff;
+    color: white;
+    font-weight: 600;
+    padding: 15px 10px; /* Väčší padding pre hlavičku */
+}
+
+tr:nth-child(even) {
+    background: #f8f9fa;
+}
+
+tr:hover {
+    background: #f0f0f0; /* Hover efekt na riadky */
+}
+
+/* Tlačidlá pre export */
+.export-btn {
+    margin-top: 15px;
+    background: #28a745;
+    border: none;
+    color: white;
+    border-radius: 8px;
+    padding: 10px 18px; /* Väčší padding */
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.export-btn:hover {
+    background: #1e7e34;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.export-btn:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
 
 /* Status box je teraz modrý, aby sa hodil k téme */
-.status-box { background:#e9f2ff; color:#007bff; font-weight:600; padding:15px; border-radius:8px; text-align:center; margin-bottom:20px; border:1px solid #007bff;}
-.daily-summary-box { background:#d4edda; color:#155724; font-weight:600; padding:15px; border-radius:8px; text-align:center; margin-top:10px; border:1px solid #c3e6cb;}
+.status-box {
+    background: #e9f2ff;
+    color: #007bff;
+    font-weight: 600;
+    padding: 18px; /* Väčší padding */
+    border-radius: 10px; /* Zaoblenejšie rohy */
+    text-align: center;
+    margin-bottom: 25px; /* Väčšia medzera */
+    border: 1px solid #a8d4ff; /* Jemnejší rámik */
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
+}
+/* NOVÝ: Stav PN je výraznejší */
+.status-box.pn-active {
+    background: #6f42c1;
+    color: white;
+    border-color: #5a3699;
+    box-shadow: 0 2px 8px rgba(111, 66, 193, 0.2);
+}
 
-.filter { margin-top: 10px; }
-.filter input, .filter select { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; }
+/* NOVÝ: Denný sumár box */
+.daily-summary-box {
+    background: #d4edda;
+    color: #155724;
+    font-weight: 600;
+    padding: 18px;
+    border-radius: 10px;
+    text-align: center;
+    margin-top: 20px; /* Medzera od akčných tlačidiel */
+    margin-bottom: 25px; /* Medzera pred H2 */
+    border: 1px solid #c3e6cb;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.1);
+    display: flex; /* Použitie flexboxu */
+    justify-content: center; /* Centrovanie obsahu */
+    align-items: center;
+    gap: 15px; /* Medzera medzi prvkami */
+    font-size: 1.1em;
+}
+.daily-summary-box strong {
+    color: #007bff; /* Modrá pre časy */
+}
 
-#debugUid { background:#d1ecf1;color:#0c5460;padding:5px;text-align:center;font-size:12px;margin-bottom:10px; border-radius: 4px;}
+
+.filter {
+    margin-top: 20px;
+    margin-bottom: 20px; /* Pridaná medzera */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap; /* Pre mobilné zariadenia */
+}
+
+.filter label {
+    font-weight: 600;
+    color: #555;
+    white-space: nowrap; /* Aby sa "Filtrovať podľa dátumu" nerozdelilo */
+}
+
+.filter input[type="date"],
+.filter select {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    color: #333;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    flex-grow: 1; /* Aby sa input natiahol */
+    max-width: 200px;
+}
+
+.filter input[type="date"]:focus,
+.filter select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
+#debugUid {
+    background: #d1ecf1;
+    color: #0c5460;
+    padding: 8px; /* Väčší padding */
+    text-align: center;
+    font-size: 13px; /* Väčší font */
+    margin-bottom: 15px; /* Väčšia medzera */
+    border-radius: 6px;
+    width: 95%; /* Zmenené na percentá */
+    max-width: 1100px;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+    margin-top: 20px;
+}
+
+/* --- AKČNÉ TLAČIDLÁ pre Dochádzku (NOVÉ) --- */
+.action-buttons {
+    margin-bottom: 25px;
+    display: flex;
+    gap: 12px; /* Väčšia medzera */
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.action-buttons .export-btn { /* Využívame štýl .export-btn, ale s farebnými úpravami */
+    padding: 12px 22px; /* Väčší padding pre akčné tlačidlá */
+    font-size: 16px;
+    display: flex !important; /* Vždy flex pre ikony */
+    align-items: center;
+    gap: 8px; /* Medzera medzi ikonou a textom */
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.action-buttons .export-btn:hover {
+    transform: translateY(-3px); /* Výraznejší hover */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+#btnPrichod { background: #28a745; border-color: #218838; } /* Zelená */
+#btnPrichod:hover { background: #218838; }
+#btnOdchod { background: #dc3545; border-color: #c82333; } /* Červená */
+#btnOdchod:hover { background: #c82333; }
+#btnPrestavkaStart { background: #ffc107; color: #333; border-color: #e0a800; } /* Žltá */
+#btnPrestavkaStart:hover { background: #e0a800; }
+#btnPrestavkaEnd { background: #0dcaf0; color: #333; border-color: #0aa3c2; } /* Cyan */
+#btnPrestavkaEnd:hover { background: #0aa3c2; }
+/* Zakázané tlačidlá */
+.action-buttons .export-btn[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
 
 /* --- ŠTÝLY PRE FAREBNÉ PILULKY (ODZNAKY) --- */
 .status-badge {
-    font-weight: 700 !important;
-    padding: 7px 14px !important;
-    border-radius: 50px !important; /* Tvar pilulky */
-    display: inline-block;
-    text-align: center;
-    min-width: 80px;
-    white-space: nowrap;
-    text-shadow: none !important; 
-    color: white !important;
-    font-size: 14px !important;
+    font-weight: 700 !important;
+    padding: 8px 16px !important; /* Väčší padding */
+    border-radius: 50px !important; /* Tvar pilulky */
+    display: inline-flex; /* Pre lepšie zarovnanie */
+    align-items: center;
+    justify-content: center;
+    min-width: 90px; /* Väčšia minimálna šírka */
+    white-space: nowrap;
+    text-shadow: none !important;
+    color: white !important;
+    font-size: 13px !important; /* Trochu menší font pre pilulky */
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
-/* Menší štýl pilulky pre Prestávky/PN v jedinom stĺpci */
+
 .status-badge.small {
-    padding: 4px 10px !important;
-    min-width: 60px;
-    font-size: 11px !important;
-    margin-left: 10px;
+    padding: 5px 12px !important; /* Menší padding pre small pilulky */
+    min-width: 70px;
+    font-size: 11px !important;
+    margin-left: 10px;
 }
-.status-prichod { 
-    background: #198754 !important; /* Zelená */
-} 
-.status-odchod { 
-    background: #dc3545 !important; /* Červená */
-} 
-.status-prestavka-start, .status-prestavka { 
-    background: #ffc107 !important; /* Žltá */
-    color: #212529 !important; /* Tmavý text na žltej */
+
+.status-prichod {
+    background: #198754 !important;
 }
-.status-prestavka-end { 
-    background: #0dcaf0 !important; /* Svetlo modrá (Cyan) */
+
+.status-odchod {
+    background: #dc3545 !important;
 }
-.status-pn { 
-    background: #6f42c1 !important; /* Fialová */
-} 
-/* ----------------------------------- */
+
+.status-prestavka-start,
+.status-prestavka {
+    background: #ffc107 !important;
+    color: #212529 !important;
+}
+
+.status-prestavka-end {
+    background: #0dcaf0 !important;
+    color: #212529 !important;
+}
+
+.status-pn {
+    background: #6f42c1 !important;
+}
+
+/* --- RESPONZÍVNE ÚPRAVY --- */
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    nav {
+        flex-direction: column;
+        align-items: stretch;
+        border-radius: 12px;
+    }
+    nav button {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+    .action-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .action-buttons .export-btn {
+        width: 100%;
+    }
+    .filter {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .filter input[type="date"] {
+        max-width: 100%;
+    }
+    section {
+        padding: 20px;
+    }
+    h2 {
+        font-size: 18px;
+    }
+    th, td {
+        padding: 8px 5px;
+        font-size: 12px;
+    }
+    .status-badge {
+        min-width: 70px;
+        padding: 6px 10px !important;
+        font-size: 11px !important;
+    }
+    .status-badge.small {
+        min-width: 50px;
+        font-size: 9px !important;
+        padding: 3px 8px !important;
+    }
+    .daily-summary-box {
+        flex-direction: column;
+        gap: 8px;
+        font-size: 1em;
+    }
+}
 </style>
 </head>
 <body>
 
 <header>
     <h1>👋 Vitaj, <span id="userName">Zamestnanec</span></h1>
-    <button id="logoutBtn">Odhlásiť sa</button>
+    <button id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Odhlásiť sa</button>
 </header>
 
 <div id="debugUid">Načítavam UID...</div>
 
 <nav>
-    <button data-target="dochadzka" class="active">Dochádzka</button>
-    <button data-target="prestavky">Prestávky</button>
-    <button data-target="pn">PN</button>
+    <button data-target="dochadzka" class="active"><i class="fas fa-clock"></i> Dochádzka</button>
+    <button data-target="prestavky"><i class="fas fa-mug-hot"></i> Prestávky</button>
+    <button data-target="pn"><i class="fas fa-hospital-alt"></i> PN</button>
 </nav>
 
 <section id="dochadzka" class="active">
     <div id="statusBox" class="status-box">Načítavam stav...</div>
     
-        <div class="action-buttons" style="margin-bottom: 20px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-        <button id="btnPrichod" class="export-btn" style="background:#198754; display: none;">✅ PRÍCHOD</button>
-        <button id="btnOdchod" class="export-btn" style="background:#dc3545; display: none;">❌ ODCHOD</button>
-        <button id="btnPrestavkaStart" class="export-btn" style="background:#ffc107; color: #333; display: none;">⏸ ZAČAŤ PRESTÁVKU</button>
-        <button id="btnPrestavkaEnd" class="export-btn" style="background:#0dcaf0; color: #333; display: none;">▶ UKONČIŤ PRESTÁVKU</button>
+    <div class="action-buttons">
+        <button id="btnPrichod" class="export-btn" style="display: none;"><i class="fas fa-sign-in-alt"></i> PRÍCHOD</button>
+        <button id="btnOdchod" class="export-btn" style="display: none;"><i class="fas fa-sign-out-alt"></i> ODCHOD</button>
+        <button id="btnPrestavkaStart" class="export-btn" style="display: none;"><i class="fas fa-coffee"></i> ZAČAŤ PRESTÁVKU</button>
+        <button id="btnPrestavkaEnd" class="export-btn" style="display: none;"><i class="fas fa-play"></i> UKONČIŤ PRESTÁVKU</button>
     </div>
+
     <div id="dailySummaryBox" class="daily-summary-box" style="display: none;"></div>
 
     <h2>Dochádzka (Príchod/Odchod)</h2>
-    <button class="export-btn" data-export-table="dochadzka">Exportovať do XLSX (Sumár)</button>
-    <div class="filter">
-        <label for="dateDochadzka">Filtrovať podľa dátumu:</label>
-        <input type="date" id="dateDochadzka">
-    </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <button class="export-btn" data-export-table="dochadzka"><i class="fas fa-file-excel"></i> Exportovať do XLSX (Sumár)</button>
+        <div class="filter">
+            <label for="dateDochadzka">Filtrovať podľa dátumu:</label>
+            <input type="date" id="dateDochadzka">
+        </div>
+    </div>
     <table>
         <thead><tr><th>Čas</th><th>Typ</th></tr></thead>
         <tbody id="dochadzkaTable"><tr><td colspan="2">Načítavam dáta...</td></tr></tbody>
@@ -144,11 +467,13 @@ tr:nth-child(even){ background:#f8f9fa; }
 
 <section id="prestavky">
     <h2>Prestávky</h2>
-    <button class="export-btn" data-export-table="prestavky">Exportovať do XLSX (Sumár)</button>
-    <div class="filter">
-        <label for="datePrestavky">Filtrovať podľa dátumu:</label>
-        <input type="date" id="datePrestavky">
-    </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <button class="export-btn" data-export-table="prestavky"><i class="fas fa-file-excel"></i> Exportovať do XLSX (Sumár)</button>
+        <div class="filter">
+            <label for="datePrestavky">Filtrovať podľa dátumu:</label>
+            <input type="date" id="datePrestavky">
+        </div>
+    </div>
     <table>
         <thead><tr><th>Čas a Typ</th></tr></thead>
         <tbody id="prestavkyTable"><tr><td colspan="1">Načítavam dáta...</td></tr></tbody>
@@ -157,11 +482,13 @@ tr:nth-child(even){ background:#f8f9fa; }
 
 <section id="pn">
     <h2>PN (Práceneschopnosť)</h2>
-    <button class="export-btn" data-export-table="pn">Exportovať do XLSX</button>
-    <div class="filter">
-        <label for="datePN">Filtrovať podľa dátumu:</label>
-        <input type="date" id="datePN">
-    </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <button class="export-btn" data-export-table="pn"><i class="fas fa-file-excel"></i> Exportovať do XLSX</button>
+        <div class="filter">
+            <label for="datePN">Filtrovať podľa dátumu:</label>
+            <input type="date" id="datePN">
+        </div>
+    </div>
     <table>
         <thead><tr><th>Čas a Typ</th></tr></thead>
         <tbody id="pnTable"><tr><td colspan="1">Načítavam dáta...</td></tr></tbody>
@@ -170,7 +497,6 @@ tr:nth-child(even){ background:#f8f9fa; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-// NOVÝ IMPORT: push pre zápis
 import { getDatabase, ref, get, push } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
 const firebaseConfig = {
@@ -191,7 +517,7 @@ const db = getDatabase(app);
 const userId = localStorage.getItem("uid");
 const userNameEl = document.getElementById("userName");
 const statusBox = document.getElementById("statusBox");
-const dailySummaryBox = document.getElementById("dailySummaryBox"); // NOVÉ
+const dailySummaryBox = document.getElementById("dailySummaryBox");
 const debugUidEl = document.getElementById("debugUid"); 
 let allRecordsCache = []; // Zásobník všetkých záznamov
 let currentLogStatus = {}; // NOVÉ: Pre uchovanie aktuálneho stavu
@@ -251,17 +577,19 @@ async function writeLog(type) {
         });
         
         // Zobrazenie úspechu
-        statusBox.textContent = `✅ Úspešne zaznamenané: ${type.toUpperCase()} o ${casValue.substring(11, 16)}`;
+        statusBox.innerHTML = `✅ Úspešne zaznamenané: **${type.replace('_', ' ').toUpperCase()}** o ${casValue.substring(11, 16)}`;
         statusBox.style.backgroundColor = '#d4edda'; // Zelená pre úspech
         statusBox.style.color = '#155724';
+        statusBox.classList.remove('pn-active'); // Odstrániť PN štýl
         
         // Opätovné načítanie dát
         await loadUserData();
     } catch (e) {
         console.error("Chyba pri zápise do DB:", e);
-        statusBox.textContent = `❌ Chyba pri zápise ${type}: ${e.message}`;
+        statusBox.innerHTML = `❌ Chyba pri zápise ${type}: **${e.message}**`;
         statusBox.style.backgroundColor = '#f8d7da'; // Červená pre chybu
         statusBox.style.color = '#721c24';
+        statusBox.classList.remove('pn-active'); // Odstrániť PN štýl
     }
 }
 
@@ -272,52 +600,66 @@ function updateStatusAndButtons(records) {
     const btnPrestavkaStart = document.getElementById("btnPrestavkaStart");
     const btnPrestavkaEnd = document.getElementById("btnPrestavkaEnd");
 
-    // Skryť všetky tlačidlá na začiatku
-    [btnPrichod, btnOdchod, btnPrestavkaStart, btnPrestavkaEnd].forEach(b => b.style.display = 'none');
+    // Skryť všetky tlačidlá na začiatku a povoliť ich
+    [btnPrichod, btnOdchod, btnPrestavkaStart, btnPrestavkaEnd].forEach(b => {
+        b.style.display = 'none';
+        b.disabled = false;
+    });
 
     // Nájdite najnovší stav PN
-    const lastPN = records.find(r => r.stav === 'pn');
-    if (lastPN) {
-        statusBox.innerHTML = `⚠️ AKTÍVNY STAV: **PN**`;
-        statusBox.style.backgroundColor = '#6f42c1';
-        statusBox.style.color = 'white';
+    // PN záznamy sú oddelené, ale majú vplyv na akcie
+    const lastPNRecord = records.filter(r => r.stav === 'pn').sort((a,b) => new Date(b.cas) - new Date(a.cas))[0];
+    if (lastPNRecord) {
+        // Kontrola, či je posledný záznam PN z dnešného alebo predchádzajúceho dňa a nemá nasledujúci záznam
+        // Zjednodušená logika: Ak existuje nejaký záznam PN, predpokladáme, že je platný pre aktuálny deň
+        statusBox.innerHTML = `⚠️ AKTUÁLNY STAV: **PN**`;
+        statusBox.classList.add('pn-active');
         dailySummaryBox.style.display = 'none';
-        return; // Ak je PN, žiadna iná akcia nie je možná
+        return; 
     }
+    statusBox.classList.remove('pn-active');
 
-    // Nájdite najnovší hlavný stav (príchod/odchod)
-    const lastMainLog = records.find(r => r.stav === 'prichod' || r.stav === 'odchod');
-    const isCurrentlyIn = lastMainLog && lastMainLog.stav === 'prichod';
 
-    // Nájdite najnovší stav prestávky
-    const lastBreakLog = records.find(r => r.stav.includes('prestavka'));
-    const isCurrentlyOnBreak = lastBreakLog && lastBreakLog.stav === 'prestavka_start' || (lastBreakLog && lastBreakLog.stav === 'prestavka');
+    // Nájdite najnovší hlavný stav (príchod/odchod) pre aktuálny deň
+    const today = new Date().toISOString().substring(0, 10);
+    const mainLogsToday = records.filter(r => r.cas.substring(0, 10) === today && (r.stav === 'prichod' || r.stav === 'odchod'))
+                                 .sort((a, b) => new Date(b.cas) - new Date(a.cas));
+    const lastMainLogToday = mainLogsToday[0];
+    const isCurrentlyIn = lastMainLogToday && lastMainLogToday.stav === 'prichod';
+
+    // Nájdite najnovší stav prestávky pre aktuálny deň
+    const breakLogsToday = records.filter(r => r.cas.substring(0, 10) === today && r.stav.includes('prestavka'))
+                                  .sort((a, b) => new Date(b.cas) - new Date(a.cas));
+    const lastBreakLogToday = breakLogsToday[0];
+    const isCurrentlyOnBreak = lastBreakLogToday && (lastBreakLogToday.stav === 'prestavka_start' || lastBreakLogToday.stav === 'prestavka');
+
 
     if (!isCurrentlyIn) {
         // Zobrazenie: PRÍCHOD
-        btnPrichod.style.display = 'block';
-        statusBox.innerHTML = `😴 AKTÍVNY STAV: **ODHLÁSENÝ**`;
+        btnPrichod.style.display = 'flex';
+        statusBox.innerHTML = `😴 AKTUÁLNY STAV: **ODHLÁSENÝ**`;
         statusBox.style.backgroundColor = '#e9f2ff';
         statusBox.style.color = '#007bff';
         dailySummaryBox.style.display = 'none';
     } else {
         // Zamestnanec je v práci
-        btnOdchod.style.display = 'block';
+        btnOdchod.style.display = 'flex';
 
         if (isCurrentlyOnBreak) {
             // Zobrazenie: UKONČIŤ PRESTÁVKU
-            btnPrestavkaEnd.style.display = 'block';
-            statusBox.innerHTML = `☕ AKTÍVNY STAV: **NA PRESTÁVKE**`;
+            btnPrestavkaEnd.style.display = 'flex';
+            statusBox.innerHTML = `☕ AKTUÁLNY STAV: **NA PRESTÁVKE**`;
             statusBox.style.backgroundColor = '#ffc107';
             statusBox.style.color = '#333';
+            btnOdchod.disabled = true; // Nemôže odísť, kým neukončí prestávku
         } else {
             // Zobrazenie: ZAČAŤ PRESTÁVKU, ODCHOD
-            btnPrestavkaStart.style.display = 'block';
-            statusBox.innerHTML = `💻 AKTÍVNY STAV: **V PRÁCI**`;
+            btnPrestavkaStart.style.display = 'flex';
+            statusBox.innerHTML = `💻 AKTUÁLNY STAV: **V PRÁCI**`;
             statusBox.style.backgroundColor = '#d4edda';
             statusBox.style.color = '#155724';
         }
-        dailySummaryBox.style.display = 'block';
+        dailySummaryBox.style.display = 'flex'; // Zobraziť denný sumár
         updateDailySummary(records); // Aktualizácia denného sumáru
     }
 }
@@ -357,7 +699,6 @@ function updateDailySummary(records) {
             
             // Odpočítať prestávku, ak sa začala a skončila v rámci cyklu príchod-odchod
             const breakRecordsInPeriod = dailyRecords.filter(r => new Date(r.cas) > lastPrichod && new Date(r.cas) < currentTime && r.stav.includes('prestavka'));
-            let breakDurationInPeriod = 0;
             let tempBreakStart = null;
 
             breakRecordsInPeriod.forEach(b => {
@@ -365,14 +706,12 @@ function updateDailySummary(records) {
                 if (b.stav.includes('start') || b.stav === 'prestavka') {
                     tempBreakStart = bTime;
                 } else if (b.stav.includes('end') && tempBreakStart) {
-                    breakDurationInPeriod += bTime - tempBreakStart;
+                    duration -= (bTime - tempBreakStart); // Odpočítať trvanie konkrétnej prestávky
                     tempBreakStart = null;
                 }
             });
 
-            duration -= breakDurationInPeriod;
-
-            workMs += duration;
+            if (duration > 0) workMs += duration;
             lastPrichod = null;
         }
     });
@@ -388,6 +727,12 @@ function updateDailySummary(records) {
         
         if (ongoingWork > 0) workMs += ongoingWork;
     }
+
+    // Ak je prebiehajúca prestávka (začala, ale neskončila)
+    if (lastBreakStart) {
+        breakMs += (new Date() - lastBreakStart);
+    }
+
 
     dailySummaryBox.innerHTML = `
         Dnes odpracované: <strong>${msToHhMm(workMs)}</strong> | 
@@ -486,7 +831,7 @@ async function loadUserData() {
 
     } catch (e) {
         console.error("Kritická chyba pri načítaní dát:", e);
-        statusBox.textContent = "Kritická chyba pri načítaní dát!";
+        statusBox.innerHTML = "❌ Kritická chyba pri načítaní dát!";
         renderTables([]);
     }
 }
@@ -811,11 +1156,11 @@ window.exportTable = function(sectionType) {
     
     const btn = document.querySelector(`[data-export-table="${sectionType}"]`);
     if(btn) {
-        btn.textContent = "Súbor stiahnutý!";
+        btn.innerHTML = `<i class="fas fa-check"></i> Súbor stiahnutý!`; // Ikona pre stiahnuté
         setTimeout(() => {
-            if (sectionType === 'dochadzka') btn.textContent = "Exportovať do XLSX (Sumár)";
-            else if (sectionType === 'prestavky') btn.textContent = "Exportovať do XLSX (Sumár)";
-            else btn.textContent = "Exportovať do XLSX";
+            if (sectionType === 'dochadzka') btn.innerHTML = `<i class="fas fa-file-excel"></i> Exportovať do XLSX (Sumár)`;
+            else if (sectionType === 'prestavky') btn.innerHTML = `<i class="fas fa-file-excel"></i> Exportovať do XLSX (Sumár)`;
+            else btn.innerHTML = `<i class="fas fa-file-excel"></i> Exportovať do XLSX`;
         }, 2000);
     }
 };
@@ -842,7 +1187,7 @@ document.getElementById("dateDochadzka").addEventListener("change", () => render
 document.getElementById("datePrestavky").addEventListener("change", () => renderTables(allRecordsCache));
 document.getElementById("datePN").addEventListener("change", () => renderTables(allRecordsCache));
 
-document.querySelectorAll(".export-btn").forEach(btn => {
+document.querySelectorAll(".export-btn[data-export-table]").forEach(btn => {
     btn.addEventListener("click", () => {
         exportTable(btn.dataset.exportTable); 
     });
