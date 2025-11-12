@@ -3,91 +3,56 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dochádzka – Zamestnanec</title>
+<title>Dochádzka – Admin Panel</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-/* --- ZOSÚLADENÉ ŠTÝLY S ADMIN PANELOM --- */
-body { font-family:'Poppins',sans-serif; margin:0; background:linear-gradient(135deg,#007bff,#6f42c1); min-height:100vh; color:#333; display:flex; flex-direction:column; align-items:center;}
-header { background:#007bff; padding:15px 25px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 3px 10px rgba(0,0,0,0.1); width:100%; color:white; position:sticky; top:0; z-index:10; }
+/* --- ZOSÚLADENÉ ŠTÝLY S EMPLOYEE PANELOM --- */
+body { font-family:'Poppins',sans-serif; margin:0; background:linear-gradient(135deg,#6f42c1,#007bff); min-height:100vh; color:#333; display:flex; flex-direction:column; align-items:center;}
+header { background:#6f42c1; padding:15px 25px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 3px 10px rgba(0,0,0,0.1); width:100%; color:white; position:sticky; top:0; z-index:10; }
 h1 { margin:0; font-size:22px; font-weight:700; }
-header button { background:#fff; border:none; color:#007bff; padding:8px 14px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; transition:0.3s; }
+header button { background:#fff; border:none; color:#6f42c1; padding:8px 14px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; transition:0.3s; }
 header button:hover { background:#e2e6ea; }
 
-nav { background:#fff; display:flex; justify-content:center; padding:10px; gap:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); position:sticky; top:65px; z-index:5; flex-wrap:wrap; width:100%; max-width:1100px; border-radius:0 0 12px 12px; }
-nav button { background:#007bff; border:none; color:white; padding:8px 14px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; transition:0.3s; }
-nav button.active { background:#6f42c1; }
-nav button:hover { background:#0056b3; }
+/* Admin Navigácia a sekcia */
+nav { background:#fff; display:flex; justify-content:center; padding:10px; gap:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); position:sticky; top:65px; z-index:5; flex-wrap:wrap; width:100%; max-width:1400px; border-radius:0 0 12px 12px; }
+nav button { background:#6f42c1; border:none; color:white; padding:8px 14px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; transition:0.3s; }
+nav button.active { background:#007bff; }
+nav button:hover { background:#5a329e; }
 
-section { display:none; padding:25px; background:#fff; margin:25px auto; border-radius:12px; max-width:1100px; width:95%; box-shadow:0 4px 20px rgba(0,0,0,0.1); transition:0.3s; }
-section.active { display:block; }
-h2 { color:#007bff; margin-top:0; border-bottom:2px solid #007bff; padding-bottom:5px; font-weight:600; }
+section { display:block; padding:25px; background:#fff; margin:25px auto; border-radius:12px; max-width:1400px; width:95%; box-shadow:0 4px 20px rgba(0,0,0,0.1); }
+h2 { color:#6f42c1; margin-top:0; border-bottom:2px solid #6f42c1; padding-bottom:5px; font-weight:600; }
 
-/* OPRAVA: Zabezpečenie, aby tabuľka nemala okraje medzi riadkami */
-table { 
-    width:100%; 
-    border-collapse:collapse; /* Toto zabezpečuje, že okraje buniek sa spoja */
-    margin-top:15px; 
-    border-radius:8px; 
-    overflow:hidden; 
-    border: none; /* Úplné zrušenie hlavného okraja tabuľky */
-}
+/* Filtre a Kontroly */
+.controls { display:flex; flex-wrap:wrap; gap:15px; margin-bottom:20px; padding:10px; border:1px solid #ddd; border-radius:8px; background:#f8f9fa; align-items:center;}
+.controls label { font-weight:600; color:#333; }
+.controls input[type="date"], .controls select { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; }
 
-/* OPRAVA: Používame len 1px okraj len pre vizuálne rozdelenie stĺpcov a riadkov */
-th,td { 
-    border:1px solid #ddd; 
-    padding:10px; 
-    text-align:center; 
-    font-size:14px; 
-    color: #333; 
-}
-/* Špeciálne nastavenie pre bunky (td), aby riadky neboli oddelené dvojitým okrajom */
-td {
-    border-top: none; /* Odstránime horný okraj na bunkách */
-    border-bottom: 1px solid #ddd; /* Ponecháme spodný okraj pre delenie riadkov */
-}
-/* Prvý riadok v tele tabuľky musí mať horný okraj */
-tbody tr:first-child td {
-    border-top: 1px solid #ddd;
-}
-/* Posledný riadok v tele tabuľky */
-tbody tr:last-child td {
-    border-bottom: none;
-}
-th { background:#007bff; color:white; font-weight:600; }
+/* Tabuľka */
+table { width:100%; border-collapse:collapse; margin-top:15px; border-radius:8px; overflow:hidden; border: none; }
+th,td { border:1px solid #ddd; padding:10px; text-align:center; font-size:14px; color: #333; }
+td { border-top: none; border-bottom: 1px solid #ddd; }
+tbody tr:first-child td { border-top: 1px solid #ddd; }
+tbody tr:last-child td { border-bottom: none; }
+th { background:#6f42c1; color:white; font-weight:600; }
 tr:nth-child(even){ background:#f8f9fa; }
 
-/* Tlačidlo premenované na Exportovať do XLSX */
+/* Tlačidlo Export */
 .export-btn{ margin-top:15px; background:#28a745; border:none; color:white; border-radius:8px; padding:8px 14px; cursor:pointer; font-weight:600; }
 .export-btn:hover{ background:#1e7e34; }
 
-/* Status box je teraz modrý, aby sa hodil k téme */
-.status-box { background:#e9f2ff; color:#007bff; font-weight:600; padding:15px; border-radius:8px; text-align:center; margin-bottom:20px; border:1px solid #007bff;}
-
-.filter { margin-top: 10px; }
-.filter input { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; }
-
-#debugUid { background:#d1ecf1;color:#0c5460;padding:5px;text-align:center;font-size:12px;margin-bottom:10px; border-radius: 4px;}
-
 /* --- ŠTÝLY PRE FAREBNÉ PILULKY (ODZNAKY) --- */
+/* Tieto triedy sú kľúčové pre vizuálne odlíšenie stavov v tabuľke */
 .status-badge {
     font-weight: 700 !important;
     padding: 7px 14px !important;
-    border-radius: 50px !important; /* Tvar pilulky */
+    border-radius: 50px !important; 
     display: inline-block;
     text-align: center;
     min-width: 80px;
     white-space: nowrap;
-    text-shadow: none !important; 
     color: white !important;
     font-size: 14px !important;
-}
-/* Menší štýl pilulky pre Prestávky/PN v jedinom stĺpci */
-.status-badge.small {
-    padding: 4px 10px !important;
-    min-width: 60px;
-    font-size: 11px !important;
-    margin-left: 10px;
 }
 .status-prichod { 
     background: #198754 !important; /* Zelená */
@@ -108,55 +73,39 @@ tr:nth-child(even){ background:#f8f9fa; }
 <body>
 
 <header>
-    <h1>👋 Vitaj, <span id="userName">Zamestnanec</span></h1>
+    <h1>👑 Admin Panel – Dochádzka</h1>
     <button id="logoutBtn">Odhlásiť sa</button>
 </header>
 
-<div id="debugUid">Načítavam UID...</div>
-
-<nav>
-    <button data-target="dochadzka" class="active">Dochádzka</button>
-    <button data-target="prestavky">Prestávky</button>
-    <button data-target="pn">PN</button>
-</nav>
-
-<section id="dochadzka" class="active">
-    <div id="statusBox" class="status-box">Načítavam stav...</div>
-    <h2>Dochádzka (Príchod/Odchod)</h2>
-    <button class="export-btn" data-export-table="dochadzka">Exportovať do XLSX</button>
-    <div class="filter">
-        <label for="dateDochadzka">Filtrovať podľa dátumu:</label>
-        <input type="date" id="dateDochadzka">
+<section id="dochadzka">
+    <h2>Prehľad Dochádzky a Statusov</h2>
+    
+    <div class="controls">
+        <label for="dateFilter">Filtrovať podľa dátumu:</label>
+        <input type="date" id="dateFilter">
+        
+        <label for="employeeFilter">Filtrovať podľa zamestnanca:</label>
+        <select id="employeeFilter">
+            <option value="all">Všetci zamestnanci</option>
+            </select>
+        
+        <button id="applyFilterBtn" style="background:#007bff; color:white; padding:8px 14px; border-radius:8px;">Aplikovať filter</button>
     </div>
+    
+    <button id="exportBtn" class="export-btn">Exportovať zobrazené dáta do XLSX</button>
+    
     <table>
-        <thead><tr><th>Čas</th><th>Typ</th></tr></thead>
-        <tbody id="dochadzkaTable"><tr><td colspan="2">Načítavam dáta...</td></tr></tbody>
-    </table>
-</section>
-
-<section id="prestavky">
-    <h2>Prestávky</h2>
-    <button class="export-btn" data-export-table="prestavky">Exportovať do XLSX</button>
-    <div class="filter">
-        <label for="datePrestavky">Filtrovať podľa dátumu:</label>
-        <input type="date" id="datePrestavky">
-    </div>
-    <table>
-        <thead><tr><th>Čas a Typ</th></tr></thead>
-        <tbody id="prestavkyTable"><tr><td colspan="1">Načítavam dáta...</td></tr></tbody>
-    </table>
-</section>
-
-<section id="pn">
-    <h2>PN</h2>
-    <button class="export-btn" data-export-table="pn">Exportovať do XLSX</button>
-    <div class="filter">
-        <label for="datePN">Filtrovať podľa dátumu:</label>
-        <input type="date" id="datePN">
-    </div>
-    <table>
-        <thead><tr><th>Čas a Typ</th></tr></thead>
-        <tbody id="pnTable"><tr><td colspan="1">Načítavam dáta...</td></tr></tbody>
+        <thead>
+            <tr>
+                <th>Zamestnanec</th>
+                <th>Dátum a Čas</th>
+                <th>Typ</th>
+                <th>Celý status</th>
+            </tr>
+        </thead>
+        <tbody id="dochadzkaTable">
+            <tr><td colspan="4">Načítavam dáta...</td></tr>
+        </tbody>
     </table>
 </section>
 
@@ -180,192 +129,177 @@ const db = getDatabase(app);
 
 // Globálne premenné
 const userId = localStorage.getItem("uid");
-const userNameEl = document.getElementById("userName");
-const statusBox = document.getElementById("statusBox");
-const debugUidEl = document.getElementById("debugUid"); 
-let allRecordsCache = []; // Zásobník všetkých záznamov
+const dochadzkaTable = document.getElementById("dochadzkaTable");
+const employeeFilter = document.getElementById("employeeFilter");
+const dateFilter = document.getElementById("dateFilter");
+
+let allRecordsCache = []; // Zásobník všetkých záznamov všetkých zamestnancov
+let allUsers = {}; // Mapa používateľov: { uid: { name: 'Meno', ... } }
 
 // --- Overenie a presmerovanie ---
-if (!userId) {
-    alert("Nie si prihlásený!");
+if (userId !== "admin") {
+    alert("Prístup odmietnutý. Len pre administrátora!");
     window.location.href = "index.html";
-} else if (userId === "admin") {
-    window.location.href = "admin.html";
-} else {
-    debugUidEl.textContent = `Aktuálne načítané UID: ${userId}`;
 }
 
-// --- Načítanie dát používateľa z Firebase ---
-async function loadUserData() {
+
+// --- Načítanie dát všetkých používateľov z Firebase ---
+async function loadAllData() {
+    dochadzkaTable.innerHTML = '<tr><td colspan="4">Načítavam dáta všetkých zamestnancov...</td></tr>';
+    
     try {
-        const userSnap = await get(ref(db, `users/${userId}`));
-        
-        if (!userSnap.exists()) {
-            console.error(`Chyba: Dáta pre UID "${userId}" neboli vo Firebase nájdené!`);
-            userNameEl.textContent = "(Neznámy)";
-            debugUidEl.style.backgroundColor = '#dc3545';
-            debugUidEl.style.color = 'white';
-            debugUidEl.textContent = `CHYBA: Dáta pre UID ${userId} neexistujú!`;
-            renderTables([]);
+        const usersSnap = await get(ref(db, `users`));
+        if (!usersSnap.exists()) {
+            dochadzkaTable.innerHTML = '<tr><td colspan="4">Žiadni zamestnanci nájdení vo Firebase.</td></tr>';
             return;
         }
 
-        const userData = userSnap.val();
-        userNameEl.textContent = userData.name || "(bez mena)";
-
+        const usersData = usersSnap.val();
         const records = [];
-        const allPossibleLogs = [];
-        
-        // Zber záznamov (Zásobník dát z dochadzka, prestavky, pn)
-        ["dochadzka", "prestavky", "pn"].forEach(type => {
-            const logsObj = userData[type] || {};
-            Object.values(logsObj).forEach(log => allPossibleLogs.push(log));
-        });
-        // Zber priamych vlastností, ak sú logy (pre prípad staršieho formátu)
-        Object.values(userData).forEach(prop => {
-            if (prop && prop.cas && prop.typ) {
-                allPossibleLogs.push(prop); 
-            }
-        });
-        
-        // Spracovanie a normalizácia času
-        allPossibleLogs.forEach(log => {
-            if (!log || !log.cas || !log.typ) return;
+        allUsers = {};
 
-            let cleanTime = String(log.cas);
-            let validIsoTime = cleanTime;
-            let displayTime = cleanTime; // Pre zobrazenie
+        // 1. Spracovanie a Normalizácia dát
+        for (const uid in usersData) {
+            if (uid === "admin" || !usersData[uid] || !usersData[uid].name) continue; // Preskoč admina
 
-            // Regex pre formát DD.MM.YYYY HH:MM
-            const dateRegex = /(\d{1,2})\.(\d{1,2})\.(\d{4}) (\d{1,2}:\d{1,2})/;
-            const match = cleanTime.match(dateRegex);
+            const userData = usersData[uid];
+            allUsers[uid] = { name: userData.name, uid: uid };
 
-            if (match) {
-                const [full, day, month, year, time] = match;
-                // ISO pre triedenie
-                validIsoTime = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')} ${time}`;
-                // Formát pre zobrazenie
-                displayTime = `${day.padStart(2, '0')}.${month.padStart(2, '0')}.${year} ${time}`;
-            } else if (cleanTime.includes('T') && cleanTime.includes('-')) {
-                validIsoTime = cleanTime.replace('T', ' '); // ISO format
-                // Formát pre zobrazenie
-                const [date, time] = validIsoTime.split(' ');
-                const [y, m, d] = date.split('-');
-                displayTime = `${d.padStart(2, '0')}.${m.padStart(2, '0')}.${y} ${time.substring(0, 5)}`;
-            } else if (cleanTime.includes('-') && cleanTime.length >= 16) {
-                validIsoTime = cleanTime; // Predpokladáme YYYY-MM-DD HH:MM
-                // Formát pre zobrazenie
-                const [date, time] = validIsoTime.split(' ');
-                const [y, m, d] = date.split('-');
-                displayTime = `${d.padStart(2, '0')}.${m.padStart(2, '0')}.${y} ${time.substring(0, 5)}`;
-            } else {
-                return;
-            }
+            const allPossibleLogs = [];
             
-            const cleanType = String(log.typ)
-                .normalize("NFD").replace(/[\u0300-\u036f]/g, "") 
-                .toLowerCase();
+            // Zber záznamov (Zásobník dát z dochadzka, prestavky, pn)
+            ["dochadzka", "prestavky", "pn"].forEach(type => {
+                const logsObj = userData[type] || {};
+                // Pridáme UID k logom pre jednoduchšiu identifikáciu
+                Object.values(logsObj).forEach(log => allPossibleLogs.push({...log, uid, userName: userData.name, logType: type}));
+            });
+            // Zber priamych vlastností pre staršie formáty
+             Object.values(userData).forEach(prop => {
+                if (prop && prop.cas && prop.typ && !prop.logType) {
+                     allPossibleLogs.push({...prop, uid, userName: userData.name, logType: 'dochadzka'}); 
+                }
+            });
 
-            let recordType = null;
-            if (cleanType.includes('prichod')) recordType = 'prichod';
-            else if (cleanType.includes('odchod')) recordType = 'odchod';
-            else if (cleanType.includes('prestavka')) recordType = 'prestavka';
-            else if (cleanType.includes('pn')) recordType = 'pn';
-            
-            if (recordType) {
-                 const isDuplicate = records.some(r => r.cas === validIsoTime && r.stav === recordType);
-                 if (!isDuplicate) {
-                     records.push({
-                         cas: validIsoTime, // ISO formát pre triedenie/filtrovanie
-                         casDisplay: displayTime, // Formát DD.MM.YYYY HH:MM pre zobrazenie/export
-                         stav: recordType,
-                         // Pridanie dátumu a času do samostatných polí pre export
-                         date: displayTime.substring(0, 10),
-                         time: displayTime.substring(11, 16)
-                     });
-                 }
-            }
-        });
+            allPossibleLogs.forEach(log => {
+                if (!log || !log.cas || !log.typ) return;
 
-        // Triedenie pre zobrazenie na stránke (Najnovšie prvé)
+                let cleanTime = String(log.cas);
+                let validIsoTime = cleanTime;
+                let displayTime = cleanTime; 
+                
+                // --- Logika spracovania času (z employee.html) ---
+                const dateRegex = /(\d{1,2})\.(\d{1,2})\.(\d{4}) (\d{1,2}:\d{1,2})/;
+                const match = cleanTime.match(dateRegex);
+
+                if (match) {
+                    const [full, day, month, year, time] = match;
+                    validIsoTime = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')} ${time}`;
+                    displayTime = `${day.padStart(2, '0')}.${month.padStart(2, '0')}.${year} ${time}`;
+                } else if (cleanTime.includes('T') && cleanTime.includes('-')) {
+                    validIsoTime = cleanTime.replace('T', ' '); 
+                    const [date, time] = validIsoTime.split(' ');
+                    const [y, m, d] = date.split('-');
+                    displayTime = `${d.padStart(2, '0')}.${m.padStart(2, '0')}.${y} ${time.substring(0, 5)}`;
+                } else if (cleanTime.includes('-') && cleanTime.length >= 16) {
+                    validIsoTime = cleanTime; 
+                    const [date, time] = validIsoTime.split(' ');
+                    const [y, m, d] = date.split('-');
+                    displayTime = `${d.padStart(2, '0')}.${m.padStart(2, '0')}.${y} ${time.substring(0, 5)}`;
+                } else {
+                    return;
+                }
+                
+                const cleanType = String(log.typ)
+                    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") 
+                    .toLowerCase();
+
+                let recordType = null;
+                if (cleanType.includes('prichod')) recordType = 'prichod';
+                else if (cleanType.includes('odchod')) recordType = 'odchod';
+                else if (cleanType.includes('prestavka')) recordType = 'prestavka';
+                else if (cleanType.includes('pn')) recordType = 'pn';
+                
+                if (recordType) {
+                    records.push({
+                        uid: log.uid,
+                        userName: log.userName,
+                        cas: validIsoTime, 
+                        casDisplay: displayTime, 
+                        stav: recordType,
+                        // Pridanie dátumu a času do samostatných polí pre export
+                        date: displayTime.substring(0, 10),
+                        time: displayTime.substring(11, 16)
+                    });
+                }
+            });
+        }
+
+        // 2. Triedenie pre zobrazenie (Najnovšie prvé)
         records.sort((a, b) => new Date(b.cas) - new Date(a.cas));
         allRecordsCache = records;
         
-        // AKTUALIZÁCIA STAVU
-        const mainStatusRecord = records.find(r => r.stav !== 'prestavka'); 
-        
-        const lastStatus = mainStatusRecord ? mainStatusRecord.stav.toUpperCase() : "Žiadny stav nezaznamenaný";
-        
-        statusBox.innerHTML = `Posledný stav: **${lastStatus}**`;
-
-        // Vykreslenie
-        renderTables(allRecordsCache);
+        // 3. Vykreslenie filtrov a tabuľky
+        populateEmployeeFilter();
+        renderTable(allRecordsCache);
 
     } catch (e) {
         console.error("Kritická chyba pri načítaní dát:", e);
-        statusBox.textContent = "Kritická chyba pri načítaní dát!";
-        renderTables([]);
+        dochadzkaTable.innerHTML = `<tr><td colspan="4">Kritická chyba: ${e.message}</td></tr>`;
     }
 }
 
-// --- Vykreslenie tabuliek (S Pilulkami) ---
-function renderTables(records) {
-    const dochadzkaTable = document.getElementById("dochadzkaTable");
-    const prestavkyTable = document.getElementById("prestavkyTable");
-    const pnTable = document.getElementById("pnTable");
-
-    const filterDochadzka = document.getElementById("dateDochadzka").value;
-    const filterPrestavky = document.getElementById("datePrestavky").value;
-    const filterPN = document.getElementById("datePN").value;
-
-    const renderSection = (bodyEl, type, filterDate, expectedStav, colCount) => {
-        let filtered = records;
-        
-        if(filterDate) {
-            // Používame ISO čas pre filtrovanie (r.cas)
-            filtered = filtered.filter(r => r.cas.substring(0, 10) === filterDate);
-        }
-        
-        const sectionRecords = filtered.filter(r => expectedStav.includes(r.stav));
-        
-        if (!sectionRecords.length) {
-            bodyEl.innerHTML = `<tr><td colspan="${colCount}">Žiadne záznamy</td></tr>`;
-        } else {
-            bodyEl.innerHTML = sectionRecords.map(z => {
-                // Vždy používame casDisplay
-                const displayTime = z.casDisplay;
-
-                let statusClass = '';
-                if (z.stav === 'prichod') statusClass = 'status-prichod';
-                else if (z.stav === 'odchod') statusClass = 'status-odchod';
-                else if (z.stav === 'prestavka') statusClass = 'status-prestavka';
-                else if (z.stav === 'pn') statusClass = 'status-pn';
-
-                
-                if (type === 'dochadzka') {
-                    // Dochádzka: 2 stĺpce
-                    return `<tr>
-                        <td>${displayTime}</td>
-                        <td><span class="status-badge ${statusClass}">${z.stav.toUpperCase()}</span></td>
-                    </tr>`;
-                } else {
-                    // Prestávky a PN: 1 stĺpec
-                    return `<tr>
-                            <td>
-                                ${displayTime}
-                                <span class="status-badge small ${statusClass}">${z.stav.toUpperCase()}</span>
-                            </td>
-                        </tr>`;
-                }
-            }).join("");
-        }
-    };
-
-    // Zavolanie funkcie s explicitným počtom stĺpcov
-    renderSection(dochadzkaTable, 'dochadzka', filterDochadzka, ["prichod", "odchod"], 2);
-    renderSection(prestavkyTable, 'prestavky', filterPrestavky, ["prestavka"], 1);
-    renderSection(pnTable, 'pn', filterPN, ["pn"], 1);
+// --- Vykreslenie dropdown menu zamestnancov ---
+function populateEmployeeFilter() {
+    employeeFilter.innerHTML = '<option value="all">Všetci zamestnanci</option>';
+    const sortedUsers = Object.values(allUsers).sort((a, b) => a.name.localeCompare(b.name));
+    
+    sortedUsers.forEach(user => {
+        const option = document.createElement('option');
+        option.value = user.uid;
+        option.textContent = user.name;
+        employeeFilter.appendChild(option);
+    });
 }
+
+// --- Vykreslenie tabuľky na základe filtrov ---
+function renderTable(records) {
+    const selectedDate = dateFilter.value;
+    const selectedEmployeeUid = employeeFilter.value;
+    
+    let filteredRecords = records;
+
+    if (selectedDate) {
+        filteredRecords = filteredRecords.filter(r => r.cas.substring(0, 10) === selectedDate);
+    }
+
+    if (selectedEmployeeUid !== 'all') {
+        filteredRecords = filteredRecords.filter(r => r.uid === selectedEmployeeUid);
+    }
+    
+    if (!filteredRecords.length) {
+        dochadzkaTable.innerHTML = '<tr><td colspan="4">Žiadne záznamy neboli nájdené na základe zvolených filtrov.</td></tr>';
+        return;
+    }
+
+    dochadzkaTable.innerHTML = filteredRecords.map(r => {
+        let statusClass = '';
+        if (r.stav === 'prichod') statusClass = 'status-prichod';
+        else if (r.stav === 'odchod') statusClass = 'status-odchod';
+        else if (r.stav === 'prestavka') statusClass = 'status-prestavka';
+        else if (r.stav === 'pn') statusClass = 'status-pn';
+        
+        // Rozdelenie Dátumu a Času pre prvý stĺpec (prehľadnosť pre admina)
+        const [datePart, timePart] = r.casDisplay.split(' ');
+        
+        return `<tr>
+            <td>${r.userName}</td>
+            <td>${datePart} ${timePart}</td>
+            <td><span class="status-badge ${statusClass}">${r.stav.toUpperCase()}</span></td>
+            <td>${r.stav === 'pn' ? 'Práceneschopnosť' : r.stav === 'prestavka' ? 'Prestávka' : r.stav.toUpperCase()}</td>
+        </tr>`;
+    }).join('');
+}
+
 
 // --- POMOCNÁ FUNKCIA: Konverzia milisekúnd na formát HH:MM ---
 function msToHhMm(ms) {
@@ -375,244 +309,176 @@ function msToHhMm(ms) {
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 }
 
-// --- HLAVNÁ FUNKCIA: Export do XLSX s výpočtom odpracovaného času (UPRAVENÉ ŠTÝLY) ---
-window.exportTable = function(sectionType) {
-    const userName = userNameEl.textContent;
-    let filterDate, expectedStav, sectionTitle;
-    let header; // Hlavička sa bude líšiť pre Dochádzku
-    let fileNameBase;
-
-    // --- Krok 1: Definovanie filtrov a hlavičiek ---
-    if (sectionType === 'dochadzka') {
-        filterDate = document.getElementById("dateDochadzka").value;
-        expectedStav = ["prichod", "odchod"];
-        sectionTitle = "Dochádzka (Príchod/Odchod) a Sumarizácia";
-        // Nová hlavička pre dochádzku s kalkuláciou
-        header = ["Dátum", "Čas", "Typ", "Odpracovaný čas/Status"]; 
-        fileNameBase = "dochadzka_sumar";
-    } else if (sectionType === 'prestavky') {
-        filterDate = document.getElementById("datePrestavky").value;
-        expectedStav = ["prestavka"];
-        sectionTitle = "Prestávky";
-        header = ["Dátum a Čas", "Typ"];
-        fileNameBase = "prestavky";
-    } else if (sectionType === 'pn') {
-        filterDate = document.getElementById("datePN").value;
-        expectedStav = ["pn"];
-        sectionTitle = "PN";
-        header = ["Dátum a Čas", "Typ"];
-        fileNameBase = "pn";
-    } else {
-        return alert("Neznámy typ sekcie pre export.");
-    }
+// --- HLAVNÁ FUNKCIA: Export do XLSX s CELKOVOU SUMARIZÁCIOU ---
+document.getElementById('exportBtn').addEventListener('click', function() {
     
-    // --- Krok 2: Filtrácia a triedenie dát pre kalkuláciu ---
+    const selectedDate = dateFilter.value;
+    const selectedEmployeeUid = employeeFilter.value;
+    
     let filteredRecords = allRecordsCache;
-    if(filterDate) {
-        filteredRecords = filteredRecords.filter(r => r.cas.substring(0, 10) === filterDate);
+    
+    if (selectedDate) {
+        filteredRecords = filteredRecords.filter(r => r.cas.substring(0, 10) === selectedDate);
+    }
+    if (selectedEmployeeUid !== 'all') {
+        filteredRecords = filteredRecords.filter(r => r.uid === selectedEmployeeUid);
     }
     
-    // Pre export s kalkuláciou v Dochádzke musíme triediť od NAJSTARŠIEHO k NAJNOVŠIEMU
-    const sortedRecords = filteredRecords
-        .filter(r => expectedStav.includes(r.stav))
+    // Filtrujeme len relevantné dochádzkové záznamy a triedime od najstaršieho
+    const dochadzkaRecords = filteredRecords
+        .filter(r => r.stav === 'prichod' || r.stav === 'odchod')
         .sort((a, b) => new Date(a.cas) - new Date(b.cas));
 
-    // --- Krok 3: Generovanie dátového poľa a KALKULÁCIA ---
     const exportData = [
-        ["Typ záznamu:", sectionTitle],
-        ["Používateľ:", userName],
+        ["Typ záznamu:", "Sumarizovaná dochádzka (Admin Export)"],
+        ["Filter dátumu:", selectedDate || "Všetky dátumy"],
+        ["Filter zamestnanca:", selectedEmployeeUid === 'all' ? "Všetci" : allUsers[selectedEmployeeUid]?.name || "Neznámy"],
         [], 
-        header // 4. riadok: Hlavička
+        ["Zamestnanec", "Dátum", "Čas", "Typ", "Odpracovaný čas/Status"] 
     ];
+
+    let totalWorkMsGlobal = 0;
+    const workSummaryByEmployee = {}; // { uid: totalWorkMs }
+    const lastPrichodByEmployee = {}; // { uid: Date object }
+    const dailySummary = {}; // { uid_date: dailyWorkMs }
     
-    let totalWorkMs = 0;
-    let lastPrichod = null;
-    let lastDate = null;
-    let dailyWorkMs = 0;
+    // 1. Prejdeme všetky záznamy a vykonáme párovanie Príchod/Odchod
+    dochadzkaRecords.forEach(record => {
+        const key = record.uid;
+        const currentDateStr = record.date; // DD.MM.RRRR
+        const uidDateKey = `${key}_${currentDateStr}`;
 
-    if (sectionType === 'dochadzka') {
-        
-        sortedRecords.forEach((record) => {
+        // Ak sa zmení deň, vynulujeme denný súčet
+        if (!dailySummary[uidDateKey]) {
+            dailySummary[uidDateKey] = 0;
+        }
+
+        if (record.stav === 'prichod') {
+            lastPrichodByEmployee[key] = new Date(record.cas);
+            exportData.push([record.userName, record.date, record.time, record.stav.toUpperCase(), ""]);
+        } else if (record.stav === 'odchod') {
             const currentDateTime = new Date(record.cas);
-            const currentDateStr = record.date; // DD.MM.RRRR
-            const currentTimeStr = record.time; // HH:MM
-
-            // --- Logika Sumarizácie Dňa ---
-            if (lastDate && lastDate !== currentDateStr) {
-                // Sumarizácia predchádzajúceho dňa
-                if (dailyWorkMs > 0) {
-                    exportData.push(["", "Sumarizácia dňa:", lastDate, msToHhMm(dailyWorkMs)]);
-                }
-                dailyWorkMs = 0; // Reset pre nový deň
-            }
-
-            if (record.stav === 'prichod') {
-                lastPrichod = currentDateTime;
-                exportData.push([currentDateStr, currentTimeStr, record.stav.toUpperCase(), ""]);
-            } else if (record.stav === 'odchod' && lastPrichod) {
-                const durationMs = currentDateTime - lastPrichod;
+            
+            if (lastPrichodByEmployee[key]) {
+                const durationMs = currentDateTime - lastPrichodByEmployee[key];
                 const durationHhMm = msToHhMm(durationMs);
                 
-                totalWorkMs += durationMs;
-                dailyWorkMs += durationMs;
+                workSummaryByEmployee[key] = (workSummaryByEmployee[key] || 0) + durationMs;
+                dailySummary[uidDateKey] += durationMs;
 
-                exportData.push([currentDateStr, currentTimeStr, record.stav.toUpperCase(), durationHhMm]);
-                lastPrichod = null; // Vynulovanie po odchode
+                exportData.push([record.userName, record.date, record.time, record.stav.toUpperCase(), durationHhMm]);
+                lastPrichodByEmployee[key] = null; // Vynulovanie po odchode
             } else {
                 // Prípad odchodu bez predchádzajúceho príchodu
-                // Zaznamenáme chybu, ktorú neskôr naformátujeme v XLSX
-                exportData.push([currentDateStr, currentTimeStr, record.stav.toUpperCase(), "Chyba PRICHOD"]);
+                exportData.push([record.userName, record.date, record.time, record.stav.toUpperCase(), "Chyba PRICHOD"]);
             }
-
-            lastDate = currentDateStr;
-        });
-
-        // --- Finálna Sumarizácia (Posledný deň) ---
-        if (lastDate && dailyWorkMs > 0) {
-            exportData.push(["", "Sumarizácia dňa:", lastDate, msToHhMm(dailyWorkMs)]);
         }
+    });
 
-        // --- Celková Sumarizácia ---
-        exportData.push([]); // Prázdny riadok
-        exportData.push(["Celková odpracovaná doba:", "", "", msToHhMm(totalWorkMs)]);
+    // 2. Pridanie sumárov do exportData (denné a celkové)
 
-    } else { // Pre Prestávky a PN je jednoduchý export
-        if (sortedRecords.length === 0) {
-            exportData.push(["Žiadne záznamy", ""]);
-        } else {
-            sortedRecords.forEach(z => {
-                exportData.push([
-                    z.casDisplay, // Dátum a Čas v jednom stĺpci
-                    z.stav.toUpperCase()
-                ]);
-            });
+    // Denny Sumár (potrebné zoradiť pre lepšiu prehľadnosť v Exceli)
+    const sortedDailyKeys = Object.keys(dailySummary).sort();
+    sortedDailyKeys.forEach(uidDateKey => {
+        if (dailySummary[uidDateKey] > 0) {
+            const [uid, dateStr] = uidDateKey.split('_');
+            const userName = allUsers[uid]?.name || "Neznámy UID";
+            exportData.push(["", "Sumarizácia dňa:", userName, dateStr, msToHhMm(dailySummary[uidDateKey])]);
         }
-    }
-
-
-    // --- Krok 4: Export XLSX s vizuálnymi úpravami ---
+    });
     
+    exportData.push([]); 
+    
+    // Celkový Sumár podľa zamestnanca
+    const sortedEmployeeUids = Object.keys(workSummaryByEmployee).sort((a, b) => allUsers[a].name.localeCompare(allUsers[b].name));
+    
+    sortedEmployeeUids.forEach(uid => {
+        const totalWorkMs = workSummaryByEmployee[uid];
+        totalWorkMsGlobal += totalWorkMs;
+        exportData.push([allUsers[uid].name, "Celková doba:", "", "", msToHhMm(totalWorkMs)]);
+    });
+
+    exportData.push([]);
+    exportData.push(["Celková odpracovaná doba (Všetci):", "", "", "", msToHhMm(totalWorkMsGlobal)]);
+    
+    // 3. Export XLSX
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet(exportData);
     
-    // ----------------------------------------------------
-    // VIZUÁLNE ÚPRAVY HÁRKU (Šírka stĺpcov, Formát buniek)
-    // ----------------------------------------------------
+    // Vizuálne úpravy
+    ws['!cols'] = [
+        { wpx: 150 }, // A: Zamestnanec
+        { wpx: 100 }, // B: Dátum/Sumarizácia
+        { wpx: 80 },  // C: Čas
+        { wpx: 100 }, // D: Typ
+        { wpx: 150 }  // E: Odpracovaný čas/Status
+    ];
     
-    if (sectionType === 'dochadzka') {
-        // Nastavenie šírky stĺpcov pre Dochádzku
-        ws['!cols'] = [
-            { wpx: 100 }, // Stĺpec A: Dátum
-            { wpx: 150 }, // Stĺpec B: Čas/Sumarizácia dňa
-            { wpx: 100 }, // Stĺpec C: Typ/Dátum Sumarizácie
-            { wpx: 150 } // Stĺpec D: Odpracovaný čas/Status
-        ];
-
-        // Zvýraznenie buniek s kalkuláciami (Sumarizácia a CHYBY)
-        const finalRowIndex = exportData.length - 1;
-
-        for (let i = 4; i < exportData.length; i++) {
-            const row = exportData[i];
+    for (let i = 5; i < exportData.length; i++) { // Začíname po hlavičke
+        const row = exportData[i];
+        
+        // Zvýraznenie denného sumáru
+        if (row[1] === "Sumarizácia dňa:") {
+            // Zamestnanec (A) a Suma (E)
+            XLSX.utils.encode_cell({ r: i, c: 0 }); // Pridaj tučné do mena
+            XLSX.utils.encode_cell({ r: i, c: 4 }); // Pridaj tučné do sumy
             
-            // Kontrola dennej sumy
-            if (row[1] === "Sumarizácia dňa:") {
-                // Formátovanie textu "Sumarizácia dňa:" (B-stĺpec) - PRIDANÉ TUČNÉ PÍSMO
-                const textCellRef = XLSX.utils.encode_cell({ r: i, c: 1 });
-                if (ws[textCellRef]) {
-                    ws[textCellRef].s = { font: { bold: true } };
-                }
+            const cellRefSum = XLSX.utils.encode_cell({ r: i, c: 4 }); 
+            if (ws[cellRefSum]) { ws[cellRefSum].s = { font: { bold: true }, fill: { fgColor: { rgb: "FFFFCC00" } } }; }
+        }
+        
+        // Zvýraznenie celkového sumáru pre zamestnanca
+        if (row[1] === "Celková doba:") {
+            // Zamestnanec (A) a Suma (E)
+            const textCellRef = XLSX.utils.encode_cell({ r: i, c: 0 });
+            if (ws[textCellRef]) { ws[textCellRef].s = { font: { bold: true } }; }
+            
+            const cellRefSum = XLSX.utils.encode_cell({ r: i, c: 4 }); 
+            if (ws[cellRefSum]) { ws[cellRefSum].s = { font: { bold: true }, fill: { fgColor: { rgb: "FF00B050" } } }; }
+        }
 
-                // Formátovanie sumy (D-stĺpec) - ZMENA NA ŽLTÚ, PRIDANÉ TUČNÉ PÍSMO
-                const cellRef = XLSX.utils.encode_cell({ r: i, c: 3 }); 
-                if (ws[cellRef]) {
-                    // Použitie štýlu: Tučné, výplň žltá 
-                    ws[cellRef].s = { font: { bold: true }, fill: { fgColor: { rgb: "FFFFCC00" } } }; 
-                }
-            }
-            
-            // Kontrola na chýbajúci príchod (Chyba PRICHOD)
-            if (row[3] === "Chyba PRICHOD") { 
-                const cellRef = XLSX.utils.encode_cell({ r: i, c: 3 }); 
-                if (ws[cellRef]) {
-                    // Použitie štýlu: Tučné, výplň červená pre chybu s bielym písmom
-                    ws[cellRef].s = { font: { bold: true, color: { rgb: "FFFFFFFF" } }, fill: { fgColor: { rgb: "FFCC0000" } } }; 
-                }
-            }
-            
-            // Celková suma
-            if (i === finalRowIndex && row[0] === "Celková odpracovaná doba:") {
-                // Formátovanie textu "Celková odpracovaná doba:" (A-stĺpec) - PRIDANÉ TUČNÉ PÍSMO
-                const textCellRef = XLSX.utils.encode_cell({ r: i, c: 0 });
-                if (ws[textCellRef]) {
-                    ws[textCellRef].s = { font: { bold: true } };
-                }
-                
-                // Formátovanie celkovej sumy (D-stĺpec) - ZELENÁ, PRIDANÉ TUČNÉ PÍSMO
-                const cellRef = XLSX.utils.encode_cell({ r: i, c: 3 }); 
-                if (ws[cellRef]) {
-                    // Použitie štýlu: Tučné, výplň zelená
-                    ws[cellRef].s = { font: { bold: true }, fill: { fgColor: { rgb: "FF00B050" } } }; 
-                }
+        // Zvýraznenie celkového globálneho sumáru (posledný riadok)
+        if (i === exportData.length - 1) {
+            for (let c = 0; c < 5; c++) {
+                const cellRef = XLSX.utils.encode_cell({ r: i, c: c });
+                 if (ws[cellRef]) { ws[cellRef].s = { font: { bold: true }, fill: { fgColor: { rgb: "FF007bff" } }, font: { color: { rgb: "FFFFFFFF" }, bold: true } }; }
             }
         }
         
-    } else {
-        // Nastavenie šírky stĺpcov pre Prestávky/PN
-          ws['!cols'] = [
-            { wpx: 150 }, // Stĺpec A: Dátum a Čas
-            { wpx: 100 }  // Stĺpec B: Typ
-        ];
+        // Zvýraznenie chybového stavu
+        if (row[4] === "Chyba PRICHOD") { 
+            const cellRef = XLSX.utils.encode_cell({ r: i, c: 4 }); 
+            if (ws[cellRef]) { ws[cellRef].s = { font: { bold: true, color: { rgb: "FFFFFFFF" } }, fill: { fgColor: { rgb: "FFCC0000" } } }; }
+        }
     }
-    
-    // ----------------------------------------------------
 
-    XLSX.utils.book_append_sheet(wb, ws, "Dochádzka");
 
-    // 5. Stiahnutie súboru
-    const safeUserName = userName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-    const fileName = `${fileNameBase}_${safeUserName}_export.xlsx`;
-    
+    XLSX.utils.book_append_sheet(wb, ws, "AdminPrehlad");
+
+    const fileName = `admin_export_dochadzka_${selectedEmployeeUid}_${selectedDate || 'all'}.xlsx`;
     XLSX.writeFile(wb, fileName);
-    
+
     // Spätná väzba na tlačidle
-    const btn = document.querySelector(`[data-export-table="${sectionType}"]`);
+    const btn = document.getElementById('exportBtn');
     if(btn) {
         btn.textContent = "Súbor stiahnutý!";
-        setTimeout(() => btn.textContent = "Exportovať do XLSX", 2000);
+        setTimeout(() => btn.textContent = "Exportovať zobrazené dáta do XLSX", 2000);
     }
-};
+});
+
 
 // --- Listenery ---
-
 document.getElementById("logoutBtn").addEventListener("click", () => {
     localStorage.removeItem("uid");
     window.location.href = "index.html";
 });
 
-document.querySelectorAll("nav button").forEach(btn => {
-    btn.addEventListener("click", () => {
-        document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        document.querySelectorAll("section").forEach(sec => sec.classList.remove("active"));
-        document.getElementById(btn.dataset.target).classList.add("active");
-        renderTables(allRecordsCache); // Prekreslenie pri prepnutí sekcie
-    });
-});
-
-// Filtre spustia renderTables, čo prekreslí tabuľky aj s pilulkami
-document.getElementById("dateDochadzka").addEventListener("change", () => renderTables(allRecordsCache));
-document.getElementById("datePrestavky").addEventListener("change", () => renderTables(allRecordsCache));
-document.getElementById("datePN").addEventListener("change", () => renderTables(allRecordsCache));
-
-document.querySelectorAll(".export-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-        // Odovzdávame len dátový atribút 'dochadzka', 'prestavky' alebo 'pn'
-        exportTable(btn.dataset.exportTable); 
-    });
+document.getElementById('applyFilterBtn').addEventListener('click', () => {
+    renderTable(allRecordsCache);
 });
 
 // --- Spustenie aplikácie ---
-loadUserData();
+loadAllData();
 </script>
 </body>
 </html>
