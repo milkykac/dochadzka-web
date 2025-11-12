@@ -279,12 +279,15 @@ async function loadUserData() {
                          cas: validIsoTime, // ISO formát pre triedenie/filtrovanie
                          casDisplay: displayTime, // Formát DD.MM.YYYY HH:MM pre zobrazenie/export
                          stav: recordType,
+                         // Pridanie dátumu a času do samostatných polí pre export
+                         date: displayTime.substring(0, 10),
+                         time: displayTime.substring(11, 16)
                      });
                  }
             }
         });
 
-        // Triedenie
+        // Triedenie pre zobrazenie na stránke (Najnovšie prvé)
         records.sort((a, b) => new Date(b.cas) - new Date(a.cas));
         allRecordsCache = records;
         
@@ -372,7 +375,7 @@ function msToHhMm(ms) {
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 }
 
-// --- NOVÁ HLAVNÁ FUNKCIA: Export do XLSX s výpočtom odpracovaného času ---
+// --- HLAVNÁ FUNKCIA: Export do XLSX s výpočtom odpracovaného času ---
 window.exportTable = function(sectionType) {
     const userName = userNameEl.textContent;
     let filterDate, expectedStav, sectionTitle;
@@ -409,7 +412,7 @@ window.exportTable = function(sectionType) {
         filteredRecords = filteredRecords.filter(r => r.cas.substring(0, 10) === filterDate);
     }
     
-    // Pre kalkuláciu potrebujeme záznamy triediť chronologicky
+    // Pre export s kalkuláciou v Dochádzke musíme triediť od NAJSTARŠIEHO k NAJNOVŠIEMU
     const sortedRecords = filteredRecords
         .filter(r => expectedStav.includes(r.stav))
         .sort((a, b) => new Date(a.cas) - new Date(b.cas));
@@ -426,22 +429,21 @@ window.exportTable = function(sectionType) {
     let lastPrichod = null;
     let lastDate = null;
     let dailyWorkMs = 0;
-    let dailySummaryAdded = false;
 
     if (sectionType === 'dochadzka') {
         
-        sortedRecords.forEach((record, index) => {
+        sortedRecords.forEach((record) => {
             const currentDateTime = new Date(record.cas);
-            const currentDateStr = record.casDisplay.substring(0, 10);
-            const currentTimeStr = record.casDisplay.substring(11, 16);
+            const currentDateStr = record.date; // DD.MM.RRRR
+            const currentTimeStr = record.time; // HH:MM
 
-            // Zhrnutie predchádzajúceho dňa (ak sa zmenil dátum a už sa pridali nejaké záznamy)
+            // --- Logika Sumarizácie Dňa ---
             if (lastDate && lastDate !== currentDateStr) {
-                if (!dailySummaryAdded) {
+                // Sumarizácia predchádzajúceho dňa
+                if (dailyWorkMs > 0) {
                     exportData.push(["", "Sumarizácia dňa:", lastDate, msToHhMm(dailyWorkMs)]);
                 }
-                dailyWorkMs = 0;
-                dailySummaryAdded = false;
+                dailyWorkMs = 0; // Reset pre nový deň
             }
 
             if (record.stav === 'prichod') {
@@ -462,21 +464,18 @@ window.exportTable = function(sectionType) {
             }
 
             lastDate = currentDateStr;
-
-            // Pridanie dennej sumy, ak je to posledný záznam dňa
-            if (index === sortedRecords.length - 1) {
-                if (!dailySummaryAdded) {
-                    exportData.push(["", "Sumarizácia dňa:", lastDate, msToHhMm(dailyWorkMs)]);
-                    dailySummaryAdded = true;
-                }
-            }
         });
 
-        // Celková sumarizácia (ak je vybraný iba jeden deň, bude sa zhodovať s dennou sumou)
-        exportData.push([]);
-        exportData.push(["Celková odpracovaná doba (filtrované dáta):", msToHhMm(totalWorkMs)]);
+        // --- Finálna Sumarizácia (Posledný deň) ---
+        if (lastDate && dailyWorkMs > 0) {
+            exportData.push(["", "Sumarizácia dňa:", lastDate, msToHhMm(dailyWorkMs)]);
+        }
 
-    } else { // Pre Prestávky a PN je jednoduchý export bez výpočtu
+        // --- Celková Sumarizácia ---
+        exportData.push([]); // Prázdny riadok
+        exportData.push(["Celková odpracovaná doba:", "", "", msToHhMm(totalWorkMs)]);
+
+    } else { // Pre Prestávky a PN je jednoduchý export
         if (sortedRecords.length === 0) {
             exportData.push(["Žiadne záznamy", ""]);
         } else {
@@ -496,7 +495,7 @@ window.exportTable = function(sectionType) {
     const ws = XLSX.utils.aoa_to_sheet(exportData);
     
     // ----------------------------------------------------
-    // VIZUÁLNE ÚPRAVY HÁRKU
+    // VIZUÁLNE ÚPRAVY HÁRKU (Šírka stĺpcov, Formát buniek)
     // ----------------------------------------------------
     
     if (sectionType === 'dochadzka') {
@@ -509,9 +508,33 @@ window.exportTable = function(sectionType) {
         ];
 
         // Zvýraznenie buniek s kalkuláciami (Sumarizácia)
-        const summaryStartRow = exportData.findIndex(row => row[1] === "Sumarizácia dňa:") + 1;
-        
-        // Ak je nájdená sumarizácia, môžeme ju štýlovať (pozn. knižnica XLSX nevie priamo farbiť, ale vieme nastaviť dátové formáty)
+        // Používame styler na bunky, ktoré obsahujú "Sumarizácia" alebo "Celková"
+        const finalRowIndex = exportData.length - 1;
+
+        for (let i = 4; i < exportData.length; i++) {
+            const row = exportData[i];
+            
+            // Kontrola dennej sumy
+            if (row[1] === "Sumarizácia dňa:") {
+                // Spojenie buniek C a D v riadku sumarizácie (na obrázku sú spojené)
+                // Len vizuálny textový formát, funkčné spojenie v XLSX je komplexné, ponecháme text
+                
+                // Formátovanie sumy (D-stĺpec)
+                const cellRef = XLSX.utils.encode_cell({ r: i, c: 3 }); 
+                if (ws[cellRef]) {
+                    ws[cellRef].s = { font: { bold: true }, fill: { fgColor: { rgb: "FFFFCC00" } } }; // Zlatá farba
+                }
+            }
+            
+            // Celková suma
+            if (i === finalRowIndex && row[0] === "Celková odpracovaná doba:") {
+                 // Formátovanie celkovej sumy (D-stĺpec)
+                 const cellRef = XLSX.utils.encode_cell({ r: i, c: 3 }); 
+                 if (ws[cellRef]) {
+                     ws[cellRef].s = { font: { bold: true }, fill: { fgColor: { rgb: "FF00B050" } } }; // Zelená farba
+                 }
+            }
+        }
         
     } else {
         // Nastavenie šírky stĺpcov pre Prestávky/PN
