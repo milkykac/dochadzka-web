@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dochádzka – Zamestnanec</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght=400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 /* --- ZOSÚLADENÉ ŠTÝLY S ADMIN PANELOM --- */
@@ -23,22 +23,37 @@ section { display:none; padding:25px; background:#fff; margin:25px auto; border-
 section.active { display:block; }
 h2 { color:#007bff; margin-top:0; border-bottom:2px solid #007bff; padding-bottom:5px; font-weight:600; }
 
-/* OPRAVA: Zabezpečenie zrútenia okrajov a súvislých riadkov */
+/* OPRAVA: Zabezpečenie, aby tabuľka nemala okraje medzi riadkami */
 table { 
     width:100%; 
     border-collapse:collapse; /* Toto zabezpečuje, že okraje buniek sa spoja */
     margin-top:15px; 
     border-radius:8px; 
     overflow:hidden; 
-    box-shadow:0 2px 5px rgba(0,0,0,0.1); 
+    /* box-shadow:0 2px 5px rgba(0,0,0,0.1); -- Zrušenie tieňa pre istotu */
+    border: none; /* Úplné zrušenie hlavného okraja tabuľky */
 }
-/* OPRAVA: Používame len 1px okraj */
+
+/* OPRAVA: Používame len 1px okraj len pre vizuálne rozdelenie stĺpcov a riadkov */
 th,td { 
     border:1px solid #ddd; 
     padding:10px; 
     text-align:center; 
     font-size:14px; 
     color: #333; 
+}
+/* Špeciálne nastavenie pre bunky (td), aby riadky neboli oddelené dvojitým okrajom */
+td {
+    border-top: none; /* Odstránime horný okraj na bunkách */
+    border-bottom: 1px solid #ddd; /* Ponecháme spodný okraj pre delenie riadkov */
+}
+/* Prvý riadok v tele tabuľky musí mať horný okraj */
+tbody tr:first-child td {
+    border-top: 1px solid #ddd;
+}
+/* Posledný riadok v tele tabuľky */
+tbody tr:last-child td {
+    border-bottom: none;
 }
 th { background:#007bff; color:white; font-weight:600; }
 tr:nth-child(even){ background:#f8f9fa; }
@@ -342,7 +357,7 @@ function renderTables(records) {
 }
 
 
-// --- OPRAVENÁ FUNKCIA: Export do CSV (prispôsobené pre Prestávky/PN s pilulkou v 1 stĺpci) ---
+// --- OPRAVENÁ FUNKCIA: Export do CSV ---
 window.exportTable = function(sectionNameId) {
     const sectionEl = document.getElementById(sectionNameId); 
     const table = sectionEl ? sectionEl.querySelector('table') : null;
@@ -443,4 +458,5 @@ loadUserData();
 </script>
 </body>
 </html>
+
 
