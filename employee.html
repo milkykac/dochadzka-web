@@ -24,35 +24,35 @@ section.active { display:block; }
 h2 { color:#007bff; margin-top:0; border-bottom:2px solid #007bff; padding-bottom:5px; font-weight:600; }
 
 /* OPRAVA: Zabezpečenie, aby tabuľka nemala okraje medzi riadkami */
-table { 
-    width:100%; 
-    border-collapse:collapse; /* Toto zabezpečuje, že okraje buniek sa spoja */
-    margin-top:15px; 
-    border-radius:8px; 
-    overflow:hidden; 
-    border: none; /* Úplné zrušenie hlavného okraja tabuľky */
+table {
+    width:100%;
+    border-collapse:collapse; /* Toto zabezpečuje, že okraje buniek sa spoja */
+    margin-top:15px;
+    border-radius:8px;
+    overflow:hidden;
+    border: none; /* Úplné zrušenie hlavného okraja tabuľky */
 }
 
 /* OPRAVA: Používame len 1px okraj len pre vizuálne rozdelenie stĺpcov a riadkov */
-th,td { 
-    border:1px solid #ddd; 
-    padding:10px; 
-    text-align:center; 
-    font-size:14px; 
-    color: #333; 
+th,td {
+    border:1px solid #ddd;
+    padding:10px;
+    text-align:center;
+    font-size:14px;
+    color: #333;
 }
 /* Špeciálne nastavenie pre bunky (td), aby riadky neboli oddelené dvojitým okrajom */
 td {
-    border-top: none; /* Odstránime horný okraj na bunkách */
-    border-bottom: 1px solid #ddd; /* Ponecháme spodný okraj pre delenie riadkov */
+    border-top: none; /* Odstránime horný okraj na bunkách */
+    border-bottom: 1px solid #ddd; /* Ponecháme spodný okraj pre delenie riadkov */
 }
 /* Prvý riadok v tele tabuľky musí mať horný okraj */
 tbody tr:first-child td {
-    border-top: 1px solid #ddd;
+    border-top: 1px solid #ddd;
 }
 /* Posledný riadok v tele tabuľky */
 tbody tr:last-child td {
-    border-bottom: none;
+    border-bottom: none;
 }
 th { background:#007bff; color:white; font-weight:600; }
 tr:nth-child(even){ background:#f8f9fa; }
@@ -65,99 +65,100 @@ tr:nth-child(even){ background:#f8f9fa; }
 .status-box { background:#e9f2ff; color:#007bff; font-weight:600; padding:15px; border-radius:8px; text-align:center; margin-bottom:20px; border:1px solid #007bff;}
 
 .filter { margin-top: 10px; }
+.filter label { font-weight: 500; margin-right: 10px; color: #333; }
 .filter input { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; }
 
 #debugUid { background:#d1ecf1;color:#0c5460;padding:5px;text-align:center;font-size:12px;margin-bottom:10px; border-radius: 4px;}
 
 /* --- ŠTÝLY PRE FAREBNÉ PILULKY (ODZNAKY) --- */
 .status-badge {
-    font-weight: 700 !important;
-    padding: 7px 14px !important;
-    border-radius: 50px !important; /* Tvar pilulky */
-    display: inline-block;
-    text-align: center;
-    min-width: 80px;
-    white-space: nowrap;
-    text-shadow: none !important; 
-    color: white !important;
-    font-size: 14px !important;
+    font-weight: 700 !important;
+    padding: 7px 14px !important;
+    border-radius: 50px !important; /* Tvar pilulky */
+    display: inline-block;
+    text-align: center;
+    min-width: 80px;
+    white-space: nowrap;
+    text-shadow: none !important;
+    color: white !important;
+    font-size: 14px !important;
 }
 /* Menší štýl pilulky pre Prestávky/PN v jedinom stĺpci */
 .status-badge.small {
-    padding: 4px 10px !important;
-    min-width: 60px;
-    font-size: 11px !important;
-    margin-left: 10px;
+    padding: 4px 10px !important;
+    min-width: 60px;
+    font-size: 11px !important;
+    margin-left: 10px;
 }
-.status-prichod { 
-    background: #198754 !important; /* Zelená */
-} 
-.status-odchod { 
-    background: #dc3545 !important; /* Červená */
-} 
-.status-prestavka { 
-    background: #ffc107 !important; /* Žltá */
-    color: #212529 !important; /* Tmavý text na žltej */
+.status-prichod {
+    background: #198754 !important; /* Zelená */
 }
-.status-pn { 
-    background: #6f42c1 !important; /* Fialová */
-} 
+.status-odchod {
+    background: #dc3545 !important; /* Červená */
+}
+.status-prestavka {
+    background: #ffc107 !important; /* Žltá */
+    color: #212529 !important; /* Tmavý text na žltej */
+}
+.status-pn {
+    background: #6f42c1 !important; /* Fialová */
+}
 /* ----------------------------------- */
 </style>
 </head>
 <body>
 
 <header>
-    <h1>👋 Vitaj, <span id="userName">Zamestnanec</span></h1>
-    <button id="logoutBtn">Odhlásiť sa</button>
+    <h1>👋 Vitaj, <span id="userName">Zamestnanec</span></h1>
+    <button id="logoutBtn">Odhlásiť sa</button>
 </header>
 
 <div id="debugUid">Načítavam UID...</div>
 
 <nav>
-    <button data-target="dochadzka" class="active">Dochádzka</button>
-    <button data-target="prestavky">Prestávky</button>
-    <button data-target="pn">PN</button>
+    <button data-target="dochadzka" class="active">Dochádzka</button>
+    <button data-target="prestavky">Prestávky</button>
+    <button data-target="pn">PN</button>
 </nav>
 
 <section id="dochadzka" class="active">
-    <div id="statusBox" class="status-box">Načítavam stav...</div>
-    <h2>Dochádzka (Príchod/Odchod)</h2>
-    <button class="export-btn" data-export-table="dochadzka">Exportovať do XLSX</button>
-    <div class="filter">
-        <label for="dateDochadzka">Filtrovať podľa dátumu:</label>
-        <input type="date" id="dateDochadzka">
-    </div>
-    <table>
-        <thead><tr><th>Čas</th><th>Typ</th></tr></thead>
-        <tbody id="dochadzkaTable"><tr><td colspan="2">Načítavam dáta...</td></tr></tbody>
-    </table>
+    <div id="statusBox" class="status-box">Načítavam stav...</div>
+    <h2>Dochádzka (Príchod/Odchod)</h2>
+    <button class="export-btn" data-export-table="dochadzka">Exportovať do XLSX</button>
+    <div class="filter">
+        <label for="dateDochadzka">Filtrovať podľa dátumu:</label>
+        <input type="date" id="dateDochadzka">
+    </div>
+    <table>
+        <thead><tr><th>Čas</th><th>Typ</th></tr></thead>
+        <tbody id="dochadzkaTable"><tr><td colspan="2">Načítavam dáta...</td></tr></tbody>
+    </table>
 </section>
 
 <section id="prestavky">
-    <h2>Prestávky</h2>
-    <button class="export-btn" data-export-table="prestavky">Exportovať do XLSX</button>
-    <div class="filter">
-        <label for="datePrestavky">Filtrovať podľa dátumu:</label>
-        <input type="date" id="datePrestavky">
-    </div>
-    <table>
-        <thead><tr><th>Čas a Typ</th></tr></thead>
-        <tbody id="prestavkyTable"><tr><td colspan="1">Načítavam dáta...</td></tr></tbody>
-    </table>
+    <h2>Prestávky</h2>
+    <button class="export-btn" data-export-table="prestavky">Exportovať do XLSX</button>
+    <div class="filter">
+        <label for="datePrestavky">Filtrovať podľa dátumu:</label>
+        <input type="date" id="datePrestavky">
+    </div>
+    <table>
+        <thead><tr><th>Čas a Typ</th></tr></thead>
+        <tbody id="prestavkyTable"><tr><td colspan="1">Načítavam dáta...</td></tr></tbody>
+    </table>
 </section>
 
 <section id="pn">
-    <h2>PN</h2>
-    <button class="export-btn" data-export-table="pn">Exportovať do XLSX</button>
-    <div class="filter">
-        <label for="datePN">Filtrovať podľa dátumu:</label>
-        <input type="date" id="datePN">
-    </div>
-    <table>
-        <thead><tr><th>Čas a Typ</th></tr></thead>
-        <tbody id="pnTable"><tr><td colspan="1">Načítavam dáta...</td></tr></tbody>
-    </table>
+    <h2>PN</h2>
+    <button class="export-btn" data-export-table="pn">Exportovať do XLSX</button>
+    <div class="filter">
+        <label for="datePN">Filtrovať podľa dátumu:</label>
+        <input type="date" id="datePN">
+    </div>
+    <table>
+        <thead><tr><th>Čas a Typ</th></tr></thead>
+        <tbody id="pnTable"><tr><td colspan="1">Načítavam dáta...</td></tr></tbody>
+    </table>
 </section>
 
 <script type="module">
@@ -165,14 +166,14 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebas
 import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBsYrbYtP4E5blWbKlrJ6iI9v6YPAYYp0g",
-    authDomain: "maturita-395fd.firebaseapp.com",
-    databaseURL: "https://maturita-395fd-default-rtdb.firebaseio.com",
-    projectId: "maturita-395fd",
-    storageBucket: "maturita-395fd.firebasestorage.app",
-    messagingSenderId: "754745500563",
-    appId: "1:754745500563:web:74fd4d6ab5765ee788be66",
-    measurementId: "G-F6KQQS48GD"
+    apiKey: "AIzaSyBsYrbYtP4E5blWbKlrJ6iI9v6YPAYYp0g",
+    authDomain: "maturita-395fd.firebaseapp.com",
+    databaseURL: "https://maturita-395fd-default-rtdb.firebaseio.com",
+    projectId: "maturita-395fd",
+    storageBucket: "maturita-395fd.firebasestorage.app",
+    messagingSenderId: "754745500563",
+    appId: "1:754745500563:web:74fd4d6ab5765ee788be66",
+    measurementId: "G-F6KQQS48GD"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -182,401 +183,407 @@ const db = getDatabase(app);
 const userId = localStorage.getItem("uid");
 const userNameEl = document.getElementById("userName");
 const statusBox = document.getElementById("statusBox");
-const debugUidEl = document.getElementById("debugUid"); 
+const debugUidEl = document.getElementById("debugUid");
 let allRecordsCache = []; // Zásobník všetkých záznamov
 
 // --- Overenie a presmerovanie ---
 if (!userId) {
-    alert("Nie si prihlásený!");
-    window.location.href = "index.html";
+    alert("Nie si prihlásený!");
+    window.location.href = "index.html";
 } else if (userId === "admin") {
-    window.location.href = "admin.html";
+    window.location.href = "admin.html";
 } else {
-    debugUidEl.textContent = `Aktuálne načítané UID: ${userId}`;
+    debugUidEl.textContent = `Aktuálne načítané UID: ${userId}`;
 }
 
 // --- Načítanie dát používateľa z Firebase ---
 async function loadUserData() {
-    try {
-        const userSnap = await get(ref(db, `users/${userId}`));
-        
-        if (!userSnap.exists()) {
-            console.error(`Chyba: Dáta pre UID "${userId}" neboli vo Firebase nájdené!`);
-            userNameEl.textContent = "(Neznámy)";
-            debugUidEl.style.backgroundColor = '#dc3545';
-            debugUidEl.style.color = 'white';
-            debugUidEl.textContent = `CHYBA: Dáta pre UID ${userId} neexistujú!`;
-            renderTables([]);
-            return;
-        }
+    try {
+        const userSnap = await get(ref(db, `users/${userId}`));
+        
+        if (!userSnap.exists()) {
+            console.error(`Chyba: Dáta pre UID "${userId}" neboli vo Firebase nájdené!`);
+            userNameEl.textContent = "(Neznámy)";
+            debugUidEl.style.backgroundColor = '#dc3545';
+            debugUidEl.style.color = 'white';
+            debugUidEl.textContent = `CHYBA: Dáta pre UID ${userId} neexistujú!`;
+            renderTables([]);
+            return;
+        }
 
-        const userData = userSnap.val();
-        userNameEl.textContent = userData.name || "(bez mena)";
+        const userData = userSnap.val();
+        userNameEl.textContent = userData.name || "(bez mena)";
 
-        const records = [];
-        const allPossibleLogs = [];
-        
-        // Zber záznamov (Zásobník dát z dochadzka, prestavky, pn)
-        ["dochadzka", "prestavky", "pn"].forEach(type => {
-            const logsObj = userData[type] || {};
-            Object.values(logsObj).forEach(log => allPossibleLogs.push(log));
-        });
-        // Zber priamych vlastností, ak sú logy (pre prípad staršieho formátu)
-        Object.values(userData).forEach(prop => {
-            if (prop && prop.cas && prop.typ) {
-                allPossibleLogs.push(prop); 
-            }
-        });
-        
-        // Spracovanie a normalizácia času
-        allPossibleLogs.forEach(log => {
-            if (!log || !log.cas || !log.typ) return;
+        const records = [];
+        const allPossibleLogs = [];
+        
+        // Zber záznamov (Zásobník dát z dochadzka, prestavky, pn)
+        ["dochadzka", "prestavky", "pn"].forEach(type => {
+            const logsObj = userData[type] || {};
+            Object.values(logsObj).forEach(log => allPossibleLogs.push(log));
+        });
+        // Zber priamych vlastností, ak sú logy (pre prípad staršieho formátu)
+        Object.values(userData).forEach(prop => {
+            if (prop && prop.cas && prop.typ) {
+                allPossibleLogs.push(prop);
+            }
+        });
+        
+        // Spracovanie a normalizácia času
+        allPossibleLogs.forEach(log => {
+            if (!log || !log.cas || !log.typ) return;
 
-            let cleanTime = String(log.cas);
-            let validIsoTime = cleanTime;
-            let displayTime = cleanTime; // Pre zobrazenie
+            let cleanTime = String(log.cas);
+            let validIsoTime = cleanTime;
+            let displayTime = cleanTime; // Pre zobrazenie
 
-            // Regex pre formát DD.MM.YYYY HH:MM
-            const dateRegex = /(\d{1,2})\.(\d{1,2})\.(\d{4}) (\d{1,2}:\d{1,2})/;
-            const match = cleanTime.match(dateRegex);
+            // Regex pre formát DD.MM.YYYY HH:MM
+            const dateRegex = /(\d{1,2})\.(\d{1,2})\.(\d{4}) (\d{1,2}:\d{1,2})/;
+            const match = cleanTime.match(dateRegex);
 
-            if (match) {
-                const [full, day, month, year, time] = match;
-                // ISO pre triedenie
-                validIsoTime = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')} ${time}`;
-                // Formát pre zobrazenie
-                displayTime = `${day.padStart(2, '0')}.${month.padStart(2, '0')}.${year} ${time}`;
-            } else if (cleanTime.includes('T') && cleanTime.includes('-')) {
-                validIsoTime = cleanTime.replace('T', ' '); // ISO format
-                // Formát pre zobrazenie
-                const [date, time] = validIsoTime.split(' ');
-                const [y, m, d] = date.split('-');
-                displayTime = `${d.padStart(2, '0')}.${m.padStart(2, '0')}.${y} ${time.substring(0, 5)}`;
-            } else if (cleanTime.includes('-') && cleanTime.length >= 16) {
-                validIsoTime = cleanTime; // Predpokladáme YYYY-MM-DD HH:MM
-                // Formát pre zobrazenie
-                const [date, time] = validIsoTime.split(' ');
-                const [y, m, d] = date.split('-');
-                displayTime = `${d.padStart(2, '0')}.${m.padStart(2, '0')}.${y} ${time.substring(0, 5)}`;
-            } else {
-                return;
-            }
-            
-            const cleanType = String(log.typ)
-                .normalize("NFD").replace(/[\u0300-\u036f]/g, "") 
-                .toLowerCase();
+            if (match) {
+                const [full, day, month, year, time] = match;
+                // ISO pre triedenie
+                validIsoTime = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')} ${time}`;
+                // Formát pre zobrazenie
+                displayTime = `${day.padStart(2, '0')}.${month.padStart(2, '0')}.${year} ${time}`;
+            } else if (cleanTime.includes('T') && cleanTime.includes('-')) {
+                validIsoTime = cleanTime.replace('T', ' ').substring(0, 16); // ISO format (YYYY-MM-DD HH:MM)
+                // Formát pre zobrazenie
+                const [date, time] = validIsoTime.split(' ');
+                const [y, m, d] = date.split('-');
+                displayTime = `${d.padStart(2, '0')}.${m.padStart(2, '0')}.${y} ${time.substring(0, 5)}`;
+            } else if (cleanTime.includes('-') && cleanTime.length >= 16) {
+                validIsoTime = cleanTime.substring(0, 16); // Predpokladáme YYYY-MM-DD HH:MM
+                // Formát pre zobrazenie
+                const [date, time] = validIsoTime.split(' ');
+                const [y, m, d] = date.split('-');
+                displayTime = `${d.padStart(2, '0')}.${m.padStart(2, '0')}.${y} ${time.substring(0, 5)}`;
+            } else {
+                return;
+            }
+            
+            const cleanType = String(log.typ)
+                .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                .toLowerCase();
 
-            let recordType = null;
-            if (cleanType.includes('prichod')) recordType = 'prichod';
-            else if (cleanType.includes('odchod')) recordType = 'odchod';
-            else if (cleanType.includes('prestavka')) recordType = 'prestavka';
-            else if (cleanType.includes('pn')) recordType = 'pn';
-            
-            if (recordType) {
-                 const isDuplicate = records.some(r => r.cas === validIsoTime && r.stav === recordType);
-                 if (!isDuplicate) {
-                     records.push({
-                         cas: validIsoTime, // ISO formát pre triedenie/filtrovanie
-                         casDisplay: displayTime, // Formát DD.MM.YYYY HH:MM pre zobrazenie/export
-                         stav: recordType,
-                         // Pridanie dátumu a času do samostatných polí pre export
-                         date: displayTime.substring(0, 10),
-                         time: displayTime.substring(11, 16)
-                     });
-                 }
-            }
-        });
+            let recordType = null;
+            if (cleanType.includes('prichod')) recordType = 'prichod';
+            else if (cleanType.includes('odchod')) recordType = 'odchod';
+            else if (cleanType.includes('prestavka')) recordType = 'prestavka';
+            else if (cleanType.includes('pn')) recordType = 'pn';
+            
+            if (recordType) {
+                 const isDuplicate = records.some(r => r.cas === validIsoTime && r.stav === recordType);
+                 if (!isDuplicate) {
+                     records.push({
+                         cas: validIsoTime, // ISO formát pre triedenie/filtrovanie
+                         casDisplay: displayTime, // Formát DD.MM.YYYY HH:MM pre zobrazenie/export
+                         stav: recordType,
+                         // Pridanie dátumu a času do samostatných polí pre export
+                         date: displayTime.substring(0, 10), // DD.MM.RRRR
+                         time: displayTime.substring(11, 16) // HH:MM
+                     });
+                 }
+            }
+        });
 
-        // Triedenie pre zobrazenie na stránke (Najnovšie prvé)
-        records.sort((a, b) => new Date(b.cas) - new Date(a.cas));
-        allRecordsCache = records;
-        
-        // AKTUALIZÁCIA STAVU
-        const mainStatusRecord = records.find(r => r.stav !== 'prestavka'); 
-        
-        const lastStatus = mainStatusRecord ? mainStatusRecord.stav.toUpperCase() : "Žiadny stav nezaznamenaný";
-        
-        statusBox.innerHTML = `Posledný stav: **${lastStatus}**`;
+        // Triedenie pre zobrazenie na stránke (Najnovšie prvé)
+        records.sort((a, b) => new Date(b.cas) - new Date(a.cas));
+        allRecordsCache = records;
+        
+        // AKTUALIZÁCIA STAVU
+        // Posledný záznam, ktorý nie je prestávka
+        const mainStatusRecord = records.find(r => r.stav !== 'prestavka');
+        
+        const lastStatus = mainStatusRecord ? mainStatusRecord.stav.toUpperCase() : "Žiadny stav nezaznamenaný";
+        
+        statusBox.innerHTML = `Posledný stav: **${lastStatus}**`;
 
-        // Vykreslenie
-        renderTables(allRecordsCache);
+        // Vykreslenie
+        renderTables(allRecordsCache);
 
-    } catch (e) {
-        console.error("Kritická chyba pri načítaní dát:", e);
-        statusBox.textContent = "Kritická chyba pri načítaní dát!";
-        renderTables([]);
-    }
+    } catch (e) {
+        console.error("Kritická chyba pri načítaní dát:", e);
+        statusBox.textContent = "Kritická chyba pri načítaní dát!";
+        renderTables([]);
+    }
 }
 
 // --- Vykreslenie tabuliek (S Pilulkami) ---
 function renderTables(records) {
-    const dochadzkaTable = document.getElementById("dochadzkaTable");
-    const prestavkyTable = document.getElementById("prestavkyTable");
-    const pnTable = document.getElementById("pnTable");
+    const dochadzkaTable = document.getElementById("dochadzkaTable");
+    const prestavkyTable = document.getElementById("prestavkyTable");
+    const pnTable = document.getElementById("pnTable");
 
-    const filterDochadzka = document.getElementById("dateDochadzka").value;
-    const filterPrestavky = document.getElementById("datePrestavky").value;
-    const filterPN = document.getElementById("datePN").value;
+    // Filtrovanie na zobrazenie
+    const filterDochadzka = document.getElementById("dateDochadzka").value;
+    const filterPrestavky = document.getElementById("datePrestavky").value;
+    const filterPN = document.getElementById("datePN").value;
 
-    const renderSection = (bodyEl, type, filterDate, expectedStav, colCount) => {
-        let filtered = records;
-        
-        if(filterDate) {
-            // Používame ISO čas pre filtrovanie (r.cas)
-            filtered = filtered.filter(r => r.cas.substring(0, 10) === filterDate);
-        }
-        
-        const sectionRecords = filtered.filter(r => expectedStav.includes(r.stav));
-        
-        if (!sectionRecords.length) {
-            bodyEl.innerHTML = `<tr><td colspan="${colCount}">Žiadne záznamy</td></tr>`;
-        } else {
-            bodyEl.innerHTML = sectionRecords.map(z => {
-                // Vždy používame casDisplay
-                const displayTime = z.casDisplay;
+    const renderSection = (bodyEl, type, filterDate, expectedStav, colCount) => {
+        let filtered = records;
+        
+        if(filterDate) {
+            // Filtrujeme podľa ISO dátumu (YYYY-MM-DD)
+            filtered = filtered.filter(r => r.cas.substring(0, 10) === filterDate);
+        }
+        
+        const sectionRecords = filtered.filter(r => expectedStav.includes(r.stav));
+        
+        if (!sectionRecords.length) {
+            bodyEl.innerHTML = `<tr><td colspan="${colCount}">Žiadne záznamy podľa filtra.</td></tr>`;
+        } else {
+            bodyEl.innerHTML = sectionRecords.map(z => {
+                // Vždy používame casDisplay
+                const displayTime = z.casDisplay;
 
-                let statusClass = '';
-                if (z.stav === 'prichod') statusClass = 'status-prichod';
-                else if (z.stav === 'odchod') statusClass = 'status-odchod';
-                else if (z.stav === 'prestavka') statusClass = 'status-prestavka';
-                else if (z.stav === 'pn') statusClass = 'status-pn';
+                let statusClass = '';
+                let statusText = z.stav.toUpperCase();
+                
+                if (z.stav === 'prichod') statusClass = 'status-prichod';
+                else if (z.stav === 'odchod') statusClass = 'status-odchod';
+                else if (z.stav === 'prestavka') statusClass = 'status-prestavka';
+                else if (z.stav === 'pn') statusClass = 'status-pn';
 
-                
-                if (type === 'dochadzka') {
-                    // Dochádzka: 2 stĺpce
-                    return `<tr>
-                        <td>${displayTime}</td>
-                        <td><span class="status-badge ${statusClass}">${z.stav.toUpperCase()}</span></td>
-                    </tr>`;
-                } else {
-                    // Prestávky a PN: 1 stĺpec
-                    return `<tr>
-                            <td>
-                                ${displayTime}
-                                <span class="status-badge small ${statusClass}">${z.stav.toUpperCase()}</span>
-                            </td>
-                        </tr>`;
-                }
-            }).join("");
-        }
-    };
+                
+                if (type === 'dochadzka') {
+                    // Dochádzka: 2 stĺpce
+                    return `<tr>
+                        <td>${displayTime}</td>
+                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    </tr>`;
+                } else {
+                    // Prestávky a PN: 1 stĺpec
+                    return `<tr>
+                            <td>
+                                ${displayTime}
+                                <span class="status-badge small ${statusClass}">${statusText}</span>
+                            </td>
+                        </tr>`;
+                }
+            }).join("");
+        }
+    };
 
-    // Zavolanie funkcie s explicitným počtom stĺpcov
-    renderSection(dochadzkaTable, 'dochadzka', filterDochadzka, ["prichod", "odchod"], 2);
-    renderSection(prestavkyTable, 'prestavky', filterPrestavky, ["prestavka"], 1);
-    renderSection(pnTable, 'pn', filterPN, ["pn"], 1);
+    // Zavolanie funkcie s explicitným počtom stĺpcov
+    renderSection(dochadzkaTable, 'dochadzka', filterDochadzka, ["prichod", "odchod"], 2);
+    renderSection(prestavkyTable, 'prestavky', filterPrestavky, ["prestavka"], 1);
+    renderSection(pnTable, 'pn', filterPN, ["pn"], 1);
 }
 
 // --- POMOCNÁ FUNKCIA: Konverzia milisekúnd na formát HH:MM ---
 function msToHhMm(ms) {
-    const totalMinutes = Math.floor(ms / (1000 * 60));
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+    const totalMinutes = Math.floor(ms / (1000 * 60));
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 }
 
 // --- HLAVNÁ FUNKCIA: Export do XLSX s výpočtom odpracovaného času ---
 window.exportTable = function(sectionType) {
-    const userName = userNameEl.textContent;
-    let filterDate, expectedStav, sectionTitle;
-    let header; // Hlavička sa bude líšiť pre Dochádzku
-    let fileNameBase;
+    const userName = userNameEl.textContent;
+    let filterDate, expectedStav, sectionTitle;
+    let header; // Hlavička sa bude líšiť pre Dochádzku
+    let fileNameBase;
 
-    // --- Krok 1: Definovanie filtrov a hlavičiek ---
-    if (sectionType === 'dochadzka') {
-        filterDate = document.getElementById("dateDochadzka").value;
-        expectedStav = ["prichod", "odchod"];
-        sectionTitle = "Dochádzka (Príchod/Odchod) a Sumarizácia";
-        // Nová hlavička pre dochádzku s kalkuláciou
-        header = ["Dátum", "Čas", "Typ", "Odpracovaný čas/Status"]; 
-        fileNameBase = "dochadzka_sumar";
-    } else if (sectionType === 'prestavky') {
-        filterDate = document.getElementById("datePrestavky").value;
-        expectedStav = ["prestavka"];
-        sectionTitle = "Prestávky";
-        header = ["Dátum a Čas", "Typ"];
-        fileNameBase = "prestavky";
-    } else if (sectionType === 'pn') {
-        filterDate = document.getElementById("datePN").value;
-        expectedStav = ["pn"];
-        sectionTitle = "PN";
-        header = ["Dátum a Čas", "Typ"];
-        fileNameBase = "pn";
-    } else {
-        return alert("Neznámy typ sekcie pre export.");
-    }
-    
-    // --- Krok 2: Filtrácia a triedenie dát pre kalkuláciu ---
-    let filteredRecords = allRecordsCache;
-    if(filterDate) {
-        filteredRecords = filteredRecords.filter(r => r.cas.substring(0, 10) === filterDate);
-    }
-    
-    // Pre export s kalkuláciou v Dochádzke musíme triediť od NAJSTARŠIEHO k NAJNOVŠIEMU
-    const sortedRecords = filteredRecords
-        .filter(r => expectedStav.includes(r.stav))
-        .sort((a, b) => new Date(a.cas) - new Date(b.cas));
+    // --- Krok 1: Definovanie filtrov a hlavičiek ---
+    if (sectionType === 'dochadzka') {
+        filterDate = document.getElementById("dateDochadzka").value;
+        expectedStav = ["prichod", "odchod"];
+        sectionTitle = "Dochádzka (Príchod/Odchod) a Sumarizácia";
+        // Nová hlavička pre dochádzku s kalkuláciou
+        header = ["Dátum", "Čas", "Typ", "Odpracovaný čas/Status"];
+        fileNameBase = "dochadzka_sumar";
+    } else if (sectionType === 'prestavky') {
+        filterDate = document.getElementById("datePrestavky").value;
+        expectedStav = ["prestavka"];
+        sectionTitle = "Prestávky";
+        header = ["Dátum a Čas", "Typ"];
+        fileNameBase = "prestavky";
+    } else if (sectionType === 'pn') {
+        filterDate = document.getElementById("datePN").value;
+        expectedStav = ["pn"];
+        sectionTitle = "PN";
+        header = ["Dátum a Čas", "Typ"];
+        fileNameBase = "pn";
+    } else {
+        return alert("Neznámy typ sekcie pre export.");
+    }
+    
+    // --- Krok 2: Filtrácia a triedenie dát pre kalkuláciu ---
+    let filteredRecords = allRecordsCache;
+    if(filterDate) {
+        filteredRecords = filteredRecords.filter(r => r.cas.substring(0, 10) === filterDate);
+    }
+    
+    // Pre export s kalkuláciou v Dochádzke musíme triediť od NAJSTARŠIEHO k NAJNOVŠIEMU
+    const sortedRecords = filteredRecords
+        .filter(r => expectedStav.includes(r.stav))
+        .sort((a, b) => new Date(a.cas) - new Date(b.cas));
 
-    // --- Krok 3: Generovanie dátového poľa a KALKULÁCIA ---
-    const exportData = [
-        ["Typ záznamu:", sectionTitle],
-        ["Používateľ:", userName],
-        [], 
-        header // 4. riadok: Hlavička
-    ];
-    
-    let totalWorkMs = 0;
-    let lastPrichod = null;
-    let lastDate = null;
-    let dailyWorkMs = 0;
+    // --- Krok 3: Generovanie dátového poľa a KALKULÁCIA ---
+    const exportData = [
+        ["Typ záznamu:", sectionTitle],
+        ["Používateľ:", userName],
+        [],
+        header // 4. riadok: Hlavička
+    ];
+    
+    let totalWorkMs = 0;
+    let lastPrichod = null;
+    let lastDate = null;
+    let dailyWorkMs = 0;
 
-    if (sectionType === 'dochadzka') {
-        
-        sortedRecords.forEach((record) => {
-            const currentDateTime = new Date(record.cas);
-            const currentDateStr = record.date; // DD.MM.RRRR
-            const currentTimeStr = record.time; // HH:MM
+    if (sectionType === 'dochadzka') {
+        
+        sortedRecords.forEach((record) => {
+            const currentDateTime = new Date(record.cas);
+            const currentDateStr = record.date; // DD.MM.RRRR
+            const currentTimeStr = record.time; // HH:MM
 
-            // --- Logika Sumarizácie Dňa ---
-            if (lastDate && lastDate !== currentDateStr) {
-                // Sumarizácia predchádzajúceho dňa
-                if (dailyWorkMs > 0) {
-                    exportData.push(["", "Sumarizácia dňa:", lastDate, msToHhMm(dailyWorkMs)]);
-                }
-                dailyWorkMs = 0; // Reset pre nový deň
-            }
+            // --- Logika Sumarizácie Dňa ---
+            if (lastDate && lastDate !== currentDateStr) {
+                // Sumarizácia predchádzajúceho dňa
+                exportData.push(["", "Sumarizácia dňa:", lastDate, msToHhMm(dailyWorkMs)]);
+                dailyWorkMs = 0; // Reset pre nový deň
+            }
 
-            if (record.stav === 'prichod') {
-                lastPrichod = currentDateTime;
-                exportData.push([currentDateStr, currentTimeStr, record.stav.toUpperCase(), ""]);
-            } else if (record.stav === 'odchod' && lastPrichod) {
-                const durationMs = currentDateTime - lastPrichod;
-                const durationHhMm = msToHhMm(durationMs);
-                
-                totalWorkMs += durationMs;
-                dailyWorkMs += durationMs;
+            if (record.stav === 'prichod') {
+                lastPrichod = currentDateTime;
+                exportData.push([currentDateStr, currentTimeStr, record.stav.toUpperCase(), ""]);
+            } else if (record.stav === 'odchod' && lastPrichod) {
+                const durationMs = currentDateTime - lastPrichod;
+                const durationHhMm = msToHhMm(durationMs);
+                
+                totalWorkMs += durationMs;
+                dailyWorkMs += durationMs;
 
-                exportData.push([currentDateStr, currentTimeStr, record.stav.toUpperCase(), durationHhMm]);
-                lastPrichod = null; // Vynulovanie po odchode
-            } else {
-                // Prípad odchodu bez predchádzajúceho príchodu
-                exportData.push([currentDateStr, currentTimeStr, record.stav.toUpperCase(), "Chýba PRÍCHOD"]);
-            }
+                exportData.push([currentDateStr, currentTimeStr, record.stav.toUpperCase(), durationHhMm]);
+                lastPrichod = null; // Vynulovanie po odchode
+            } else {
+                // Prípad odchodu bez predchádzajúceho príchodu, alebo prebytočný príchod (ten nepridáme)
+                exportData.push([currentDateStr, currentTimeStr, record.stav.toUpperCase(), "Chýba PRÍCHOD"]);
+                lastPrichod = null; // Reset pre opätovnú kontrolu
+            }
 
-            lastDate = currentDateStr;
-        });
+            lastDate = currentDateStr;
+        });
 
-        // --- Finálna Sumarizácia (Posledný deň) ---
-        if (lastDate && dailyWorkMs > 0) {
-            exportData.push(["", "Sumarizácia dňa:", lastDate, msToHhMm(dailyWorkMs)]);
-        }
+        // --- Finálna Sumarizácia (Posledný deň) ---
+        if (lastDate) {
+            // Pridáme celkovú sumu pre posledný spracovaný deň
+            exportData.push(["", "Sumarizácia dňa:", lastDate, msToHhMm(dailyWorkMs)]);
+        }
 
-        // --- Celková Sumarizácia ---
-        exportData.push([]); // Prázdny riadok
-        exportData.push(["Celková odpracovaná doba:", "", "", msToHhMm(totalWorkMs)]);
+        // --- Celková Sumarizácia ---
+        exportData.push([]); // Prázdny riadok
+        exportData.push(["Celková odpracovaná doba:", "", "", msToHhMm(totalWorkMs)]);
 
-    } else { // Pre Prestávky a PN je jednoduchý export
-        if (sortedRecords.length === 0) {
-            exportData.push(["Žiadne záznamy", ""]);
-        } else {
-            sortedRecords.forEach(z => {
-                exportData.push([
-                    z.casDisplay, // Dátum a Čas v jednom stĺpci
-                    z.stav.toUpperCase()
-                ]);
-            });
-        }
-    }
+    } else { // Pre Prestávky a PN je jednoduchý export
+        if (sortedRecords.length === 0) {
+            exportData.push(["Žiadne záznamy", ""]);
+        } else {
+            sortedRecords.forEach(z => {
+                exportData.push([
+                    z.casDisplay, // Dátum a Čas v jednom stĺpci
+                    z.stav.toUpperCase()
+                ]);
+            });
+        }
+    }
 
 
-    // --- Krok 4: Export XLSX s vizuálnymi úpravami ---
-    
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet(exportData);
-    
-    // ----------------------------------------------------
-    // VIZUÁLNE ÚPRAVY HÁRKU (Šírka stĺpcov, Formát buniek)
-    // ----------------------------------------------------
-    
-    if (sectionType === 'dochadzka') {
-        // Nastavenie šírky stĺpcov pre Dochádzku
-        ws['!cols'] = [
-            { wpx: 100 }, // Stĺpec A: Dátum
-            { wpx: 70 },  // Stĺpec B: Čas
-            { wpx: 100 }, // Stĺpec C: Typ
-            { wpx: 150 }  // Stĺpec D: Odpracovaný čas/Status
-        ];
+    // --- Krok 4: Export XLSX s vizuálnymi úpravami ---
+    
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(exportData);
+    
+    // ----------------------------------------------------
+    // VIZUÁLNE ÚPRAVY HÁRKU (Šírka stĺpcov, Formát buniek)
+    // ----------------------------------------------------
+    
+    if (sectionType === 'dochadzka') {
+        // Nastavenie šírky stĺpcov pre Dochádzku
+        ws['!cols'] = [
+            { wpx: 100 }, // Stĺpec A: Dátum
+            { wpx: 70 },  // Stĺpec B: Čas
+            { wpx: 100 }, // Stĺpec C: Typ
+            { wpx: 150 }  // Stĺpec D: Odpracovaný čas/Status
+        ];
 
-        // Zvýraznenie buniek s kalkuláciami (Sumarizácia)
-        // Používame styler na bunky, ktoré obsahujú "Sumarizácia" alebo "Celková"
-        const finalRowIndex = exportData.length - 1;
+        // Zvýraznenie buniek s kalkuláciami (Sumarizácia)
+        // Používame styler na bunky, ktoré obsahujú "Sumarizácia" alebo "Celková"
+        const finalRowIndex = exportData.length - 1;
 
-        for (let i = 4; i < exportData.length; i++) {
-            const row = exportData[i];
-            
-            // Kontrola dennej sumy
-            if (row[1] === "Sumarizácia dňa:") {
-                // Spojenie buniek C a D v riadku sumarizácie (na obrázku sú spojené)
-                // Len vizuálny textový formát, funkčné spojenie v XLSX je komplexné, ponecháme text
-                
-                // Formátovanie sumy (D-stĺpec)
-                const cellRef = XLSX.utils.encode_cell({ r: i, c: 3 }); 
-                if (ws[cellRef]) {
-                    ws[cellRef].s = { font: { bold: true }, fill: { fgColor: { rgb: "FFFFCC00" } } }; // Zlatá farba
-                }
-            }
-            
-            // Celková suma
-            if (i === finalRowIndex && row[0] === "Celková odpracovaná doba:") {
-                 // Formátovanie celkovej sumy (D-stĺpec)
-                 const cellRef = XLSX.utils.encode_cell({ r: i, c: 3 }); 
-                 if (ws[cellRef]) {
-                     ws[cellRef].s = { font: { bold: true }, fill: { fgColor: { rgb: "FF00B050" } } }; // Zelená farba
-                 }
-            }
-        }
-        
-    } else {
-        // Nastavenie šírky stĺpcov pre Prestávky/PN
-         ws['!cols'] = [
-            { wpx: 150 }, // Stĺpec A: Dátum a Čas
-            { wpx: 100 }  // Stĺpec B: Typ
-        ];
-    }
-    
-    // ----------------------------------------------------
+        for (let i = 4; i < exportData.length; i++) {
+            const row = exportData[i];
+            
+            // Kontrola dennej sumy
+            if (row[1] === "Sumarizácia dňa:") {
+                // Formátovanie sumy (D-stĺpec)
+                const cellRef = XLSX.utils.encode_cell({ r: i, c: 3 }); 
+                if (ws[cellRef]) {
+                    ws[cellRef].s = { font: { bold: true }, fill: { fgColor: { rgb: "FFFFFF00" } } }; // Žltá farba
+                }
+            }
+            
+            // Celková suma
+            if (i === finalRowIndex && row[0] === "Celková odpracovaná doba:") {
+                 // Formátovanie textu "Celková odpracovaná doba:" (A-stĺpec)
+                 const textCellRef = XLSX.utils.encode_cell({ r: i, c: 0 }); 
+                 if (ws[textCellRef]) {
+                     ws[textCellRef].s = { font: { bold: true } };
+                 }
+                 // Formátovanie celkovej sumy (D-stĺpec)
+                 const cellRef = XLSX.utils.encode_cell({ r: i, c: 3 }); 
+                 if (ws[cellRef]) {
+                     ws[cellRef].s = { font: { bold: true }, fill: { fgColor: { rgb: "FFCCFFCC" } } }; // Svetlo zelená
+                 }
+            }
+        }
+        
+    } else {
+        // Nastavenie šírky stĺpcov pre Prestávky/PN
+         ws['!cols'] = [
+            { wpx: 150 }, // Stĺpec A: Dátum a Čas
+            { wpx: 100 }  // Stĺpec B: Typ
+        ];
+    }
+    
+    // ----------------------------------------------------
 
-    XLSX.utils.book_append_sheet(wb, ws, "Dochádzka");
+    XLSX.utils.book_append_sheet(wb, ws, "Dochádzka");
 
-    // 5. Stiahnutie súboru
-    const safeUserName = userName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-    const fileName = `${fileNameBase}_${safeUserName}_export.xlsx`;
-    
-    XLSX.writeFile(wb, fileName);
-    
-    // Spätná väzba na tlačidle
-    const btn = document.querySelector(`[data-export-table="${sectionType}"]`);
-    if(btn) {
-        btn.textContent = "Súbor stiahnutý!";
-        setTimeout(() => btn.textContent = "Exportovať do XLSX", 2000);
-    }
+    // 5. Stiahnutie súboru
+    const safeUserName = userName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+    const fileName = `${fileNameBase}_${safeUserName}_export.xlsx`;
+    
+    XLSX.writeFile(wb, fileName);
+    
+    // Spätná väzba na tlačidle
+    const btn = document.querySelector(`[data-export-table="${sectionType}"]`);
+    if(btn) {
+        btn.textContent = "Súbor stiahnutý!";
+        setTimeout(() => btn.textContent = "Exportovať do XLSX", 2000);
+    }
 };
 
 // --- Listenery ---
 
 document.getElementById("logoutBtn").addEventListener("click", () => {
-    localStorage.removeItem("uid");
-    window.location.href = "index.html";
+    localStorage.removeItem("uid");
+    window.location.href = "index.html";
 });
 
 document.querySelectorAll("nav button").forEach(btn => {
-    btn.addEventListener("click", () => {
-        document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        document.querySelectorAll("section").forEach(sec => sec.classList.remove("active"));
-        document.getElementById(btn.dataset.target).classList.add("active");
-        renderTables(allRecordsCache);
-    });
+    btn.addEventListener("click", () => {
+        document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        document.querySelectorAll("section").forEach(sec => sec.classList.remove("active"));
+        document.getElementById(btn.dataset.target).classList.add("active");
+        renderTables(allRecordsCache);
+    });
 });
 
 document.getElementById("dateDochadzka").addEventListener("change", () => renderTables(allRecordsCache));
@@ -584,10 +591,10 @@ document.getElementById("datePrestavky").addEventListener("change", () => render
 document.getElementById("datePN").addEventListener("change", () => renderTables(allRecordsCache));
 
 document.querySelectorAll(".export-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-        // Odovzdávame len dátový atribút 'dochadzka', 'prestavky' alebo 'pn'
-        exportTable(btn.dataset.exportTable); 
-    });
+    btn.addEventListener("click", () => {
+        // Odovzdávame len dátový atribút 'dochadzka', 'prestavky' alebo 'pn'
+        exportTable(btn.dataset.exportTable);
+    });
 });
 
 // --- Spustenie aplikácie ---
