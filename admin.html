@@ -49,6 +49,8 @@ tr:nth-child(even){ background:#f8f9fa; }
     color: inherit !important; /* KĽÚČOVÁ OPRAVA: Dedenie farby, aby nebola modrá */
     font-size: 16px !important;
 }
+
+/* KĽÚČOVÁ OPRAVA: Použitie normalizovaných tried (bez diakritiky), ale ponechanie pôvodných pre kompatibilitu */
 .status-prichod { 
     background: #198754 !important; /* Zelená */
     color: white !important; /* Zabezpečí biely text */
@@ -57,7 +59,7 @@ tr:nth-child(even){ background:#f8f9fa; }
     background: #dc3545 !important; /* Červená */
     color: white !important; /* Zabezpečí biely text */
 } 
-.status-prestávka { 
+.status-prestávka, .status-prestavka {  /* ZACHOVÁVAM TOTO, ale preferujem status-prestavka */
     background: #ffc107 !important; /* Žltá */
     color: #212529 !important; /* Zabezpečí tmavý text */
 }
@@ -221,7 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
 window.logout = () => { window.location.href="index.html"; };
 
 // ----------------------------------------------------
-// !!! UPRAVENÁ FUNKCIA PRE EXPORT DO CSV !!!
+// FUNKCIA PRE EXPORT DO CSV
 // ----------------------------------------------------
 window.exportTable = function(id){
   // Nájdeme div, ktorý obsahuje tabuľku (dochadzkaTable, usersTable atď.)
@@ -282,7 +284,7 @@ window.exportTable = function(id){
 };
 
 // ----------------------------------------------------
-// KONIEC UPRAVENEJ FUNKCIE EXPORTU
+// KONIEC FUNKCIE EXPORTU
 // ----------------------------------------------------
 
 
@@ -323,7 +325,7 @@ window.addLog = async function(type, typ){
 };
 
 
-// ----- FUNKCIA pre načítanie (FILTROVANIE DÁTUM + MENO) - OPRAVENÁ LOGIKA PREHĽADÁVANIA -----
+// ----- FUNKCIA pre načítanie (FILTROVANIE DÁTUM + MENO) - OPRAVENÁ LOGIKA PREHĽADÁVANIA A PRIRADENIE TRIED PRE FARBU -----
 async function loadAttendance(type, tableId, dateId, searchId){
   const el = document.getElementById(tableId);
   el.innerHTML="Načítavam dáta...";
@@ -347,53 +349,47 @@ async function loadAttendance(type, tableId, dateId, searchId){
         // Prehľadávame VŠETKY vlastnosti (priame aj pod-priečinky) používateľa
         Object.values(user).forEach(logsEntry => {
             
-            // Kontrola, či ide o objekt s viacerými logmi (dochadzka, prestavky, pn)
-            // alebo o jeden priamy záznam, ak databáza nie je konzistentná
             let logs;
             if (typeof logsEntry === 'object' && logsEntry !== null && !Array.isArray(logsEntry)) {
-                // Ak je to priečinok (dochadzka, prestavky atď.), prejdeme jeho kľúče/hodnoty
                 logs = Object.values(logsEntry);
             } else if (typeof logsEntry === 'object' && logsEntry !== null && logsEntry.cas && logsEntry.typ) {
-                // Ak je to jeden priamy záznam, spracujeme ho ako jednoelementové pole
                 logs = [logsEntry];
             } else {
-                return; // Preskočíme, nie je to záznam dochádzky
+                return;
             }
 
             logs.forEach(log => {
 
                 // --- KROK 1: Overenie, či je to platný záznam ---
-                if (!log || !log.cas || !log.typ) return; // Toto nie je platný záznam
+                if (!log || !log.cas || !log.typ) return;
 
                 const rawType = (log.typ || "").toLowerCase();
-                const logTyp = rawType.replace('á', 'a'); // Normalizácia (prestávka -> prestavka)
+                // Normalizácia pre triedu (bez diakritiky)
+                const logTypNormalized = rawType.replace('á', 'a').replace('í', 'i'); 
 
                 // --- KROK 2: Kontrola, či záznam patrí do tejto sekcie ---
                 let isRelevantType = false;
-                if (type === 'dochadzka' && (logTyp === 'prichod' || logTyp === 'odchod')) {
+                if (type === 'dochadzka' && (logTypNormalized === 'prichod' || logTypNormalized === 'odchod')) {
                     isRelevantType = true;
-                } else if (type === 'prestavky' && logTyp === 'prestavka') {
+                } else if (type === 'prestavky' && logTypNormalized === 'prestavka') {
                     isRelevantType = true;
-                } else if (type === 'pn' && logTyp === 'pn') {
+                } else if (type === 'pn' && logTypNormalized === 'pn') {
                     isRelevantType = true;
                 }
 
                 if (!isRelevantType) return; 
 
-                // --- KROK 3: Normalizácia DÁTUMU (logika pre oba formáty) ---
+                // --- KROK 3: Normalizácia DÁTUMU ---
                 let cleanTime = String(log.cas);
-                let validIsoDate = ""; // Dátum vo formáte YYYY-MM-DD
+                let validIsoDate = "";
                 
-                // Regex pre "DD.MM.YYYY"
                 const dateRegex = /(\d{1,2})\.(\d{1,2})\.(\d{4})/; 
                 const match = cleanTime.match(dateRegex);
 
                 if (match) {
-                    // Formát je "DD.MM.YYYY ..."
                     const [full, day, month, year] = match;
                     validIsoDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
                 } else if (cleanTime.includes('-')) {
-                    // Predpokladaný formát "YYYY-MM-DD ..."
                     validIsoDate = cleanTime.substring(0, 10);
                 } else {
                     return; 
@@ -406,24 +402,21 @@ async function loadAttendance(type, tableId, dateId, searchId){
                 const nameMatch = !search || userNameLower.includes(search);
 
                 if (dateMatch && nameMatch) {
-                  entriesFound = true; // Našli sme záznam
+                  entriesFound = true;
                   
-                  let statusClass = '';
-                  if (logTyp === 'prichod') statusClass = 'status-prichod';
-                  else if (logTyp === 'odchod') statusClass = 'status-odchod';
-                  else if (logTyp === 'prestávka' || logTyp === 'prestavka') statusClass = 'status-prestávka';
-                  else if (logTyp === 'pn') statusClass = 'status-pn';
-
+                  // UPRAVENÁ LOGIKA PRE PRIRADENIE TRIEDY (POUŽÍVAME NORMALIZOVANÝ TYP)
+                  let statusClass = 'status-' + logTypNormalized; // Napr. status-prichod, status-prestavka
+                  
                   html += `<tr>
                     <td>${userName}</td>
-                    <td>${log.cas || '-'}</td> <td><span class="status-badge ${statusClass}">${rawType.toUpperCase()}</span></td>
+                    <td>${log.cas || '-'}</td> 
+                    <td><span class="status-badge ${statusClass}">${rawType.toUpperCase()}</span></td>
                   </tr>`;
                 }
             });
-        }); // Koniec Object.values(user).forEach
-      }); // Koniec snap.forEach
+        });
+      });
       
-      // Ak sa po prejdení všetkých záznamov nenašiel žiadny, ktorý by vyhovoval filtru
       if (!entriesFound) {
         html += '<tr><td colspan="3">Žiadne záznamy podľa filtra.</td></tr>';
       }
@@ -438,7 +431,7 @@ async function loadAttendance(type, tableId, dateId, searchId){
 }
 
 
-// ----- Načítanie Používateľov -----
+// ----- Načítanie Používateľov (Bez Zmeny) -----
 async function loadUsers(){
   const el = document.getElementById("usersTable");
   el.innerHTML="Načítavam používateľov...";
