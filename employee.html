@@ -375,7 +375,7 @@ function msToHhMm(ms) {
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 }
 
-// --- HLAVNÁ FUNKCIA: Export do XLSX s výpočtom odpracovaného času ---
+// --- HLAVNÁ FUNKCIA: Export do XLSX s výpočtom odpracovaného času (UPRAVENÉ ŠTÝLY) ---
 window.exportTable = function(sectionType) {
     const userName = userNameEl.textContent;
     let filterDate, expectedStav, sectionTitle;
@@ -502,13 +502,12 @@ window.exportTable = function(sectionType) {
         // Nastavenie šírky stĺpcov pre Dochádzku
         ws['!cols'] = [
             { wpx: 100 }, // Stĺpec A: Dátum
-            { wpx: 70 },  // Stĺpec B: Čas
-            { wpx: 100 }, // Stĺpec C: Typ
-            { wpx: 150 }  // Stĺpec D: Odpracovaný čas/Status
+            { wpx: 150 },  // Stĺpec B: Čas/Sumarizácia dňa
+            { wpx: 100 }, // Stĺpec C: Typ/Dátum Sumarizácie
+            { wpx: 150 }  // Stĺpec D: Odpracovaný čas/Status
         ];
 
         // Zvýraznenie buniek s kalkuláciami (Sumarizácia)
-        // Používame styler na bunky, ktoré obsahujú "Sumarizácia" alebo "Celková"
         const finalRowIndex = exportData.length - 1;
 
         for (let i = 4; i < exportData.length; i++) {
@@ -516,31 +515,42 @@ window.exportTable = function(sectionType) {
             
             // Kontrola dennej sumy
             if (row[1] === "Sumarizácia dňa:") {
-                // Spojenie buniek C a D v riadku sumarizácie (na obrázku sú spojené)
-                // Len vizuálny textový formát, funkčné spojenie v XLSX je komplexné, ponecháme text
-                
-                // Formátovanie sumy (D-stĺpec)
+                // Formátovanie textu "Sumarizácia dňa:" (B-stĺpec) - PRIDANÉ TUČNÉ PÍSMO
+                const textCellRef = XLSX.utils.encode_cell({ r: i, c: 1 });
+                if (ws[textCellRef]) {
+                    ws[textCellRef].s = { font: { bold: true } };
+                }
+
+                // Formátovanie sumy (D-stĺpec) - ZMENA NA ŽLTÚ, PRIDANÉ TUČNÉ PÍSMO
                 const cellRef = XLSX.utils.encode_cell({ r: i, c: 3 }); 
                 if (ws[cellRef]) {
-                    ws[cellRef].s = { font: { bold: true }, fill: { fgColor: { rgb: "FFFFCC00" } } }; // Zlatá farba
+                    // Použitie štýlu: Tučné, výplň žltá (FFFFFF00 alebo FFC000)
+                    ws[cellRef].s = { font: { bold: true }, fill: { fgColor: { rgb: "FFFFCC00" } } }; 
                 }
             }
             
             // Celková suma
             if (i === finalRowIndex && row[0] === "Celková odpracovaná doba:") {
-                 // Formátovanie celkovej sumy (D-stĺpec)
-                 const cellRef = XLSX.utils.encode_cell({ r: i, c: 3 }); 
-                 if (ws[cellRef]) {
-                     ws[cellRef].s = { font: { bold: true }, fill: { fgColor: { rgb: "FF00B050" } } }; // Zelená farba
-                 }
+                // Formátovanie textu "Celková odpracovaná doba:" (A-stĺpec) - PRIDANÉ TUČNÉ PÍSMO
+                const textCellRef = XLSX.utils.encode_cell({ r: i, c: 0 });
+                if (ws[textCellRef]) {
+                    ws[textCellRef].s = { font: { bold: true } };
+                }
+                
+                // Formátovanie celkovej sumy (D-stĺpec) - ZELENÁ, PRIDANÉ TUČNÉ PÍSMO
+                const cellRef = XLSX.utils.encode_cell({ r: i, c: 3 }); 
+                if (ws[cellRef]) {
+                    // Použitie štýlu: Tučné, výplň zelená
+                    ws[cellRef].s = { font: { bold: true }, fill: { fgColor: { rgb: "FF00B050" } } }; 
+                }
             }
         }
         
     } else {
         // Nastavenie šírky stĺpcov pre Prestávky/PN
-         ws['!cols'] = [
+          ws['!cols'] = [
             { wpx: 150 }, // Stĺpec A: Dátum a Čas
-            { wpx: 100 }  // Stĺpec B: Typ
+            { wpx: 100 }  // Stĺpec B: Typ
         ];
     }
     
