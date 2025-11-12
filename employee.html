@@ -33,7 +33,34 @@ tr:nth-child(even){ background:#f8f9fa; }
 
 /* Status box je teraz len textový */
 .status-box { background:#e9f2ff; color:#007bff; font-weight:600; padding:15px; border-radius:8px; text-align:center; margin-bottom:20px; border:1px solid #007bff;}
-/* Triedy status-badge boli odstránené */
+
+/* --- NOVÉ ŠTÝLY PRE ODZNAKY (PILULKY) --- */
+.status-badge {
+    font-weight: 700 !important;
+    padding: 7px 14px !important;
+    border-radius: 50px !important; /* Tvar pilulky */
+    display: inline-block;
+    text-align: center;
+    min-width: 80px;
+    white-space: nowrap;
+    text-shadow: none !important; 
+    color: white !important; /* Predvolená farba textu pre pilulku */
+    font-size: 14px !important;
+}
+.status-prichod { 
+    background: #198754 !important; /* Zelená */
+} 
+.status-odchod { 
+    background: #dc3545 !important; /* Červená */
+} 
+.status-prestavka { 
+    background: #ffc107 !important; /* Žltá */
+    color: #212529 !important; /* Tmavý text na žltej */
+}
+.status-pn { 
+    background: #6f42c1 !important; /* Fialová */
+} 
+/* ----------------------------------- */
 
 .filter { margin-top: 10px; }
 .filter input { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; }
@@ -197,7 +224,7 @@ async function loadUserData() {
                  const isDuplicate = records.some(r => r.cas === validIsoTime && r.stav === recordType);
                  if (!isDuplicate) {
                      records.push({
-                         cas: validIsoTime, 
+                         cas: validIsoTime, 
                          stav: recordType,
                      });
                  }
@@ -209,7 +236,7 @@ async function loadUserData() {
         allRecordsCache = records;
         
         // AKTUALIZÁCIA STAVU (používame len text)
-        const mainStatusRecord = records.find(r => r.stav !== 'prestavka'); 
+        const mainStatusRecord = records.find(r => r.stav !== 'prestavka'); 
         
         const lastStatus = mainStatusRecord ? mainStatusRecord.stav.toUpperCase() : "Žiadny stav nezaznamenaný";
         
@@ -225,7 +252,7 @@ async function loadUserData() {
     }
 }
 
-// --- Vykreslenie tabuliek (Odstránenie triedy status-badge) ---
+// --- Vykreslenie tabuliek (Pridané status-badge triedy) ---
 function renderTables(records) {
   const dochadzkaTable = document.getElementById("dochadzkaTable");
   const prestavkyTable = document.getElementById("prestavkyTable");
@@ -253,12 +280,27 @@ function renderTables(records) {
         const timePart = z.cas.substring(11, 16);
         const visibleTime = `${datePart[2]}.${datePart[1]}.${datePart[0]} ${timePart}`; 
 
+        let statusClass = '';
+        if (z.stav === 'prichod') statusClass = 'status-prichod';
+        else if (z.stav === 'odchod') statusClass = 'status-odchod';
+        else if (z.stav === 'prestavka') statusClass = 'status-prestavka';
+        else if (z.stav === 'pn') statusClass = 'status-pn';
+
         
         if (type === 'dochadzka') {
-          // Dochádzka: 2 stĺpce - Zobrazujeme len text
-          return `<tr><td>${visibleTime}</td><td>${z.stav.toUpperCase()}</td></tr>`;
+          // Dochádzka: 2 stĺpce - Zobrazujeme pilulku
+          return `<tr>
+              <td>${visibleTime}</td>
+              <td><span class="status-badge ${statusClass}">${z.stav.toUpperCase()}</span></td>
+          </tr>`;
         } else {
           // Prestávky a PN: 1 stĺpec (Len čas)
+          // Pre Prestávky zmeníme:
+          if (type === 'prestavky') {
+            return `<tr><td>${visibleTime} <span class="status-badge ${statusClass}" style="margin-left: 10px; font-size: 10px;">${z.stav.toUpperCase()}</span></td></tr>`;
+          }
+          
+          // PN zostane len čas, ak nemá vlastný stĺpec
           return `<tr><td>${visibleTime}</td></tr>`;
         }
       }).join("");
@@ -293,7 +335,14 @@ window.exportTable = function(sectionNameId) {
     
     table.querySelectorAll("tbody tr").forEach(row => {
         const cols = Array.from(row.querySelectorAll("td")).map(td => {
-            const text = td.textContent.trim().replace(/\s\s+/g, ' '); 
+            // Extrahujeme len text, bez pilulky, aby CSV bolo čisté
+            let text = td.textContent.trim().replace(/\s\s+/g, ' '); 
+            
+            // Ak bunka obsahuje pilulku (napr. v Prestávkach), odstránime jej text z hlavného textu
+            const badge = td.querySelector('.status-badge');
+            if (badge) {
+                text = text.replace(badge.textContent, '').trim();
+            }
             return `"${text}"`;
         });
         
@@ -341,3 +390,4 @@ loadUserData();
 </script>
 </body>
 </html>
+
