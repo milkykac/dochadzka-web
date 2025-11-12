@@ -364,65 +364,131 @@ function renderTables(records) {
     renderSection(pnTable, 'pn', filterPN, ["pn"], 1);
 }
 
+// --- POMOCNÁ FUNKCIA: Konverzia milisekúnd na formát HH:MM ---
+function msToHhMm(ms) {
+    const totalMinutes = Math.floor(ms / (1000 * 60));
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+}
 
-// --- NOVÁ FUNKCIA: Export do skutočného XLSX formátu s vizuálnymi úpravami ---
+// --- NOVÁ HLAVNÁ FUNKCIA: Export do XLSX s výpočtom odpracovaného času ---
 window.exportTable = function(sectionType) {
     const userName = userNameEl.textContent;
     let filterDate, expectedStav, sectionTitle;
-    let header = [];
+    let header; // Hlavička sa bude líšiť pre Dochádzku
     let fileNameBase;
 
-    // --- Krok 1: Definovanie filtrov a hlavičiek na základe typu sekcie ---
+    // --- Krok 1: Definovanie filtrov a hlavičiek ---
     if (sectionType === 'dochadzka') {
         filterDate = document.getElementById("dateDochadzka").value;
         expectedStav = ["prichod", "odchod"];
-        sectionTitle = "Dochádzka (Príchod/Odchod)";
-        header = ["Čas", "Typ"];
-        fileNameBase = "dochadzka";
+        sectionTitle = "Dochádzka (Príchod/Odchod) a Sumarizácia";
+        // Nová hlavička pre dochádzku s kalkuláciou
+        header = ["Dátum", "Čas", "Typ", "Odpracovaný čas/Status"]; 
+        fileNameBase = "dochadzka_sumar";
     } else if (sectionType === 'prestavky') {
         filterDate = document.getElementById("datePrestavky").value;
         expectedStav = ["prestavka"];
         sectionTitle = "Prestávky";
-        header = ["Čas", "Typ"];
+        header = ["Dátum a Čas", "Typ"];
         fileNameBase = "prestavky";
     } else if (sectionType === 'pn') {
         filterDate = document.getElementById("datePN").value;
         expectedStav = ["pn"];
         sectionTitle = "PN";
-        header = ["Čas", "Typ"];
+        header = ["Dátum a Čas", "Typ"];
         fileNameBase = "pn";
     } else {
         return alert("Neznámy typ sekcie pre export.");
     }
     
-    // --- Krok 2: Filtrácia dát ---
+    // --- Krok 2: Filtrácia a triedenie dát pre kalkuláciu ---
     let filteredRecords = allRecordsCache;
     if(filterDate) {
         filteredRecords = filteredRecords.filter(r => r.cas.substring(0, 10) === filterDate);
     }
-    const sectionRecords = filteredRecords.filter(r => expectedStav.includes(r.stav));
+    
+    // Pre kalkuláciu potrebujeme záznamy triediť chronologicky
+    const sortedRecords = filteredRecords
+        .filter(r => expectedStav.includes(r.stav))
+        .sort((a, b) => new Date(a.cas) - new Date(b.cas));
 
-    // --- Krok 3: Generovanie dátového poľa pre XLSX ---
-    // Pridáme metadáta s názvami stĺpcov (pre prehľadnosť v Exceli)
+    // --- Krok 3: Generovanie dátového poľa a KALKULÁCIA ---
     const exportData = [
-        ["Typ záznamu:", sectionTitle], // 1. riadok
-        ["Používateľ:", userName],       // 2. riadok
-        [], // 3. riadok: Prázdny pre vizuálne oddelenie
-        header // 4. riadok: Hlavička tabuľky
+        ["Typ záznamu:", sectionTitle],
+        ["Používateľ:", userName],
+        [], 
+        header // 4. riadok: Hlavička
     ];
     
-    // Pridanie záznamov od 5. riadku
-    if (sectionRecords.length === 0) {
-        exportData.push(["Žiadne záznamy", ""]);
-    } else {
-        sectionRecords.forEach(z => {
-            // Používame casDisplay a stav
-            exportData.push([
-                z.casDisplay,
-                z.stav.toUpperCase()
-            ]);
+    let totalWorkMs = 0;
+    let lastPrichod = null;
+    let lastDate = null;
+    let dailyWorkMs = 0;
+    let dailySummaryAdded = false;
+
+    if (sectionType === 'dochadzka') {
+        
+        sortedRecords.forEach((record, index) => {
+            const currentDateTime = new Date(record.cas);
+            const currentDateStr = record.casDisplay.substring(0, 10);
+            const currentTimeStr = record.casDisplay.substring(11, 16);
+
+            // Zhrnutie predchádzajúceho dňa (ak sa zmenil dátum a už sa pridali nejaké záznamy)
+            if (lastDate && lastDate !== currentDateStr) {
+                if (!dailySummaryAdded) {
+                    exportData.push(["", "Sumarizácia dňa:", lastDate, msToHhMm(dailyWorkMs)]);
+                }
+                dailyWorkMs = 0;
+                dailySummaryAdded = false;
+            }
+
+            if (record.stav === 'prichod') {
+                lastPrichod = currentDateTime;
+                exportData.push([currentDateStr, currentTimeStr, record.stav.toUpperCase(), ""]);
+            } else if (record.stav === 'odchod' && lastPrichod) {
+                const durationMs = currentDateTime - lastPrichod;
+                const durationHhMm = msToHhMm(durationMs);
+                
+                totalWorkMs += durationMs;
+                dailyWorkMs += durationMs;
+
+                exportData.push([currentDateStr, currentTimeStr, record.stav.toUpperCase(), durationHhMm]);
+                lastPrichod = null; // Vynulovanie po odchode
+            } else {
+                // Prípad odchodu bez predchádzajúceho príchodu
+                exportData.push([currentDateStr, currentTimeStr, record.stav.toUpperCase(), "Chýba PRÍCHOD"]);
+            }
+
+            lastDate = currentDateStr;
+
+            // Pridanie dennej sumy, ak je to posledný záznam dňa
+            if (index === sortedRecords.length - 1) {
+                if (!dailySummaryAdded) {
+                    exportData.push(["", "Sumarizácia dňa:", lastDate, msToHhMm(dailyWorkMs)]);
+                    dailySummaryAdded = true;
+                }
+            }
         });
+
+        // Celková sumarizácia (ak je vybraný iba jeden deň, bude sa zhodovať s dennou sumou)
+        exportData.push([]);
+        exportData.push(["Celková odpracovaná doba (filtrované dáta):", msToHhMm(totalWorkMs)]);
+
+    } else { // Pre Prestávky a PN je jednoduchý export bez výpočtu
+        if (sortedRecords.length === 0) {
+            exportData.push(["Žiadne záznamy", ""]);
+        } else {
+            sortedRecords.forEach(z => {
+                exportData.push([
+                    z.casDisplay, // Dátum a Čas v jednom stĺpci
+                    z.stav.toUpperCase()
+                ]);
+            });
+        }
     }
+
 
     // --- Krok 4: Export XLSX s vizuálnymi úpravami ---
     
@@ -430,31 +496,36 @@ window.exportTable = function(sectionType) {
     const ws = XLSX.utils.aoa_to_sheet(exportData);
     
     // ----------------------------------------------------
-    // VIZUÁLNE ÚPRAVY HÁRKU (Šírka stĺpcov, Formát buniek)
+    // VIZUÁLNE ÚPRAVY HÁRKU
     // ----------------------------------------------------
     
-    // 1. Nastavenie šírky stĺpcov (wpx = šírka v pixeloch)
-    ws['!cols'] = [
-        { wpx: 150 }, // Stĺpec A: Čas (Dátum a čas)
-        { wpx: 100 }  // Stĺpec B: Typ (PRÍCHOD/ODCHOD)
-    ];
+    if (sectionType === 'dochadzka') {
+        // Nastavenie šírky stĺpcov pre Dochádzku
+        ws['!cols'] = [
+            { wpx: 100 }, // Stĺpec A: Dátum
+            { wpx: 70 },  // Stĺpec B: Čas
+            { wpx: 100 }, // Stĺpec C: Typ
+            { wpx: 150 }  // Stĺpec D: Odpracovaný čas/Status
+        ];
 
-    // 2. Formátovanie buniek v stĺpci A (Čas) na dátum/čas
-    // Začíname na indexe 4 (5. riadok) po hlavičke
-    for (let i = 4; i < exportData.length; i++) {
-        // Kontrola, či existuje bunka A (Čas)
-        const cellRef = XLSX.utils.encode_cell({ r: i, c: 0 }); // r=riadok, c=stĺpec 0 (A)
-        if (ws[cellRef]) {
-            // Formát "D.M.RRRR HH:MM"
-            ws[cellRef].t = 's'; // Nastaví typ bunky na String, hoci by sa dalo pokúsiť aj o dátumové formátovanie, pre vizuál stačí String.
-        }
+        // Zvýraznenie buniek s kalkuláciami (Sumarizácia)
+        const summaryStartRow = exportData.findIndex(row => row[1] === "Sumarizácia dňa:") + 1;
+        
+        // Ak je nájdená sumarizácia, môžeme ju štýlovať (pozn. knižnica XLSX nevie priamo farbiť, ale vieme nastaviť dátové formáty)
+        
+    } else {
+        // Nastavenie šírky stĺpcov pre Prestávky/PN
+         ws['!cols'] = [
+            { wpx: 150 }, // Stĺpec A: Dátum a Čas
+            { wpx: 100 }  // Stĺpec B: Typ
+        ];
     }
-
+    
     // ----------------------------------------------------
 
     XLSX.utils.book_append_sheet(wb, ws, "Dochádzka");
 
-    // 4. Stiahnutie súboru
+    // 5. Stiahnutie súboru
     const safeUserName = userName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
     const fileName = `${fileNameBase}_${safeUserName}_export.xlsx`;
     
