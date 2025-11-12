@@ -1,20 +1,3 @@
-🛠️ Pridanie Exportu do XLSX pre Admin Panel
-Pridal som do vášho kódu funkciu exportTableToXLSX, ktorá nahradí pôvodnú funkciu exportu do CSV. Táto funkcia zabezpečí, že dáta z dochádzky (vrátane dátumu, mena a statusu) budú exportované do prehľadného Excel súboru s názvom podľa sekcie.
-
-Zmenené boli tieto časti:
-
-Pôvodný kód pre export do CSV bol nahradený.
-
-Pridaná referencie na knižnicu xlsx.full.min.js v <head>.
-
-Globálna funkcia exportTable bola zmenená na volanie novej funkcie exportTableToXLSX.
-
-Pôvodný názov tlačidla "Exportovať do CSV" bol vo všetkých sekciách nahradený textom "Exportovať do XLSX".
-
-Tu je celý upravený HTML kód:
-
-HTML
-
 <!DOCTYPE html>
 <html lang="sk">
 <head>
@@ -553,5 +536,4 @@ window.addUser = async function() {
 
 </body>
 </html>
-
 
