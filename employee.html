@@ -365,7 +365,7 @@ function renderTables(records) {
 }
 
 
-// --- NOVÁ FUNKCIA: Export do skutočného XLSX formátu ---
+// --- NOVÁ FUNKCIA: Export do skutočného XLSX formátu s vizuálnymi úpravami ---
 window.exportTable = function(sectionType) {
     const userName = userNameEl.textContent;
     let filterDate, expectedStav, sectionTitle;
@@ -383,13 +383,13 @@ window.exportTable = function(sectionType) {
         filterDate = document.getElementById("datePrestavky").value;
         expectedStav = ["prestavka"];
         sectionTitle = "Prestávky";
-        header = ["Čas", "Typ"]; // Používame rovnakú štruktúru pre dáta
+        header = ["Čas", "Typ"];
         fileNameBase = "prestavky";
     } else if (sectionType === 'pn') {
         filterDate = document.getElementById("datePN").value;
         expectedStav = ["pn"];
         sectionTitle = "PN";
-        header = ["Čas", "Typ"]; // Používame rovnakú štruktúru pre dáta
+        header = ["Čas", "Typ"];
         fileNameBase = "pn";
     } else {
         return alert("Neznámy typ sekcie pre export.");
@@ -403,15 +403,15 @@ window.exportTable = function(sectionType) {
     const sectionRecords = filteredRecords.filter(r => expectedStav.includes(r.stav));
 
     // --- Krok 3: Generovanie dátového poľa pre XLSX ---
-    // Pridáme nadpis
+    // Pridáme metadáta s názvami stĺpcov (pre prehľadnosť v Exceli)
     const exportData = [
-        ["Typ záznamu:", sectionTitle],
-        ["Používateľ:", userName],
-        [], // Prázdny riadok
-        header // Hlavička tabuľky
+        ["Typ záznamu:", sectionTitle], // 1. riadok
+        ["Používateľ:", userName],       // 2. riadok
+        [], // 3. riadok: Prázdny pre vizuálne oddelenie
+        header // 4. riadok: Hlavička tabuľky
     ];
     
-    // Pridanie záznamov
+    // Pridanie záznamov od 5. riadku
     if (sectionRecords.length === 0) {
         exportData.push(["Žiadne záznamy", ""]);
     } else {
@@ -424,15 +424,34 @@ window.exportTable = function(sectionType) {
         });
     }
 
-    // --- Krok 4: Export XLSX ---
+    // --- Krok 4: Export XLSX s vizuálnymi úpravami ---
     
-    // 1. Vytvorenie pracovného zošita
     const wb = XLSX.utils.book_new();
-    
-    // 2. Vytvorenie hárku z dátového poľa
     const ws = XLSX.utils.aoa_to_sheet(exportData);
+    
+    // ----------------------------------------------------
+    // VIZUÁLNE ÚPRAVY HÁRKU (Šírka stĺpcov, Formát buniek)
+    // ----------------------------------------------------
+    
+    // 1. Nastavenie šírky stĺpcov (wpx = šírka v pixeloch)
+    ws['!cols'] = [
+        { wpx: 150 }, // Stĺpec A: Čas (Dátum a čas)
+        { wpx: 100 }  // Stĺpec B: Typ (PRÍCHOD/ODCHOD)
+    ];
 
-    // 3. Pridanie hárku do zošita
+    // 2. Formátovanie buniek v stĺpci A (Čas) na dátum/čas
+    // Začíname na indexe 4 (5. riadok) po hlavičke
+    for (let i = 4; i < exportData.length; i++) {
+        // Kontrola, či existuje bunka A (Čas)
+        const cellRef = XLSX.utils.encode_cell({ r: i, c: 0 }); // r=riadok, c=stĺpec 0 (A)
+        if (ws[cellRef]) {
+            // Formát "D.M.RRRR HH:MM"
+            ws[cellRef].t = 's'; // Nastaví typ bunky na String, hoci by sa dalo pokúsiť aj o dátumové formátovanie, pre vizuál stačí String.
+        }
+    }
+
+    // ----------------------------------------------------
+
     XLSX.utils.book_append_sheet(wb, ws, "Dochádzka");
 
     // 4. Stiahnutie súboru
@@ -441,11 +460,11 @@ window.exportTable = function(sectionType) {
     
     XLSX.writeFile(wb, fileName);
     
-    // Zmeníme text tlačidla na upozornenie, že sa sťahuje
+    // Spätná väzba na tlačidle
     const btn = document.querySelector(`[data-export-table="${sectionType}"]`);
     if(btn) {
         btn.textContent = "Súbor stiahnutý!";
-        setTimeout(() => btn.textContent = "Exportovať do XLSX", 2000); // Už je to XLSX, nie CSV
+        setTimeout(() => btn.textContent = "Exportovať do XLSX", 2000);
     }
 };
 
