@@ -1,17 +1,3 @@
-Ďakujem za upozornenie. Chápem, že funkcia exportu do CSV (window.exportTable) v Zamestnaneckom paneli nefunguje správne, hoci vizuál tabuľky je už opravený.
-
-Hlavný problém je, že exportná funkcia bola napísaná tak, aby hľadala tabuľku na základe ID sekcie, nie ID tela tabuľky (tbody).
-
-Riešenie:
-
-Opravím funkciu window.exportTable tak, aby správne získavala dáta priamo z premennej allRecordsCache a používala rovnakú filtračnú logiku ako renderTables, čím zaistím, že export bude vždy obsahovať len aktuálne, filtrované dáta. Je to spoľahlivejší prístup ako pokúšať sa parsovať HTML kód tabuľky, obzvlášť pre formát Prestávok a PN, kde je čas a typ v jednej bunke.
-
-Upravím volanie funkcie exportu v listenery, aby správne odovzdávala typ sekcie.
-
-Tu je opravený a zjednodušený kód pre Zamestnanecký panel:
-
-HTML
-
 <!DOCTYPE html>
 <html lang="sk">
 <head>
@@ -473,3 +459,4 @@ loadUserData();
 </script>
 </body>
 </html>
+
