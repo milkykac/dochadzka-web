@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin panel – Dochádzka</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script> <style>
+<style>
 /* PÔVODNÉ ŠTÝLY */
 body { font-family:'Poppins',sans-serif; margin:0; background:linear-gradient(135deg,#007bff,#6f42c1); min-height:100vh; color:#333; }
 header { background:#fff; padding:15px 25px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 3px 10px rgba(0,0,0,0.1); position:sticky; top:0; z-index:10; }
@@ -125,7 +125,8 @@ tr:nth-child(even){ background:#f8f9fa; }
     <button onclick="addLog('dochadzka','odchod')">Odchod</button>
     <button onclick="addLog('prestavky','prestávka')">Prestávka</button>
   </div>
-  <button class="export-btn" onclick="exportTableToXLSX('dochadzkaTable')">Exportovať do XLSX</button>   <div style="display:flex; gap:10px; margin-top:10px;">
+  <button class="export-btn" onclick="exportTable('dochadzkaTable')">Exportovať do CSV</button>
+  <div style="display:flex; gap:10px; margin-top:10px;">
     <input type="date" id="dateDochadzka" style="flex:1;" onchange="loadSection('dochadzka')">
     <input type="text" id="searchDochadzka" placeholder="Hľadať podľa mena..." style="flex:2;" oninput="loadSection('dochadzka')">
   </div>
@@ -134,7 +135,8 @@ tr:nth-child(even){ background:#f8f9fa; }
 
 <section id="prestavky">
   <h2>Prestávky</h2>
-  <button class="export-btn" onclick="exportTableToXLSX('prestavkyTable')">Exportovať do XLSX</button>   <div style="display:flex; gap:10px; margin-top:10px;">
+  <button class="export-btn" onclick="exportTable('prestavkyTable')">Exportovať do CSV</button>
+  <div style="display:flex; gap:10px; margin-top:10px;">
     <input type="date" id="datePrestavky" style="flex:1;" onchange="loadSection('prestavky')">
     <input type="text" id="searchPrestavky" placeholder="Hľadať podľa mena..." style="flex:2;" oninput="loadSection('prestavky')">
   </div>
@@ -143,7 +145,8 @@ tr:nth-child(even){ background:#f8f9fa; }
 
 <section id="pn">
   <h2>PN</h2>
-  <button class="export-btn" onclick="exportTableToXLSX('pnTable')">Exportovať do XLSX</button>   <div style="display:flex; gap:10px; margin-top:10px;">
+  <button class="export-btn" onclick="exportTable('pnTable')">Exportovať do CSV</button>
+  <div style="display:flex; gap:10px; margin-top:10px;">
     <input type="date" id="datePN" style="flex:1;" onchange="loadSection('pn')">
     <input type="text" id="searchPN" placeholder="Hľadať podľa mena..." style="flex:2;" oninput="loadSection('pn')">
   </div>
@@ -153,7 +156,8 @@ tr:nth-child(even){ background:#f8f9fa; }
 <section id="pouzivatelia">
   <h2>Používatelia</h2>
   <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap;">
-    <button class="export-btn" onclick="exportTableToXLSX('usersTable')">Exportovať do XLSX</button>     <button class="export-btn" style="background:#007bff;" onclick="addUser()">Pridať používateľa</button>
+    <button class="export-btn" onclick="exportTable('usersTable')">Exportovať do CSV</button>
+    <button class="export-btn" style="background:#007bff;" onclick="addUser()">Pridať používateľa</button>
   </div>
   <div id="usersTable" class="loader">Načítavam používateľov...</div>
   <h3>Nepriradené čipy</h3>
@@ -216,36 +220,70 @@ document.addEventListener('DOMContentLoaded', () => {
 
 window.logout = () => { window.location.href="index.html"; };
 
-// ---------------------------------------------
-// NOVÁ FUNKCIA: EXPORT DO XLSX
-// ---------------------------------------------
-window.exportTableToXLSX = function(tableId) {
-    const table = document.getElementById(tableId).closest('section').querySelector("table");
-    if (!table) return alert("Žiadne dáta na export. Tabuľka nie je viditeľná alebo neobsahuje dáta.");
+// ----------------------------------------------------
+// !!! UPRAVENÁ FUNKCIA PRE EXPORT DO CSV !!!
+// ----------------------------------------------------
+window.exportTable = function(id){
+  // Nájdeme div, ktorý obsahuje tabuľku (dochadzkaTable, usersTable atď.)
+  const container = document.getElementById(id); 
+  // Hľadáme skutočnú tabuľku vo vnútri tohto divu
+  const table = container.querySelector("table");
 
-    // Získanie názvu sekcie pre názov súboru a hárku
-    const sectionName = table.closest('section').id.toUpperCase();
-    const fileName = `${sectionName}_export.xlsx`;
-    const sheetName = sectionName;
+  if(!table) return alert("Žiadne dáta na export.");
 
-    // Premena HTML tabuľky na pracovný hárok (Worksheet)
-    const ws = XLSX.utils.table_to_sheet(table);
+  let csv = [];
+  
+  // Prejdeme všetky riadky v tele tabuľky (ignorujeme riadky "Žiadne záznamy...")
+  table.querySelectorAll("tr").forEach(row => {
+    // Kontrola, či riadok obsahuje dáta (viac ako 1 bunka, aby sa ignorovali hlásenia o chýbajúcich dátach)
+    const cells = row.querySelectorAll("th, td");
+    if (cells.length < 2) return; 
 
-    // Vytvorenie zošita (Workbook) a pridanie hárku
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    // Získame text z každej bunky
+    const cols = [...cells].map(td => {
+      let cellText = td.innerText.trim();
+      
+      // Špeciálna úprava pre stĺpec Akcie v tabuľke Používatelia
+      if (td.classList.contains('user-actions')) {
+        return ''; // Akcie neexportujeme
+      }
 
-    // Uloženie súboru
-    XLSX.writeFile(wb, fileName);
+      // Odstránenie prebytočných stavových textov/tagov pre čitateľnosť v CSV
+      if (td.querySelector('.status-badge')) {
+        cellText = td.querySelector('.status-badge').innerText.trim();
+      }
+
+      // Odstránenie prebytočného textu "Priradený (ČIP_UID)"
+      if (cellText.startsWith("Priradený")) {
+        // Extrahujeme len UID v zátvorke
+        const match = cellText.match(/\(([^)]+)\)/);
+        cellText = match ? `Priradený; ${match[1]}` : "Priradený";
+      } else if (cellText === "Nepriradený") {
+        // Ponecháme text "Nepriradený"
+      }
+
+      // Odstránenie nových riadkov a uzavretie do úvodzoviek
+      return `"${cellText.replace(/\n/g, ' ').replace(/"/g, '""')}"`;
+    });
     
-    // Spätná väzba na tlačidle
-    const btn = table.closest('section').querySelector(".export-btn");
-    if(btn) {
-        btn.textContent = "Súbor stiahnutý!";
-        setTimeout(() => btn.textContent = "Exportovať do XLSX", 2000);
-    }
+    // Filtrujeme, aby sme odstránili prázdne (Akcie) bunky
+    const filteredCols = cols.filter(col => col !== "");
+    
+    // Pridáme riadok do CSV
+    csv.push(filteredCols.join(";")); // Používame ';' ako oddeľovač pre lepšiu kompatibilitu so SK Excelom
+  });
+
+  // Vytvorenie Blob objektu pre stiahnutie
+  const blob = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `${id}_export.csv`;
+  a.click();
 };
-// ---------------------------------------------
+
+// ----------------------------------------------------
+// KONIEC UPRAVENEJ FUNKCIE EXPORTU
+// ----------------------------------------------------
 
 
 // ----- pridanie logu (prestávka, príchod, odchod) -----
@@ -536,4 +574,3 @@ window.addUser = async function() {
 
 </body>
 </html>
-
