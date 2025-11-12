@@ -225,24 +225,24 @@ window.logout = () => { window.location.href="index.html"; };
 // ----------------------------------------------------
 window.exportTable = function(id){
   // Nájdeme div, ktorý obsahuje tabuľku (dochadzkaTable, usersTable atď.)
-  const container = document.getElementById(id); 
+  const container = document.getElementById(id); 
   // Hľadáme skutočnú tabuľku vo vnútri tohto divu
   const table = container.querySelector("table");
 
   if(!table) return alert("Žiadne dáta na export.");
 
   let csv = [];
-  
+  
   // Prejdeme všetky riadky v tele tabuľky (ignorujeme riadky "Žiadne záznamy...")
   table.querySelectorAll("tr").forEach(row => {
     // Kontrola, či riadok obsahuje dáta (viac ako 1 bunka, aby sa ignorovali hlásenia o chýbajúcich dátach)
     const cells = row.querySelectorAll("th, td");
-    if (cells.length < 2) return; 
+    if (cells.length < 2) return; 
 
     // Získame text z každej bunky
     const cols = [...cells].map(td => {
       let cellText = td.innerText.trim();
-      
+      
       // Špeciálna úprava pre stĺpec Akcie v tabuľke Používatelia
       if (td.classList.contains('user-actions')) {
         return ''; // Akcie neexportujeme
@@ -265,10 +265,10 @@ window.exportTable = function(id){
       // Odstránenie nových riadkov a uzavretie do úvodzoviek
       return `"${cellText.replace(/\n/g, ' ').replace(/"/g, '""')}"`;
     });
-    
+    
     // Filtrujeme, aby sme odstránili prázdne (Akcie) bunky
     const filteredCols = cols.filter(col => col !== "");
-    
+    
     // Pridáme riadok do CSV
     csv.push(filteredCols.join(";")); // Používame ';' ako oddeľovač pre lepšiu kompatibilitu so SK Excelom
   });
