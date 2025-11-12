@@ -7,8 +7,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-/* --- Štýly (ŽIADNE FAREBNÉ ODZNAKY) --- */
-body { font-family:'Poppins',sans-serif; margin:0; background:linear-gradient(135deg,#f4f5f7,#e0e0e0); min-height:100vh; color:#333; display:flex; flex-direction:column; align-items:center;}
+/* --- ZOSÚLADENÉ ŠTÝLY S ADMIN PANELOM --- */
+body { font-family:'Poppins',sans-serif; margin:0; background:linear-gradient(135deg,#007bff,#6f42c1); min-height:100vh; color:#333; display:flex; flex-direction:column; align-items:center;}
 header { background:#007bff; padding:15px 25px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 3px 10px rgba(0,0,0,0.1); width:100%; color:white; position:sticky; top:0; z-index:10; }
 h1 { margin:0; font-size:22px; font-weight:700; }
 header button { background:#fff; border:none; color:#007bff; padding:8px 14px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; transition:0.3s; }
@@ -24,17 +24,22 @@ section.active { display:block; }
 h2 { color:#007bff; margin-top:0; border-bottom:2px solid #007bff; padding-bottom:5px; font-weight:600; }
 
 table { width:100%; border-collapse:collapse; margin-top:15px; border-radius:8px; overflow:hidden; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
-th,td { border:1px solid #ddd; padding:10px; text-align:center; font-size:14px; color: #333; /* Zabezpečenie tmavej farby textu */ }
+th,td { border:1px solid #ddd; padding:10px; text-align:center; font-size:14px; color: #333; }
 th { background:#007bff; color:white; font-weight:600; }
 tr:nth-child(even){ background:#f8f9fa; }
 
 .export-btn{ margin-top:15px; background:#28a745; border:none; color:white; border-radius:8px; padding:8px 14px; cursor:pointer; font-weight:600; }
 .export-btn:hover{ background:#1e7e34; }
 
-/* Status box je teraz len textový */
+/* Status box je teraz modrý, aby sa hodil k téme */
 .status-box { background:#e9f2ff; color:#007bff; font-weight:600; padding:15px; border-radius:8px; text-align:center; margin-bottom:20px; border:1px solid #007bff;}
 
-/* --- NOVÉ ŠTÝLY PRE ODZNAKY (PILULKY) --- */
+.filter { margin-top: 10px; }
+.filter input { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; }
+
+#debugUid { background:#d1ecf1;color:#0c5460;padding:5px;text-align:center;font-size:12px;margin-bottom:10px; border-radius: 4px;}
+
+/* --- ŠTÝLY PRE FAREBNÉ PILULKY (ODZNAKY) --- */
 .status-badge {
     font-weight: 700 !important;
     padding: 7px 14px !important;
@@ -44,10 +49,10 @@ tr:nth-child(even){ background:#f8f9fa; }
     min-width: 80px;
     white-space: nowrap;
     text-shadow: none !important; 
-    color: white !important; /* Predvolená farba textu pre pilulku */
+    color: white !important;
     font-size: 14px !important;
 }
-/* Menší štýl pilulky pre Prestávky/PN v jedinom stĺpci, aby sa zmestila */
+/* Menší štýl pilulky pre Prestávky/PN v jedinom stĺpci */
 .status-badge.small {
     padding: 4px 10px !important;
     min-width: 60px;
@@ -68,12 +73,6 @@ tr:nth-child(even){ background:#f8f9fa; }
     background: #6f42c1 !important; /* Fialová */
 } 
 /* ----------------------------------- */
-
-.filter { margin-top: 10px; }
-.filter input { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; }
-
-/* DEBUG BOX */
-#debugUid { background:#d1ecf1;color:#0c5460;padding:5px;text-align:center;font-size:12px;margin-bottom:10px; border-radius: 4px;}
 </style>
 </head>
 <body>
@@ -113,7 +112,7 @@ tr:nth-child(even){ background:#f8f9fa; }
     <input type="date" id="datePrestavky">
   </div>
   <table>
-    <thead><tr><th>Čas</th></tr></thead>
+    <thead><tr><th>Čas a Typ</th></tr></thead>
     <tbody id="prestavkyTable"><tr><td colspan="1">Načítavam dáta...</td></tr></tbody>
   </table>
 </section>
@@ -126,7 +125,7 @@ tr:nth-child(even){ background:#f8f9fa; }
     <input type="date" id="datePN">
   </div>
   <table>
-    <thead><tr><th>Čas</th></tr></thead>
+    <thead><tr><th>Čas a Typ</th></tr></thead>
     <tbody id="pnTable"><tr><td colspan="1">Načítavam dáta...</td></tr></tbody>
   </table>
 </section>
@@ -187,11 +186,12 @@ async function loadUserData() {
         const records = [];
         const allPossibleLogs = [];
         
-        // Zber záznamov
+        // Zber záznamov (Zásobník dát z dochadzka, prestavky, pn)
         ["dochadzka", "prestavky", "pn"].forEach(type => {
             const logsObj = userData[type] || {};
             Object.values(logsObj).forEach(log => allPossibleLogs.push(log));
         });
+        // Zber priamych vlastností, ak sú logy (pre prípad staršieho formátu)
         Object.values(userData).forEach(prop => {
             if (prop && prop.cas && prop.typ) {
                 allPossibleLogs.push(prop); 
@@ -205,6 +205,7 @@ async function loadUserData() {
             let cleanTime = String(log.cas);
             let validIsoTime = cleanTime;
 
+            // Regex pre formát DD.MM.YYYY HH:MM
             const dateRegex = /(\d{1,2})\.(\d{1,2})\.(\d{4}) (\d{1,2}:\d{1,2})/;
             const match = cleanTime.match(dateRegex);
 
@@ -212,8 +213,10 @@ async function loadUserData() {
                 const [full, day, month, year, time] = match;
                 validIsoTime = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')} ${time}`;
             } else if (cleanTime.includes('T') && cleanTime.includes('-')) {
-                validIsoTime = cleanTime.replace('T', ' ');
-            } else {
+                validIsoTime = cleanTime.replace('T', ' '); // ISO format
+            } else if (cleanTime.includes('-') && cleanTime.length >= 16) {
+                validIsoTime = cleanTime; // Predpokladáme YYYY-MM-DD HH:MM
+            } else {
                 return;
             }
             
@@ -228,6 +231,7 @@ async function loadUserData() {
             else if (cleanType.includes('pn')) recordType = 'pn';
             
             if (recordType) {
+                 // Zabránenie duplikátom pri rôznych logoch s rovnakým časom (napr. prichod a prestavka)
                  const isDuplicate = records.some(r => r.cas === validIsoTime && r.stav === recordType);
                  if (!isDuplicate) {
                      records.push({
@@ -242,7 +246,7 @@ async function loadUserData() {
         records.sort((a, b) => new Date(b.cas) - new Date(a.cas));
         allRecordsCache = records;
         
-        // AKTUALIZÁCIA STAVU (používame len text)
+        // AKTUALIZÁCIA STAVU
         const mainStatusRecord = records.find(r => r.stav !== 'prestavka'); 
         
         const lastStatus = mainStatusRecord ? mainStatusRecord.stav.toUpperCase() : "Žiadny stav nezaznamenaný";
@@ -259,7 +263,7 @@ async function loadUserData() {
     }
 }
 
-// --- Vykreslenie tabuliek (Pridané vizuály pre všetky sekcie) ---
+// --- Vykreslenie tabuliek (S Pilulkami) ---
 function renderTables(records) {
   const dochadzkaTable = document.getElementById("dochadzkaTable");
   const prestavkyTable = document.getElementById("prestavkyTable");
@@ -282,10 +286,13 @@ function renderTables(records) {
       bodyEl.innerHTML = `<tr><td colspan="${colCount}">Žiadne záznamy</td></tr>`;
     } else {
       bodyEl.innerHTML = sectionRecords.map(z => {
-        // Formátovanie pre zobrazenie
-        const datePart = z.cas.substring(0, 10).split('-');
-        const timePart = z.cas.substring(11, 16);
-        const visibleTime = `${datePart[2]}.${datePart[1]}.${datePart[0]} ${timePart}`; 
+        // Formátovanie pre zobrazenie DD. MM. YYYY HH:MM
+        let displayTime = z.cas;
+        if (z.cas.includes('-') && z.cas.length >= 16) {
+            const [date, time] = z.cas.split(' ');
+            const [y, m, d] = date.split('-');
+            displayTime = `${d.padStart(2, '0')}.${m.padStart(2, '0')}.${y} ${time}`;
+        }
 
         let statusClass = '';
         if (z.stav === 'prichod') statusClass = 'status-prichod';
@@ -297,14 +304,14 @@ function renderTables(records) {
         if (type === 'dochadzka') {
           // Dochádzka: 2 stĺpce - Použijeme veľkú pilulku
           return `<tr>
-              <td>${visibleTime}</td>
+              <td>${displayTime}</td>
               <td><span class="status-badge ${statusClass}">${z.stav.toUpperCase()}</span></td>
           </tr>`;
         } else {
           // Prestávky a PN: 1 stĺpec - Použijeme čas + malú pilulku v tom istom <td>
           return `<tr>
                 <td>
-                    ${visibleTime}
+                    ${displayTime}
                     <span class="status-badge small ${statusClass}">${z.stav.toUpperCase()}</span>
                 </td>
             </tr>`;
@@ -320,7 +327,7 @@ function renderTables(records) {
 }
 
 
-// --- Export do CSV (bezo zmeny) ---
+// --- Export do CSV (prispôsobené pre Prestávky/PN s pilulkou v 1 stĺpci) ---
 window.exportTable = function(sectionNameId) {
     const sectionEl = document.getElementById(sectionNameId); 
     const table = sectionEl ? sectionEl.querySelector('table') : null;
@@ -336,39 +343,38 @@ window.exportTable = function(sectionNameId) {
     csv.push(`"Používateľ","${userName}"`);
     csv.push("");
     
-    const header = Array.from(table.querySelectorAll("thead th")).map(th => `"${th.innerText.trim()}"`);
-    csv.push(header.join(","));
+    // Pre Prestávky a PN zmeň hlavičku pre CSV, aby sedela s 2 stĺpcami dát (Čas, Typ)
+    let header;
+    if (sectionNameId === 'prestavky' || sectionNameId === 'pn') {
+        header = ["Čas", "Typ záznamu"];
+    } else {
+        header = Array.from(table.querySelectorAll("thead th")).map(th => th.innerText.trim());
+    }
+    csv.push(header.map(h => `"${h}"`).join(","));
     
     table.querySelectorAll("tbody tr").forEach(row => {
-        const cols = Array.from(row.querySelectorAll("td")).map(td => {
-            let text = td.textContent.trim().replace(/\s\s+/g, ' '); 
-            
-            const badge = td.querySelector('.status-badge');
-            if (badge) {
-                // Pre Prestávky/PN: extrahujeme Cas a Typ (pilulku) do dvoch stĺpcov
-                const timePart = text.replace(badge.textContent, '').trim();
-                const typePart = badge.textContent.trim();
-                return [timePart, typePart]; // Vrátime pole pre CSV
-            }
-            // Pre Dochádzku (Typ už je v samostatnom stĺpci v HTML)
-            return [`"${text}"`]; // Vrátime pole, aby sa dali zjednotiť
-        });
+        const cols = Array.from(row.querySelectorAll("td"));
         
-        // Zjednotenie stĺpcov: Pre Prestávky/PN to budú 2 stĺpce, pre Dochádzku 1 alebo 2
-        let finalCols = [];
-        cols.flat().forEach(item => {
-            if (item !== null && item !== undefined) {
-                if (typeof item === 'string' && item.startsWith('"')) {
-                    finalCols.push(item);
-                } else if (typeof item === 'string') {
-                    finalCols.push(`"${item}"`);
-                }
+        // Ak má tabuľka len 1 stĺpec (Prestávky/PN)
+        if (cols.length === 1) {
+            const td = cols[0];
+            const badge = td.querySelector('.status-badge');
+            
+            if (badge) {
+                // Extrahujeme čas (text bez textu pilulky) a typ (text pilulky)
+                const typePart = badge.textContent.trim();
+                const timePart = td.textContent.replace(badge.textContent, '').trim();
+                csv.push(`"${timePart}","${typePart}"`);
+            } else if (td.textContent.includes("Žiadne záznamy") === false) {
+                 csv.push(`"${td.textContent.trim()}",""`); // Len čas
             }
-        });
-        
-        if (finalCols.length > 0 && finalCols[0].includes("Žiadne záznamy") === false) {
-            csv.push(finalCols.join(","));
-        }
+        } 
+        // Ak má tabuľka 2 stĺpce (Dochádzka)
+        else if (cols.length > 1) {
+             const timePart = cols[0].textContent.trim();
+             const typePart = cols[1].querySelector('.status-badge')?.textContent.trim() || cols[1].textContent.trim();
+             csv.push(`"${timePart}","${typePart}"`);
+        }
     });
     
     const blob = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
@@ -378,7 +384,7 @@ window.exportTable = function(sectionNameId) {
     a.click();
 };
 
-// --- Listenery (bezo zmeny) ---
+// --- Listenery ---
 
 document.getElementById("logoutBtn").addEventListener("click", () => {
   localStorage.removeItem("uid");
@@ -401,7 +407,7 @@ document.getElementById("datePN").addEventListener("change", () => renderTables(
 
 document.querySelectorAll(".export-btn").forEach(btn => {
   btn.addEventListener("click", () => {
-    exportTable(btn.dataset.exportTable);
+    exportTable(btn.dataset.exportTable + "Table"); // Pridaný "Table" pre správne ID
   });
 });
 
