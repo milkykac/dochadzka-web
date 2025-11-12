@@ -272,7 +272,8 @@ window.addLog = async function(type, typ){
   }
 };
 
-// ----- FUNKCIA pre načítanie (FILTROVANIE DÁTUM + MENO) - OPRAVENÉ ZORADENIE A FILTRE -----
+
+// ----- FUNKCIA pre načítanie (FILTROVANIE DÁTUM + MENO) - OPRAVENÉ FILTRE (BEZ TRIEDENIA) -----
 async function loadAttendance(type, tableId, dateId, searchId){
   const el = document.getElementById(tableId);
   el.innerHTML="Načítavam dáta...";
@@ -283,8 +284,10 @@ async function loadAttendance(type, tableId, dateId, searchId){
   try{
     const snap = await get(ref(db, "users"));
     let html="<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>";
+    
     if(snap.exists()){
-      let allLogs = [];
+      // Premenná na sledovanie, či sme našli aspoň jeden záznam
+      let entriesFound = false; 
       
       snap.forEach(userSnap=>{
         const user = userSnap.val();
@@ -301,42 +304,33 @@ async function loadAttendance(type, tableId, dateId, searchId){
             const nameMatch = !search || userNameLower.includes(search);
 
             if (dateMatch && nameMatch) {
-              // Pre správne triedenie vytvoríme objekt Date z času
-              allLogs.push({
-                time: new Date(log.cas.replace(' ', 'T') || 0), // Nahradenie medzery za T pre správny Date objekt
-                name: userName,
-                log: log
-              });
+              entriesFound = true; // Našli sme záznam
+              
+              const rawType = (log.typ || type).toLowerCase();
+              // Normalizácia pre CSS triedu (napr. 'prestávka' -> 'prestavka')
+              const logTyp = rawType.replace('á', 'a'); 
+
+              let statusClass = '';
+              if (logTyp === 'prichod') statusClass = 'status-prichod';
+              else if (logTyp === 'odchod') statusClass = 'status-odchod';
+              else if (logTyp === 'prestávka' || logTyp === 'prestavka') statusClass = 'status-prestávka';
+              else if (logTyp === 'pn') statusClass = 'status-pn';
+
+              // Vizuálna oprava je zabezpečená triedou status-badge a CSS
+              html += `<tr>
+                <td>${userName}</td>
+                <td>${log.cas || '-'}</td>
+                <td><span class="status-badge ${statusClass}">${rawType.toUpperCase()}</span></td>
+              </tr>`;
             }
         });
       });
       
-      // Triedenie záznamov podľa času (najnovšie prvé: b.time - a.time)
-      allLogs.sort((a, b) => b.time - a.time);
-
-      if (allLogs.length > 0) {
-        allLogs.forEach(entry => {
-          const log = entry.log;
-          const rawType = (log.typ || type).toLowerCase();
-          // Normalizácia pre CSS triedu (napr. 'prestávka' -> 'prestavka')
-          const logTyp = rawType.replace('á', 'a'); 
-
-          let statusClass = '';
-          if (logTyp === 'prichod') statusClass = 'status-prichod';
-          else if (logTyp === 'odchod') statusClass = 'status-odchod';
-          else if (logTyp === 'prestávka' || logTyp === 'prestavka') statusClass = 'status-prestávka';
-          else if (logTyp === 'pn') statusClass = 'status-pn';
-
-          // Vizuálna oprava je zabezpečená triedou status-badge a CSS
-          html += `<tr>
-            <td>${entry.name}</td>
-            <td>${log.cas || '-'}</td>
-            <td><span class="status-badge ${statusClass}">${rawType.toUpperCase()}</span></td>
-          </tr>`;
-        });
-      } else {
+      // Ak sa po prejdení všetkých záznamov nenašiel žiadny, ktorý by vyhovoval filtru
+      if (!entriesFound) {
         html += '<tr><td colspan="3">Žiadne záznamy podľa filtra.</td></tr>';
       }
+      
       html += "</table>";
       el.innerHTML = html;
 
@@ -345,6 +339,7 @@ async function loadAttendance(type, tableId, dateId, searchId){
     }
   } catch(e){ el.innerHTML="Chyba pri načítaní dát. Viac info v konzole (F12)."; console.error(e); }
 }
+
 
 // ----- Načítanie Používateľov (Bez zmien) -----
 async function loadUsers(){
