@@ -11,7 +11,8 @@
 body { font-family:'Poppins',sans-serif; margin:0; background:linear-gradient(135deg,#007bff,#6f42c1); min-height:100vh; color:#333; }
 header { background:#fff; padding:15px 25px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 3px 10px rgba(0,0,0,0.1); position:sticky; top:0; z-index:10; }
 h1 { color:#007bff; margin:0; font-size:22px; font-weight:600; }
-button { background:#007bff; border:none; color:white; padding:8px 14px; border-radius:8px; cursor:pointer; font-size:14px; transition:0.3s; }
+/* VYLEPŠENIE: Hlavné tlačidlá */
+button { background:#007bff; border:none; color:white; padding:8px 14px; border-radius:8px; cursor:pointer; font-size:14px; transition:0.3s; font-weight: 500;}
 button:hover { background:#0056b3; }
 nav { background:#fff; padding:10px; gap:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); position:sticky; top:70px; z-index:5; flex-wrap:wrap; display: flex; justify-content: center; }
 nav button.active { background:#6f42c1; }
@@ -57,7 +58,20 @@ tr:nth-child(even){ background:#f8f9fa; }
 } 
 
 /* --- MODAL a POUŽÍVATELIA --- */
-.new-chip { background:#17a2b8; padding:8px 10px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border-radius:6px; color:white; font-size:14px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+
+/* OPRAVA: Kontrast nepriradených čipov */
+.new-chip { 
+    background:#17a2b8; 
+    padding:8px 10px; 
+    margin-bottom:8px; 
+    display:flex; 
+    justify-content:space-between; 
+    align-items:center; 
+    border-radius:6px; 
+    color:white; /* KĽÚČOVÁ ZMENA: Biely text pre lepší kontrast */
+    font-size:14px; 
+    box-shadow:0 2px 6px rgba(0,0,0,0.1); 
+}
 .new-chip button { background:#007bff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-size:13px; }
 .new-chip button:hover { background:#0056b3; }
 .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:100; }
@@ -68,22 +82,28 @@ tr:nth-child(even){ background:#f8f9fa; }
 #closeModal{ position:absolute; right:10px; top:5px; font-size:22px; cursor:pointer; color:#333; }
 .chip-status-assigned { background: #198754 !important; }
 .chip-status-unassigned { background: #6c757d !important; }
+
+/* OPRAVA: Vylepšený vzhľad akčných tlačidiel pre používateľov (vrátane ikoniek) */
 .user-actions button { 
-    background: transparent; 
+    background: #f1f1f1; 
     border: 1px solid #ddd;
     color: #333;
-    padding: 5px 8px; 
-    margin: 0 2px;
+    padding: 5px 10px;  /* Zväčšený padding */
+    margin: 0 4px; /* Viac miesta medzi tlačidlami */
     font-size: 14px;
-    border-radius: 4px;
+    border-radius: 6px; /* Jemnejšie rohy */
     transition: 0.2s;
+    min-width: 100px; /* Aby mali tlačidlá rovnakú šírku */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 .user-actions button:hover {
-    background: #f1f1f1;
+    background: #e9ecef;
     border-color: #007bff;
-    color: #007bff;
 }
-.user-actions button:first-child:hover { color: #dc3545; }
+.user-actions button:first-child:hover { color: #dc3545; border-color: #dc3545;}
+.user-actions button:last-child:hover { color: #007bff; border-color: #007bff;}
 /* ----------------------------------- */
 </style>
 </head>
@@ -104,7 +124,7 @@ tr:nth-child(even){ background:#f8f9fa; }
 <section id="dochadzka" class="active">
   <h2>Dochádzka (Príchod/Odchod)</h2>
   <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap;">
-        <button style="background: #007bff;" onclick="addLog('dochadzka','príchod')">Príchod</button>
+    <button style="background: #007bff;" onclick="addLog('dochadzka','príchod')">Príchod</button>
     <button style="background: #dc3545;" onclick="addLog('dochadzka','odchod')">Odchod</button>
     <button style="background: #ffc107; color: #333;" onclick="addLog('prestavky','prestávka')">Prestávka</button>
   </div>
@@ -535,13 +555,14 @@ async function loadUsers(){
 
         const chip = d.chipUid;
         const statusClass = chip ? 'chip-status-assigned' : 'chip-status-unassigned';
-        const statusText = chip ? `Priradený (${chip.substring(0, 8)}...)` : 'Nepriradený';
+        const chipDisplay = chip ? chip.substring(0, 8) + '...' : 'Nepriradený';
+        const statusText = chip ? `Priradený (${chipDisplay})` : 'Nepriradený';
         
         html+=`<tr>
           <td>${d.name||"(bez mena)"}</td>
           <td><span class="status-badge ${statusClass}">${statusText}</span></td>
           <td class="user-actions">
-            <button onclick="removeUser('${key}')">🗑️ Odstrániť</button>
+                        <button onclick="removeUser('${key}')">🗑️ Odstrániť</button>
             <button onclick="openChangePassword('${key}')">🔑 Heslo</button>
           </td>
         </tr>`;
@@ -563,9 +584,12 @@ async function loadNewChips(){
     Object.keys(snap.val()).reverse().forEach(chip=>{ 
       const div = document.createElement("div");
       div.className="new-chip";
+      // Vylepšené tlačidlá pre nepriradené čipy
       div.innerHTML = `${chip} 
-        <button onclick="assignChip('${chip}')">Priradiť</button>
-        <button onclick="removeChip('${chip}')" style="background:#dc3545;">Odstrániť</button>`;
+        <div>
+          <button onclick="assignChip('${chip}')">Priradiť</button>
+          <button onclick="removeChip('${chip}')" style="background:#dc3545;">Odstrániť</button>
+        </div>`;
       el.appendChild(div);
     });
   } catch(e){ el.innerHTML="Chyba pri načítaní čipov."; console.error(e); }
