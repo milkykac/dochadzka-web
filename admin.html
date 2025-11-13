@@ -135,9 +135,9 @@ tr:nth-child(even){ background:#f8f9fa; }
 <section id="dochadzka" class="active">
     <h2>Dochádzka (Príchod/Odchod)</h2>
     <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap;">
-        <button style="background: #007bff;" onclick="addLog('dochadzka','príchod')">Príchod (Čip)</button>
-        <button style="background: #dc3545;" onclick="addLog('dochadzka','odchod')">Odchod (Čip)</button>
-        <button style="background: #ffc107; color: #333;" onclick="addLog('prestavky','prestávka_manual')">Prestávka (Meno)</button>
+        <button style="background: #007bff;" onclick="addLog('dochadzka','príchod')">Príchod</button>
+        <button style="background: #dc3545;" onclick="addLog('dochadzka','odchod')">Odchod</button>
+        <button style="background: #ffc107; color: #333;" onclick="addLog('prestavky','prestávka_manual')">Prestávka</button>
     </div>
     <button class="export-btn" data-export-table="dochadzka" onclick="exportTable('dochadzka')">Exportovať do XLSX</button>
     <div style="display:flex; gap:10px; margin-top:10px; flex-wrap: wrap;">
@@ -727,57 +727,35 @@ document.addEventListener('DOMContentLoaded', () => {
     window.loadSection("dochadzka");
 });
 
-// Zaznamenanie príchod/odchod/prestávka
+// UPRAVENÁ FUNKCIA: Všetky logy (Príchod, Odchod, Prestávka) sa pridávajú manuálne na základe mena.
 window.addLog = async function(type, typ){
     
     let userId = null;
     let userName = null;
-    let typeToSave = typ.toUpperCase().replace('_MANUAL', ''); // Napr. 'PRESTÁVKA'
-    let alertMessage = `Log (${typeToSave}) bol pridaný pre `;
+    let typeToSave = typ.toUpperCase().replace('_MANUAL', ''); // Napr. 'PRÍCHOD', 'ODCHOD', 'PRESTÁVKA'
+    
+    const actionLabel = (typeToSave === 'PRÍCHOD' || typeToSave === 'ODCHOD') 
+                        ? `${typeToSave} (Manuálne)` 
+                        : typeToSave;
 
-    if (typ === 'prestávka_manual') {
-        // --- NOVÁ LOGIKA PRE PRESTÁVKU (PODĽA MENA) ---
-        const inputName = prompt(`Ready. Zadaj meno používateľa pre ${typeToSave} (napr. 'Jozef Novák'):`).trim();
-        if (!inputName) return;
+    // --- NOVÁ UNIVERZÁLNA LOGIKA (PODĽA MENA PRE VŠETKY TRI AKCIE) ---
+    const inputName = prompt(`Ready. Zadaj meno používateľa pre ${actionLabel} (napr. 'Jozef Novák'):`).trim();
+    if (!inputName) return;
 
-        // Vyhľadanie UID podľa mena
-        for (const key in allUsersCache) {
-            if ((allUsersCache[key].name || "").toLowerCase() === inputName.toLowerCase()) {
-                userId = key;
-                userName = allUsersCache[key].name;
-                break;
-            }
+    // 1. Vyhľadanie UID podľa mena
+    for (const key in allUsersCache) {
+        if ((allUsersCache[key].name || "").toLowerCase() === inputName.toLowerCase()) {
+            userId = key;
+            userName = allUsersCache[key].name;
+            break;
         }
-        if (!userId) {
-            alert("Používateľ s menom '" + inputName + "' nebol nájdený. Meno musí presne sedieť.");
-            return;
-        }
-        alertMessage += userName;
-
-    } else {
-        // --- PÔVODNÁ LOGIKA PRE PRÍCHOD/ODCHOD (PODĽA ČIPU) ---
-        alert(`Ready. Zadaj čip používateľa pre ${typeToSave}.`);
-
-        const chipUid = prompt("Zadaj čip používateľa:").trim();
-        if(!chipUid) return;
-
-        const snap = await get(child(ref(db), `chipToUser/${chipUid}`));
-        if(!snap.exists()){ alert("Čip nie je priradený!"); return; }
-        userId = snap.val();
-        
-        // Ak je cache prázdna, skúsime ju naplniť, aby sme získali meno
-        if (!allUsersCache[userId]) {
-             allUsersCache[userId] = (await get(ref(db, `users/${userId}`))).val();
-        }
-
-        userName = allUsersCache[userId]?.name || "(Neznáme Meno)";
-        alertMessage += userName;
-
-        await new Promise(res => setTimeout(res, 500)); // Simulácia oneskorenia pri čipe
     }
     
-    if (!userId) return;
-
+    if (!userId) {
+        alert("Používateľ s menom '" + inputName + "' nebol nájdený. Meno musí presne sedieť.");
+        return;
+    }
+    
     // --- LOGIKA ZÁPISU DO DB (SPOLOČNÁ) ---
     const now = new Date();
     // Formát DD.MM.RRRR HH:MM
@@ -794,7 +772,7 @@ window.addLog = async function(type, typ){
         await set(newLogRef, logData);
 
         // Akcia bola úspešná
-        alert(alertMessage);
+        alert(`Log (${typeToSave}) bol pridaný pre ${userName}.`);
         
         // Aktualizácia cache a zobrazenia
         allAdminRecordsCache = []; // Vynútiť opätovné načítanie cache
