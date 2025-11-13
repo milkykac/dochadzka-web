@@ -104,16 +104,17 @@ tr:nth-child(even){ background:#f8f9fa; }
 <section id="dochadzka" class="active">
   <h2>Dochádzka (Príchod/Odchod)</h2>
   <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap;">
-    <button onclick="addLog('dochadzka','prichod')">Príchod</button>
-    <button onclick="addLog('dochadzka','odchod')">Odchod</button>
-    <button onclick="addLog('prestavky','prestávka')">Prestávka</button>
+        <button style="background: #007bff;" onclick="addLog('dochadzka','príchod')">Príchod</button>
+    <button style="background: #dc3545;" onclick="addLog('dochadzka','odchod')">Odchod</button>
+    <button style="background: #ffc107; color: #333;" onclick="addLog('prestavky','prestávka')">Prestávka</button>
   </div>
   <button class="export-btn" data-export-table="dochadzka" onclick="exportTable('dochadzka')">Exportovať do XLSX</button>
   <div style="display:flex; gap:10px; margin-top:10px;">
     <input type="date" id="dateDochadzka" style="flex:1;" onchange="loadSection('dochadzka')">
     <input type="text" id="searchDochadzka" placeholder="Hľadať podľa mena..." style="flex:2;" oninput="loadSection('dochadzka')">
   </div>
-  <div id="dochadzkaTable" class="loader"></div> </section>
+  <div id="dochadzkaTable" class="loader"></div>
+</section>
 
 <section id="prestavky">
   <h2>Prestávky</h2>
@@ -122,7 +123,8 @@ tr:nth-child(even){ background:#f8f9fa; }
     <input type="date" id="datePrestavky" style="flex:1;" onchange="loadSection('prestavky')">
     <input type="text" id="searchPrestavky" placeholder="Hľadať podľa mena..." style="flex:2;" oninput="loadSection('prestavky')">
   </div>
-  <div id="prestavkyTable" class="loader"></div> </section>
+  <div id="prestavkyTable" class="loader"></div>
+</section>
 
 <section id="pn">
   <h2>PN</h2>
@@ -131,7 +133,8 @@ tr:nth-child(even){ background:#f8f9fa; }
     <input type="date" id="datePN" style="flex:1;" onchange="loadSection('pn')">
     <input type="text" id="searchPN" placeholder="Hľadať podľa mena..." style="flex:2;" oninput="loadSection('pn')">
   </div>
-  <div id="pnTable" class="loader"></div> </section>
+  <div id="pnTable" class="loader"></div>
+</section>
 
 <section id="pouzivatelia">
   <h2>Používatelia</h2>
@@ -192,7 +195,7 @@ window.loadSection = function(id){
 // Funkcia pre načítanie, filtrovanie a zobrazenie dochádzky (vrátane farebných odznakov)
 async function loadAttendance(type, tableId, dateId, searchId){
   const el = document.getElementById(tableId);
-  el.innerHTML='<div class="loader">Načítavam dáta...</div>'; // UPRAVENÉ: Dynamické zobrazenie indikátora
+  el.innerHTML='<div class="loader">Načítavam dáta...</div>';
 
   // 1. Načítanie dát do cache, ak je prázdna (volá sa len raz)
   if (allAdminRecordsCache.length === 0) {
@@ -702,9 +705,10 @@ window.addLog = async function(type, typ){
     await new Promise(res => setTimeout(res, 500)); // Simulácia oneskorenia
 
     const now = new Date();
-    const timestamp = now.getFullYear().toString() + "-" +
-                      (now.getMonth() + 1).toString().padStart(2, "0") + "-" +
-                      now.getDate().toString().padStart(2, "0") + " " +
+    // Formát DD.MM.RRRR HH:MM, aby sa to zhodovalo s inými dátami z databázy
+    const timestamp = now.getDate().toString().padStart(2, "0") + "." +
+                      (now.getMonth() + 1).toString().padStart(2, "0") + "." +
+                      now.getFullYear().toString() + " " +
                       now.getHours().toString().padStart(2,"0") + ":" +
                       now.getMinutes().toString().padStart(2,"0");
 
@@ -713,14 +717,15 @@ window.addLog = async function(type, typ){
 
     await push(ref(db, path), { 
       cas: timestamp, 
-      typ: typ.charAt(0).toUpperCase() + typ.slice(1), // S diakritikou/veľkým písmenom
+      typ: typ.charAt(0).toUpperCase() + typ.slice(1), // S diakritikou/veľkým písmenom (Príchod/Odchod/Prestávka)
       manual: true, 
       meno: userName 
     });
     
-    // Reset cache a reload sekcie
+    // KĽÚČOVÁ OPRAVA: Reset cache a reload sekcie
     allAdminRecordsCache = [];
     alert(`${typ.charAt(0).toUpperCase() + typ.slice(1)} zaznamenaný pre ${userName} o ${timestamp}`);
+    // Načítanie sekcie Dochádzka alebo Prestávky
     window.loadSection(type === "prestavky" ? "prestavky" : "dochadzka");
 
   } catch(e){ 
