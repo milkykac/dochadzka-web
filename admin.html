@@ -11,20 +11,27 @@
 body { font-family:'Poppins',sans-serif; margin:0; background:linear-gradient(135deg,#007bff,#6f42c1); min-height:100vh; color:#333; }
 header { background:#fff; padding:15px 25px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 3px 10px rgba(0,0,0,0.1); position:sticky; top:0; z-index:10; }
 h1 { color:#007bff; margin:0; font-size:22px; font-weight:600; }
-button { background:#007bff; border:none; color:white; padding:8px 14px; border-radius:8px; cursor:pointer; font-weight:600; transition:0.3s; }
-button:hover { background:#0056b3; transform:translateY(-2px); }
+/* VYLEPŠENIE: Hlavné tlačidlá */
+button { background:#007bff; border:none; color:white; padding:8px 14px; border-radius:8px; cursor:pointer; font-weight:600; transition:0.3s; box-shadow:0 4px 6px rgba(0,123,255,0.2); }
+button:hover { background:#0056b3; transform:translateY(-2px); box-shadow:0 6px 12px rgba(0,123,255,0.3); }
+button:active { transform:translateY(0); }
 .container { padding:20px; max-width:1200px; margin:auto; }
 .card { background:#fff; padding:20px; border-radius:12px; box-shadow:0 5px 15px rgba(0,0,0,0.08); margin-bottom:20px; }
+h3 { margin-top:0; color:#444; border-bottom:2px solid #f0f0f0; padding-bottom:10px; margin-bottom:15px; }
+/* Tabuľka */
 table { width:100%; border-collapse:collapse; margin-top:15px; background:#fff; border-radius:8px; overflow:hidden; }
 th, td { padding:12px 15px; text-align:left; border-bottom:1px solid #eee; }
-th { background:#f8f9fa; color:#007bff; font-weight:600; }
+th { background:#f8f9fa; color:#007bff; font-weight:600; text-transform:uppercase; font-size:13px; }
 tr:hover { background:#f1f7ff; }
+/* Odznaky */
 .badge { padding:5px 10px; border-radius:20px; font-size:12px; font-weight:600; text-transform:uppercase; }
 .badge-in { background:#e8f5e9; color:#2e7d32; }
 .badge-out { background:#ffebee; color:#c62828; }
-.badge-break { background:#fff3e0; color:#ef6c00; }
-.admin-controls { display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
-input, select { padding:10px; border:1px solid #ddd; border-radius:8px; outline:none; }
+/* Admin sekcia */
+.admin-controls { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:10px; }
+input, select { padding:10px; border:1px solid #ddd; border-radius:8px; outline:none; transition:0.3s; }
+input:focus, select:focus { border-color:#007bff; box-shadow:0 0 0 3px rgba(0,123,255,0.1); }
+#status { font-size:14px; font-weight:600; color:#28a745; }
 </style>
 </head>
 <body>
@@ -42,8 +49,7 @@ input, select { padding:10px; border:1px solid #ddd; border-radius:8px; outline:
             <select id="manualType">
                 <option value="prichod">Príchod</option>
                 <option value="odchod">Odchod</option>
-                <option value="prestavka prichod">Prestávka začiatok</option>
-                <option value="prestavka odchod">Prestávka koniec</option>
+                <option value="prestavka">Prestávka</option>
             </select>
             <button onclick="addManualLog()">Pridať záznam</button>
         </div>
@@ -70,7 +76,7 @@ input, select { padding:10px; border:1px solid #ddd; border-radius:8px; outline:
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, onValue, push, set, child, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, onValue, push, set, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 const firebaseConfig = {
     databaseURL: "https://maturita-395fd-default-rtdb.firebaseio.com"
@@ -78,11 +84,10 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-let allUsersCache = {};
 
-// Funkcia na načítanie dát
 const attendanceBody = document.getElementById('attendanceBody');
 const usersRef = ref(db, 'users');
+let allUsersCache = {};
 
 onValue(usersRef, (snapshot) => {
     const data = snapshot.val();
@@ -111,10 +116,7 @@ onValue(usersRef, (snapshot) => {
 
 function renderRow(name, log) {
     const row = document.createElement('tr');
-    let badgeClass = "badge-in";
-    if (log.typ.includes("odchod")) badgeClass = "badge-out";
-    if (log.typ.includes("prestavka")) badgeClass = "badge-break";
-
+    const badgeClass = (log.typ === "prichod" || log.typ === "prestavka odchod") ? "badge-in" : "badge-out";
     row.innerHTML = `
         <td>${name}</td>
         <td>${log.cas}</td>
@@ -124,16 +126,16 @@ function renderRow(name, log) {
     attendanceBody.appendChild(row);
 }
 
-// UPRAVENÁ FUNKCIA NA MANUÁLNY ZÁPIS
 window.addManualLog = async function() {
-    const inputName = document.getElementById('manualName').value;
+    const inputName = document.getElementById('manualName').value.trim();
     const typeToSave = document.getElementById('manualType').value;
+    
+    // ZMENA: Ak je vybratá prestávka, nastaví sa priečinok "prestavky", inak "dochadzka"
+    const folder = typeToSave === "prestavka" ? "prestavky" : "dochadzka";
+    
     let userId = null;
     let userName = "";
 
-    if (!inputName) { alert("Zadajte meno!"); return; }
-
-    // Vyhľadanie používateľa podľa mena v cache
     for (const key in allUsersCache) {
         if ((allUsersCache[key].name || "").toLowerCase() === inputName.toLowerCase()) {
             userId = key;
@@ -141,31 +143,26 @@ window.addManualLog = async function() {
             break;
         }
     }
-
+    
     if (!userId) {
-        alert("Používateľ nenájdený!");
+        alert("Používateľ s menom '" + inputName + "' nebol nájdený. Meno musí presne sedieť.");
         return;
     }
-
+    
     const now = new Date();
     const timestamp = now.getDate().toString().padStart(2, "0") + "." +
-                      (now.getMonth() + 1).toString().padStart(2, "0") + "." +
-                      now.getFullYear() + " " +
-                      now.getHours().toString().padStart(2, "0") + ":" +
-                      now.getMinutes().toString().padStart(2, "0");
-
-    // URČENIE CIEĽOVÉHO PRIEČINKA (dochadzka vs prestavky)
-    const targetFolder = typeToSave.includes("prestavka") ? "prestavky" : "dochadzka";
+                        (now.getMonth() + 1).toString().padStart(2, "0") + "." +
+                        now.getFullYear() + " " +
+                        now.getHours().toString().padStart(2, "0") + ":" +
+                        now.getMinutes().toString().padStart(2, "0");
 
     try {
-        const newLogRef = push(ref(db, `users/${userId}/${targetFolder}`));
-        await set(newLogRef, {
-            cas: timestamp,
-            typ: typeToSave,
-            manual: true,
-            meno: userName
-        });
-        alert(`Úspešne pridané do ${targetFolder}`);
+        const newLogRef = push(child(ref(db, `users/${userId}`), folder));
+        const logData = { cas: timestamp, typ: typeToSave, manual: true };
+        
+        await set(newLogRef, logData);
+
+        alert(`Log (${typeToSave}) bol pridaný pre ${userName}.`);
         document.getElementById('manualName').value = "";
     } catch (e) {
         console.error(e);
@@ -182,5 +179,3 @@ window.exportToExcel = function() {
 
 </body>
 </html>
-</body>
-
