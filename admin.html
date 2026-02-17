@@ -31,35 +31,19 @@
         .export-btn{ margin-top:15px; background:#28a745; border-radius:8px; padding:8px 14px; }
         .export-btn:hover{ background:#1e7e34; }
 
-        /* --- STAVOVÉ ODZNAKY --- */
-        .status-badge {
-            font-weight: 700 !important;
-            padding: 7px 14px !important;
-            border-radius: 50px !important; 
-            display: inline-block;
-            text-align: center;
-            min-width: 80px;
-            white-space: nowrap;
-            color: white !important;
-            font-size: 14px !important;
-        }
-        .status-prichod { background: #198754 !important; } 
-        .status-odchod { background: #dc3545 !important; } 
-        .status-prestávka, .status-prestavka { background: #ffc107 !important; color: #212529 !important; }
-        .status-pn { background: #6f42c1 !important; } 
+        .status-badge { font-weight:700!important; padding:7px 14px!important; border-radius:50px!important; display:inline-block; text-align:center; min-width:80px; color:white!important; font-size:14px!important; }
+        .status-prichod { background:#198754!important; } 
+        .status-odchod { background:#dc3545!important; } 
+        .status-prestavka { background:#ffc107!important; color:#212529!important; }
+        .status-pn { background:#6f42c1!important; } 
 
-        /* --- MODAL A POUŽÍVATELIA --- */
-        .new-chip { background:#17a2b8; padding:8px 10px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border-radius:6px; color:white; font-size:14px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+        .new-chip { background:#17a2b8; padding:8px 10px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border-radius:6px; color:white; }
         .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:100; }
-        .modal-content{ background:#fff; padding:20px; border-radius:8px; width:90%; max-width:400px; position:relative; box-shadow:0 5px 15px rgba(0,0,0,0.2);}
-        .modal-content input{ width:100%; margin:10px 0; padding:8px; border:1px solid #ccc; border-radius:6px; box-sizing: border-box; }
+        .modal-content{ background:#fff; padding:20px; border-radius:8px; width:90%; max-width:400px; position:relative; }
+        .modal-content input{ width:100%; margin:10px 0; padding:8px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box; }
         
-        .chip-status-assigned { background: #198754 !important; color: white !important; }
-        .chip-status-unassigned { background: #6c757d !important; color: white !important; }
-
-        .user-actions button { background: #007bff; border: none; color: white; padding: 5px 10px; margin: 0 4px; font-size: 14px; border-radius: 6px; min-width: 100px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
-        .user-actions button.btn-remove { background: #dc3545; }
-        .user-actions button.btn-password { background: #17a2b8; }
+        .user-actions button { background:#007bff; border:none; color:white; padding:5px 10px; margin:0 4px; border-radius:6px; }
+        .user-actions button.btn-remove { background:#dc3545; }
     </style>
 </head>
 <body>
@@ -79,9 +63,9 @@
 <section id="dochadzka" class="active">
     <h2>Dochádzka (Príchod/Odchod)</h2>
     <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap;">
-        <button style="background: #007bff;" onclick="addLog('dochadzka','príchod')">Príchod</button>
-        <button style="background: #dc3545;" onclick="addLog('dochadzka','odchod')">Odchod</button>
-        <button style="background: #ffc107; color: #333;" onclick="addLog('prestavky','prestávka_manual')">Prestávka</button>
+        <button style="background: #198754;" onclick="addLog('dochadzka','PRICHOD')">Príchod</button>
+        <button style="background: #dc3545;" onclick="addLog('dochadzka','ODCHOD')">Odchod</button>
+        <button style="background: #ffc107; color: #333;" onclick="addLog('dochadzka','PRESTAVKA')">Prestávka</button>
     </div>
     <button class="export-btn" onclick="exportTable('dochadzka')">Exportovať do XLSX</button>
     <div style="display:flex; gap:10px; margin-top:10px; flex-wrap: wrap;">
@@ -92,7 +76,7 @@
 </section>
 
 <section id="prestavky">
-    <h2>Prestávky</h2>
+    <h2>Zobrazenie Prestávok</h2>
     <button class="export-btn" onclick="exportTable('prestavky')">Exportovať do XLSX</button>
     <div style="display:flex; gap:10px; margin-top:10px; flex-wrap: wrap;">
         <input type="date" id="datePrestavky" style="flex:1;" onchange="loadSection('prestavky')">
@@ -104,31 +88,24 @@
 <section id="pn">
     <h2>PN</h2>
     <button class="export-btn" onclick="exportTable('pn')">Exportovať do XLSX</button>
-    <div style="display:flex; gap:10px; margin-top:10px; flex-wrap: wrap;">
-        <input type="date" id="datePN" style="flex:1;" onchange="loadSection('pn')">
-        <input type="text" id="searchPN" placeholder="Hľadať podľa mena..." style="flex:2;" oninput="loadSection('pn')">
-    </div>
     <div id="pnTable" class="loader">Načítavam dáta...</div>
 </section>
 
 <section id="pouzivatelia">
-    <h2>Používatelia</h2>
-    <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap;">
-        <button class="export-btn" onclick="exportTable('users')" style="background:#007bff;">Exportovať používateľov</button>
-        <button onclick="addUser()">Pridať používateľa</button>
-    </div>
-    <div id="usersTable" class="loader">Načítavam používateľov...</div>
-    <h3>Nepriradené čipy</h3>
-    <div id="newChipsContainer" class="loader">Načítavam čipy...</div>
+    <h2>Správa používateľov</h2>
+    <button onclick="addUser()" style="margin-bottom:10px;">+ Pridať používateľa</button>
+    <div id="usersTable"></div>
+    <h3>Nové čipy (nepriradené)</h3>
+    <div id="newChipsContainer"></div>
 </section>
 
 <div id="changePasswordModal" class="modal">
     <div class="modal-content">
-        <span id="closeModal" style="position:absolute; right:15px; top:5px; cursor:pointer; font-size:24px;" onclick="closeModal()">&times;</span>
         <h3>Zmeniť heslo</h3>
         <input type="hidden" id="changePasswordUserId">
         <input type="password" id="newPassword" placeholder="Nové heslo">
         <button onclick="saveNewPassword()" style="width:100%;">Uložiť</button>
+        <button onclick="closeModal()" style="width:100%; background:#6c757d; margin-top:5px;">Zrušiť</button>
     </div>
 </div>
 
@@ -153,156 +130,78 @@ const db = getDatabase(app);
 let allAdminRecordsCache = [];
 let allUsersCache = {};
 
+// --- HLAVNÁ LOGIKA NAČÍTANIA ---
 window.loadSection = function(id){
     if(id==="dochadzka") loadAttendance("dochadzka","dochadzkaTable","dateDochadzka","searchDochadzka");
     else if(id==="prestavky") loadAttendance("prestavky","prestavkyTable","datePrestavky","searchPrestavky");
-    else if(id==="pn") loadAttendance("pn","pnTable","datePN","searchPN");
+    else if(id==="pn") loadAttendance("pn","pnTable","","");
     else if(id==="pouzivatelia"){ loadUsers(); loadNewChips(); }
 }
 
 async function loadAttendance(type, tableId, dateId, searchId){
     const el = document.getElementById(tableId);
-    el.innerHTML='<div class="loader">Načítavam dáta...</div>';
-
     if (allAdminRecordsCache.length === 0) {
         try {
             const snap = await get(ref(db, "users"));
-            if(!snap.exists()) {
-                el.innerHTML = '<table><tr><td colspan="3">Žiadne dáta.</td></tr></table>';
-                return;
-            }
+            if(!snap.exists()) return el.innerHTML = "Žiadne dáta.";
+            
             const allRecords = [];
             snap.forEach(userSnap => {
                 const userData = userSnap.val();
                 const userId = userSnap.key;
-                const userName = userData.name || "(bez mena)";
                 allUsersCache[userId] = userData;
 
                 ["dochadzka", "prestavky", "pn"].forEach(logType => {
-                    const logsObj = userData[logType] || {};
-                    Object.values(logsObj).forEach(log => {
-                        if (!log || !log.cas || !log.typ) return;
+                    const logs = userData[logType] || {};
+                    Object.values(logs).forEach(log => {
+                        if (!log.cas || !log.typ) return;
                         
+                        // Normalizácia času pre zoradenie
                         let cleanTime = String(log.cas);
-                        const dateRegex = /(\d{1,2})\.(\d{1,2})\.(\d{4}) (\d{1,2}:\d{1,2})/;
-                        const match = cleanTime.match(dateRegex);
-                        let iso = cleanTime;
-                        if(match) iso = `${match[3]}-${match[2].padStart(2,'0')}-${match[1].padStart(2,'0')} ${match[4]}`;
+                        const parts = cleanTime.split(/[\. :]/);
+                        let isoDate = cleanTime;
+                        if(parts.length >= 5) isoDate = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}T${parts[3]}:${parts[4]}`;
 
-                        const cleanType = String(log.typ).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-                        let recordType = cleanType.includes('prichod') ? 'prichod' : 
-                                         cleanType.includes('odchod') ? 'odchod' : 
-                                         cleanType.includes('prestavka') ? 'prestavka' : 
-                                         cleanType.includes('pn') ? 'pn' : null;
+                        const normTyp = log.typ.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+                        let stav = normTyp.includes('prichod') ? 'prichod' : 
+                                   normTyp.includes('odchod') ? 'odchod' : 
+                                   normTyp.includes('prestavka') ? 'prestavka' : 'pn';
 
-                        if (recordType) {
-                            allRecords.push({
-                                userId, userName, cas: iso, casDisplay: cleanTime,
-                                date: iso.substring(0, 10), time: iso.substring(11, 16),
-                                stav: recordType, rawType: log.typ.toUpperCase()
-                            });
-                        }
+                        allRecords.push({
+                            userName: userData.name || "Neznámy",
+                            casDisplay: cleanTime,
+                            casIso: new Date(isoDate),
+                            date: isoDate.substring(0, 10),
+                            rawType: log.typ.toUpperCase(),
+                            stav: stav
+                        });
                     });
                 });
             });
             allAdminRecordsCache = allRecords;
-        } catch (e) { el.innerHTML = "Chyba načítania."; return; }
+        } catch (e) { console.error(e); }
     }
 
     const dateFilter = document.getElementById(dateId)?.value || "";
     const search = document.getElementById(searchId)?.value.toLowerCase().trim() || "";
-    const expected = { dochadzka: ["prichod", "odchod"], prestavky: ["prestavka"], pn: ["pn"] }[type];
+    const expected = { dochadzka:["prichod","odchod","prestavka"], prestavky:["prestavka"], pn:["pn"] }[type];
 
     const filtered = allAdminRecordsCache.filter(r => 
         (!dateFilter || r.date === dateFilter) && 
         (!search || r.userName.toLowerCase().includes(search)) && 
         expected.includes(r.stav)
-    ).sort((a, b) => new Date(b.cas) - new Date(a.cas));
+    ).sort((a, b) => b.casIso - a.casIso);
 
     let html="<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>";
     filtered.forEach(log => {
         html += `<tr><td>${log.userName}</td><td>${log.casDisplay}</td><td><span class="status-badge status-${log.stav}">${log.rawType}</span></td></tr>`;
     });
-    el.innerHTML = filtered.length ? html + "</table>" : "<table><tr><td colspan='3'>Žiadne záznamy.</td></tr></table>";
-}
-
-// --- SPRÁVA POUŽÍVATEĽOV ---
-async function loadUsers(){
-    const el = document.getElementById("usersTable");
-    if (Object.keys(allUsersCache).length === 0) await loadAttendance("dochadzka","dochadzkaTable","dateDochadzka","searchDochadzka");
-    
-    let html="<table><tr><th>Meno</th><th>Čip Status</th><th>Akcie</th></tr>";
-    for (const key in allUsersCache) {
-        if (key === 'admin') continue;
-        const d = allUsersCache[key];
-        const chip = d.chipUid;
-        const statusClass = chip ? 'chip-status-assigned' : 'chip-status-unassigned';
-        html+=`<tr><td>${d.name}</td><td><span class="status-badge ${statusClass}">${chip ? 'Priradený' : 'Nepriradený'}</span></td>
-        <td class="user-actions"><button class="btn-remove" onclick="removeUser('${key}')">Odstrániť</button>
-        <button class="btn-password" onclick="openChangePassword('${key}')">Heslo</button></td></tr>`;
-    }
     el.innerHTML = html + "</table>";
 }
 
-async function loadNewChips(){
-    const el = document.getElementById("newChipsContainer");
-    const snap = await get(ref(db, "newChips"));
-    el.innerHTML = "";
-    if(!snap.exists()) { el.innerHTML = "Žiadne nové čipy."; return; }
-    Object.keys(snap.val()).forEach(chip => {
-        const div = document.createElement("div");
-        div.className = "new-chip";
-        div.innerHTML = `<span>${chip}</span><div><button onclick="assignChip('${chip}')">Priradiť</button>
-        <button onclick="removeChip('${chip}')" style="background:#dc3545; margin-left:5px;">X</button></div>`;
-        el.appendChild(div);
-    });
-}
-
-window.addUser = async () => {
-    const name = prompt("Meno:");
-    const pass = prompt("Heslo (min 4 znaky):");
-    if(name && pass && pass.length >= 4) {
-        const newUserRef = push(ref(db, "users"));
-        await set(newUserRef, { name, password: pass, chipUid: null });
-        allUsersCache = {}; allAdminRecordsCache = []; loadUsers();
-    }
-};
-
-window.removeUser = async (id) => {
-    if(confirm("Odstrániť?")){
-        const chip = allUsersCache[id]?.chipUid;
-        await set(ref(db, `users/${id}`), null);
-        if(chip) await set(ref(db, `chipToUser/${chip}`), null);
-        delete allUsersCache[id]; loadUsers();
-    }
-};
-
-window.assignChip = async (chipUid) => {
-    const name = prompt("Priradiť čip k menu:").trim();
-    let uid = Object.keys(allUsersCache).find(k => allUsersCache[k].name?.toLowerCase() === name.toLowerCase());
-    if(uid) {
-        await set(ref(db, `users/${uid}/chipUid`), chipUid);
-        await set(ref(db, `chipToUser/${chipUid}`), uid);
-        await set(ref(db, `newChips/${chipUid}`), null);
-        allUsersCache[uid].chipUid = chipUid; loadUsers(); loadNewChips();
-    } else alert("Meno sa nenašlo.");
-};
-
-window.removeChip = async (chip) => { if(confirm("Zmazať čip?")) { await set(ref(db, `newChips/${chip}`), null); loadNewChips(); } };
-
-// --- LOGIKA MODALU ---
-window.openChangePassword = (id) => { document.getElementById("changePasswordModal").style.display="flex"; document.getElementById("changePasswordUserId").value=id; };
-window.closeModal = () => { document.getElementById("changePasswordModal").style.display="none"; };
-window.saveNewPassword = async () => {
-    const id = document.getElementById("changePasswordUserId").value;
-    const pass = document.getElementById("newPassword").value;
-    if(pass.length >= 4) { await set(ref(db, `users/${id}/password`), pass); closeModal(); alert("Zmenené."); }
-};
-
-// --- LOGOVANIE ---
-window.addLog = async function(type, typ){
-    const typeToSave = typ.toUpperCase().replace('_MANUAL', '');
-    const inputName = prompt(`Meno pre ${typeToSave}:`)?.trim();
+// --- MANUÁLNY ZÁPIS (VŽDY DO DOCHÁDZKY) ---
+window.addLog = async function(sectionId, typToSave){
+    const inputName = prompt(`Meno pre ${typToSave}:`)?.trim();
     if (!inputName) return;
 
     let userId = Object.keys(allUsersCache).find(k => allUsersCache[k].name?.toLowerCase() === inputName.toLowerCase());
@@ -312,14 +211,89 @@ window.addLog = async function(type, typ){
     const timestamp = now.getDate().toString().padStart(2,"0") + "." + (now.getMonth()+1).toString().padStart(2,"0") + "." + now.getFullYear() + " " + now.getHours().toString().padStart(2,"0") + ":" + now.getMinutes().toString().padStart(2,"0");
 
     try {
-        const newLogRef = push(child(ref(db, `users/${userId}`), type));
-        await set(newLogRef, { cas: timestamp, typ: typeToSave });
-        alert("Pridané.");
-        allAdminRecordsCache = []; loadSection(type);
-    } catch (e) { console.error(e); }
+        // Natvrdo zapisujeme do "dochadzka" uzla
+        const newLogRef = push(child(ref(db, `users/${userId}`), "dochadzka"));
+        await set(newLogRef, { cas: timestamp, typ: typToSave });
+        
+        alert("Zápis úspešný.");
+        allAdminRecordsCache = []; // Premazať cache pre refresh
+        loadSection(sectionId);
+    } catch (e) { alert("Chyba zápisu."); }
 };
 
-window.logout = () => { localStorage.removeItem("uid"); window.location.href="index.html"; };
+// --- PÔVODNÝ EXPORT ---
+window.exportTable = function(type) {
+    const expected = { dochadzka:["prichod","odchod","prestavka"], prestavky:["prestavka"], pn:["pn"] }[type];
+    const filtered = allAdminRecordsCache.filter(r => expected.includes(r.stav))
+                     .sort((a,b) => a.casIso - b.casIso);
+
+    const data = [["Meno", "Dátum a Čas", "Typ"]];
+    filtered.forEach(r => data.push([r.userName, r.casDisplay, r.rawType]));
+
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Export");
+    XLSX.writeFile(wb, `export_${type}.xlsx`);
+};
+
+// --- OSTATNÉ FUNKCIE (POUŽÍVATELIA) ---
+async function loadUsers(){
+    const el = document.getElementById("usersTable");
+    let html="<table><tr><th>Meno</th><th>Akcie</th></tr>";
+    for(let id in allUsersCache) {
+        if(id==='admin') continue;
+        html+=`<tr><td>${allUsersCache[id].name}</td><td class="user-actions">
+        <button class="btn-remove" onclick="removeUser('${id}')">Zmazať</button>
+        <button onclick="openChangePassword('${id}')">Heslo</button></td></tr>`;
+    }
+    el.innerHTML = html + "</table>";
+}
+
+async function loadNewChips(){
+    const el = document.getElementById("newChipsContainer");
+    const snap = await get(ref(db, "newChips"));
+    el.innerHTML = snap.exists() ? "" : "Žiadne nové čipy.";
+    if(snap.exists()){
+        Object.keys(snap.val()).forEach(chip => {
+            const div = document.createElement("div");
+            div.className="new-chip";
+            div.innerHTML=`<span>${chip}</span><button onclick="assignChip('${chip}')">Priradiť</button>`;
+            el.appendChild(div);
+        });
+    }
+}
+
+window.addUser = async () => {
+    const n = prompt("Meno:");
+    const p = prompt("Heslo:");
+    if(n && p){
+        const refU = push(ref(db, "users"));
+        await set(refU, { name:n, password:p });
+        allAdminRecordsCache=[]; loadSection('pouzivatelia');
+    }
+};
+
+window.assignChip = async (chip) => {
+    const name = prompt("Priradiť k menu:");
+    let uid = Object.keys(allUsersCache).find(k => allUsersCache[k].name === name);
+    if(uid){
+        await set(ref(db, `users/${uid}/chipUid`), chip);
+        await set(ref(db, `chipToUser/${chip}`), uid);
+        await set(ref(db, `newChips/${chip}`), null);
+        allAdminRecordsCache=[]; loadSection('pouzivatelia');
+    }
+};
+
+window.openChangePassword = (id) => { document.getElementById("changePasswordModal").style.display="flex"; document.getElementById("changePasswordUserId").value=id; };
+window.closeModal = () => { document.getElementById("changePasswordModal").style.display="none"; };
+window.saveNewPassword = async () => {
+    const id = document.getElementById("changePasswordUserId").value;
+    const p = document.getElementById("newPassword").value;
+    await set(ref(db, `users/${id}/password`), p);
+    closeModal(); alert("Heslo zmenené.");
+};
+
+window.logout = () => { window.location.href="index.html"; };
 
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll("nav button").forEach(btn => {
@@ -332,17 +306,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     loadSection("dochadzka");
 });
-
-window.exportTable = (section) => {
-    // Jednoduchý export pre ukážku (používa allAdminRecordsCache)
-    const wb = XLSX.utils.book_new();
-    const data = allAdminRecordsCache.map(r => [r.userName, r.casDisplay, r.rawType]);
-    data.unshift(["Meno", "Čas", "Typ"]);
-    const ws = XLSX.utils.aoa_to_sheet(data);
-    XLSX.utils.book_append_sheet(wb, ws, "Export");
-    XLSX.writeFile(wb, `${section}_export.xlsx`);
-};
-
 </script>
 </body>
 </html>
