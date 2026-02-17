@@ -215,32 +215,31 @@ let allUsersCache = {};
 
 // --- HLAVNÉ FUNKCIE PRE ROZHRANIE A DÁTA ---
 
-window.addLog = async function(type, typ){
-    // 1. Rozhodnutie o priečinku: ak typ obsahuje "prestavka", ide do "prestavky", inak do "dochadzka"
+window.addLog = async function(originalType, typ) {
+    // 1. Určenie správneho priečinka v DB
     const typeToSave = typ.toUpperCase().replace('_MANUAL', '');
     const folder = typeToSave.includes("PRESTAVKA") || typeToSave.includes("PRESTÁVKA") ? "prestavky" : "dochadzka";
 
-    // 2. Opýtanie sa na meno
-    const inputName = prompt(`Zadaj meno používateľa pre ${typeToSave}:`).trim();
+    // 2. Prompt na meno
+    const inputName = prompt(`Zadaj meno pre ${typeToSave}:`);
     if (!inputName) return;
+    const trimmedName = inputName.trim();
 
-    // 3. Nájdenie UID podľa mena v cache
+    // 3. Nájdenie používateľa v cache
     let userId = null;
-    let userName = null;
     for (const key in allUsersCache) {
-        if ((allUsersCache[key].name || "").toLowerCase() === inputName.toLowerCase()) {
+        if ((allUsersCache[key].name || "").toLowerCase() === trimmedName.toLowerCase()) {
             userId = key;
-            userName = allUsersCache[key].name;
             break;
         }
     }
-    
+
     if (!userId) {
-        alert("Používateľ s menom '" + inputName + "' nebol nájdený.");
+        alert("Používateľ nenájdený!");
         return;
     }
-    
-    // 4. Vygenerovanie času (DD.MM.RRRR HH:MM)
+
+    // 4. Formát času (DD.MM.RRRR HH:MM)
     const now = new Date();
     const timestamp = now.getDate().toString().padStart(2, "0") + "." +
                       (now.getMonth() + 1).toString().padStart(2, "0") + "." +
@@ -248,67 +247,28 @@ window.addLog = async function(type, typ){
                       now.getHours().toString().padStart(2, "0") + ":" +
                       now.getMinutes().toString().padStart(2, "0");
 
-    // 5. Zápis do Firebase do správneho priečinka (folder)
+    // 5. Zápis do Firebase
     try {
-        const newLogRef = push(child(ref(db, `users/${userId}`), folder));
-        await set(newLogRef, { cas: timestamp, typ: typeToSave });
+        // Používame premennú 'folder' na určenie cesty
+        const dbRef = ref(db, `users/${userId}/${folder}`);
+        const newLogRef = push(dbRef);
+        await set(newLogRef, {
+            cas: timestamp,
+            typ: typeToSave
+        });
 
-        alert(`Log pridaný pre ${userName} do priečinka: ${folder}`);
+        alert("Zápis úspešný!");
         
-        // Vynútenie obnovenia tabuľky
+        // Reset cache a refresh tabuľky
         allAdminRecordsCache = [];
-        window.loadSection(folder); 
+        if (typeof window.loadSection === "function") {
+            window.loadSection(folder);
+        }
     } catch (e) {
-        alert("Chyba pri zápise!");
         console.error(e);
+        alert("Chyba pri zápise do databázy.");
     }
 };
-
-    // 2. Aplikovanie filtrov
-    const dateFilter = document.getElementById(dateId)?.value || "";
-    const search = document.getElementById(searchId)?.value.toLowerCase().trim() || "";  
-    const expectedStav = {
-      dochadzka: ["prichod", "odchod"],
-      prestavky: ["prestavka"],
-      pn: ["pn"]
-    }[type];
-
-    const filteredRecords = allAdminRecordsCache
-      .filter(r => {
-          const dateMatch = !dateFilter || r.date === dateFilter;
-          const nameMatch = !search || r.userName.toLowerCase().includes(search);
-          const typeMatch = expectedStav.includes(r.stav);
-          return dateMatch && nameMatch && typeMatch;
-      })
-      .sort((a, b) => new Date(b.cas) - new Date(a.cas)); // Triedenie od najnovšieho
-
-
-    // 3. Generovanie HTML
-    let html="<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>";
-    let entriesFound = false;
-
-    filteredRecords.forEach(log => {
-        entriesFound = true;
-        const logTypNormalized = log.stav;
-        const rawType = log.rawType;
-        
-        // Aplikovanie triedy status-prichod, status-odchod, status-prestavka, status-pn
-        let statusClass = 'status-' + logTypNormalized;
-        
-        html += `<tr>
-            <td>${log.userName}</td>
-            <td>${log.casDisplay || '-'}</td>
-            <td><span class="status-badge ${statusClass}">${rawType}</span></td>
-          </tr>`;
-    });
-    
-    if (!entriesFound) {
-      html += '<tr><td colspan="3">Žiadne záznamy podľa filtra.</td></tr>';
-    }
-    
-    html += "</table>";
-    el.innerHTML = html;
-}
 
 // --- POMOCNÉ FUNKCIE A MODAL LOGIKA ---
 
@@ -750,3 +710,4 @@ window.addLog = async function(type, typ){
 </script>
 
 </body>
+
