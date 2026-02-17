@@ -215,60 +215,136 @@ let allUsersCache = {};
 
 // --- HLAVNÉ FUNKCIE PRE ROZHRANIE A DÁTA ---
 
-window.addLog = async function(originalType, typ) {
-    // 1. Určenie správneho priečinka v DB
-    const typeToSave = typ.toUpperCase().replace('_MANUAL', '');
-    const folder = typeToSave.includes("PRESTAVKA") || typeToSave.includes("PRESTÁVKA") ? "prestavky" : "dochadzka";
+// Hlavná funkcia pre prepínanie sekcií
+window.loadSection = function(id){
+    if(id==="dochadzka") loadAttendance("dochadzka","dochadzkaTable","dateDochadzka","searchDochadzka");
+    else if(id==="prestavky") loadAttendance("prestavky","prestavkyTable","datePrestavky","searchPrestavky");
+    else if(id==="pn") loadAttendance("pn","pnTable","datePN","searchPN");
+    else if(id==="pouzivatelia"){ loadUsers(); loadNewChips(); }
+}
 
-    // 2. Prompt na meno
-    const inputName = prompt(`Zadaj meno pre ${typeToSave}:`);
-    if (!inputName) return;
-    const trimmedName = inputName.trim();
+// Funkcia pre načítanie, filtrovanie a zobrazenie dochádzky (vrátane farebných odznakov)
+async function loadAttendance(type, tableId, dateId, searchId){
+    const el = document.getElementById(tableId);
+    el.innerHTML='<div class="loader">Načítavam dáta...</div>';
 
-    // 3. Nájdenie používateľa v cache
-    let userId = null;
-    for (const key in allUsersCache) {
-        if ((allUsersCache[key].name || "").toLowerCase() === trimmedName.toLowerCase()) {
-            userId = key;
-            break;
+    // 1. Načítanie dát do cache, ak je prázdna (volá sa len raz)
+    if (allAdminRecordsCache.length === 0) {
+        try {
+            const snap = await get(ref(db, "users"));
+            if(!snap.exists()) {
+                el.innerHTML = '<table><tr><td colspan="3">Žiadni používatelia v databáze.</td></tr></table>';
+                return;
+            }
+
+            const allRecords = [];
+            snap.forEach(userSnap => {
+                const userData = userSnap.val();
+                const userId = userSnap.key;
+                const userName = userData.name || "(bez mena)";
+                allUsersCache[userId] = userData; // Uložíme do cache aj používateľov
+
+                ["dochadzka", "prestavky", "pn"].forEach(logType => {
+                    const logsObj = userData[logType] || {};
+                    Object.values(logsObj).forEach(log => {
+                        if (!log || !log.cas || !log.typ) return;
+
+                        let cleanTime = String(log.cas);
+                        let validIsoTime = cleanTime;
+
+                        // Logika na normalizáciu dátumu/času pre správne triedenie (YYYY-MM-DD HH:MM)
+                        const dateRegex = /(\d{1,2})\.(\d{1,2})\.(\d{4}) (\d{1,2}:\d{1,2})/;
+                        const match = cleanTime.match(dateRegex);
+
+                        if (match) {
+                            const [full, day, month, year, time] = match;
+                            validIsoTime = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')} ${time}`;
+                        } else if (cleanTime.includes('T') && cleanTime.includes('-')) {
+                            validIsoTime = cleanTime.replace('T', ' ');
+                        } else if (cleanTime.includes('-') && cleanTime.length >= 16) {
+                            validIsoTime = cleanTime;
+                        } else {
+                            return;
+                        }
+
+                        // Normalizácia typu na malú abecedu bez diakritiky
+                        const cleanType = String(log.typ).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();  
+                        let recordType = null;
+                        if (cleanType.includes('prichod')) recordType = 'prichod';
+                        else if (cleanType.includes('odchod')) recordType = 'odchod';
+                        else if (cleanType.includes('prestavka')) recordType = 'prestavka';
+                        else if (cleanType.includes('pn')) recordType = 'pn';
+
+                        if (recordType) {
+                            allRecords.push({
+                                userId: userId,
+                                userName: userName,
+                                cas: validIsoTime, // Pre triedenie/filtrovanie
+                                casDisplay: cleanTime, // Pôvodný formát pre zobrazenie
+                                date: validIsoTime.substring(0, 10), // YYYY-MM-DD
+                                time: validIsoTime.substring(11, 16), // HH:MM
+                                stav: recordType, // Normalizovaný stav pre CSS
+                                rawType: log.typ.toUpperCase() // Pôvodný typ s diakritikou pre zobrazenie
+                            });
+                        }
+                    });
+                });
+            });
+
+            allAdminRecordsCache = allRecords;
+
+        } catch (e) {
+            el.innerHTML = "Chyba pri načítaní dát.";
+            console.error("Kritická chyba pri načítaní dát pre admina:", e);
+            return;
         }
     }
 
-    if (!userId) {
-        alert("Používateľ nenájdený!");
-        return;
-    }
+    // 2. Aplikovanie filtrov
+    const dateFilter = document.getElementById(dateId)?.value || "";
+    const search = document.getElementById(searchId)?.value.toLowerCase().trim() || "";  
+    const expectedStav = {
+      dochadzka: ["prichod", "odchod"],
+      prestavky: ["prestavka"],
+      pn: ["pn"]
+    }[type];
 
-    // 4. Formát času (DD.MM.RRRR HH:MM)
-    const now = new Date();
-    const timestamp = now.getDate().toString().padStart(2, "0") + "." +
-                      (now.getMonth() + 1).toString().padStart(2, "0") + "." +
-                      now.getFullYear() + " " +
-                      now.getHours().toString().padStart(2, "0") + ":" +
-                      now.getMinutes().toString().padStart(2, "0");
+    const filteredRecords = allAdminRecordsCache
+      .filter(r => {
+          const dateMatch = !dateFilter || r.date === dateFilter;
+          const nameMatch = !search || r.userName.toLowerCase().includes(search);
+          const typeMatch = expectedStav.includes(r.stav);
+          return dateMatch && nameMatch && typeMatch;
+      })
+      .sort((a, b) => new Date(b.cas) - new Date(a.cas)); // Triedenie od najnovšieho
 
-    // 5. Zápis do Firebase
-    try {
-        // Používame premennú 'folder' na určenie cesty
-        const dbRef = ref(db, `users/${userId}/${folder}`);
-        const newLogRef = push(dbRef);
-        await set(newLogRef, {
-            cas: timestamp,
-            typ: typeToSave
-        });
 
-        alert("Zápis úspešný!");
+    // 3. Generovanie HTML
+    let html="<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>";
+    let entriesFound = false;
+
+    filteredRecords.forEach(log => {
+        entriesFound = true;
+        const logTypNormalized = log.stav;
+        const rawType = log.rawType;
         
-        // Reset cache a refresh tabuľky
-        allAdminRecordsCache = [];
-        if (typeof window.loadSection === "function") {
-            window.loadSection(folder);
-        }
-    } catch (e) {
-        console.error(e);
-        alert("Chyba pri zápise do databázy.");
+        // Aplikovanie triedy status-prichod, status-odchod, status-prestavka, status-pn
+        let statusClass = 'status-' + logTypNormalized;
+        
+        html += `<tr>
+            <td>${log.userName}</td>
+            <td>${log.casDisplay || '-'}</td>
+            <td><span class="status-badge ${statusClass}">${rawType}</span></td>
+          </tr>`;
+    });
+    
+    if (!entriesFound) {
+      html += '<tr><td colspan="3">Žiadne záznamy podľa filtra.</td></tr>';
     }
-};
+    
+    html += "</table>";
+    el.innerHTML = html;
+}
 
 // --- POMOCNÉ FUNKCIE A MODAL LOGIKA ---
 
@@ -700,7 +776,7 @@ window.addLog = async function(type, typ){
         
         // Aktualizácia cache a zobrazenia
         allAdminRecordsCache = []; // Vynútiť opätovné načítanie cache
-        window.loadSection(type); 
+        window.loadSection(type); // ← 'type' je teraz správne 'prestavky' pre prestávku
 
     } catch (e) {
         alert("Chyba pri zápise logu do databázy.");
@@ -710,4 +786,3 @@ window.addLog = async function(type, typ){
 </script>
 
 </body>
-
