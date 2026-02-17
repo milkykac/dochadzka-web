@@ -270,9 +270,10 @@ async function loadAttendance(type, tableId, dateId, searchId){
                         // Normalizácia typu na malú abecedu bez diakritiky
                         const cleanType = String(log.typ).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();  
                         let recordType = null;
-                        if (cleanType.includes('prichod')) recordType = 'prichod';
+                        // OPRAVA: prestavka musí byť prvá, lebo "prestavka prichod" obsahuje aj 'prichod'
+                        if (cleanType.includes('prestavka')) recordType = 'prestavka';
+                        else if (cleanType.includes('prichod')) recordType = 'prichod';
                         else if (cleanType.includes('odchod')) recordType = 'odchod';
-                        else if (cleanType.includes('prestavka')) recordType = 'prestavka';
                         else if (cleanType.includes('pn')) recordType = 'pn';
 
                         if (recordType) {
@@ -608,10 +609,14 @@ async function loadNewChips(){
 }
 
 window.addUser = async function() {
-    const name = prompt("Zadaj meno nového používateľa:").trim();
+    const nameRaw = prompt("Zadaj meno nového používateľa:");
+    if(nameRaw === null) return;
+    const name = nameRaw.trim();
     if(!name) return;
 
-    const password = prompt(`Zadaj heslo pre ${name}:`).trim();
+    const passwordRaw = prompt(`Zadaj heslo pre ${name}:`);
+    if(passwordRaw === null) return;
+    const password = passwordRaw.trim();
     if(!password || password.length < 4) return alert("Heslo musí mať aspoň 4 znaky.");
 
     try {
@@ -644,7 +649,9 @@ window.removeUser = async function(id){
 };
 
 window.assignChip = async function(chipUid){
-    const name = prompt("Zadaj meno používateľa, ktorému chceš priradiť čip:").trim();
+    const nameRaw = prompt("Zadaj meno používateľa, ktorému chceš priradiť čip:");
+    if(nameRaw === null) return;
+    const name = nameRaw.trim();
     if(!name) return;
 
     let uid=null;
@@ -739,7 +746,9 @@ window.addLog = async function(type, typ){
                         : typeToSave;
 
     // --- NOVÁ UNIVERZÁLNA LOGIKA (PODĽA MENA PRE VŠETKY TRI AKCIE) ---
-    const inputName = prompt(`Ready. Zadaj meno používateľa pre ${actionLabel} (napr. 'Jozef Novák'):`).trim();
+    const inputNameRaw = prompt(`Ready. Zadaj meno používateľa pre ${actionLabel} (napr. 'Jozef Novák'):`);
+    if (inputNameRaw === null) return;
+    const inputName = inputNameRaw.trim();
     if (!inputName) return;
 
     // 1. Vyhľadanie UID podľa mena
