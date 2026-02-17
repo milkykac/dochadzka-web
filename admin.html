@@ -213,30 +213,20 @@ let allAdminRecordsCache = [];
 let allUsersCache = {};
 
 
+// --- HLAVNÉ FUNKCIE PRE ROZHRANIE A DÁTA ---
+
 window.addLog = async function(type, typ){
-    
-    // 1. Zistenie typu akcie (odstránenie _MANUAL ak tam je)
-    let typeToSave = typ.toUpperCase().replace('_MANUAL', ''); // Napr. 'PRÍCHOD', 'ODCHOD', 'PRESTÁVKA'
-    
-    // 2. Automatické určenie cieľového priečinka
-    [cite_start]// Ak je to prestávka, ide do 'prestavky', inak do 'dochadzka' [cite: 73, 198]
-    let targetFolder = "dochadzka";
-    if (typeToSave.includes("PRESTAVKA") || typeToSave.includes("PRESTÁVKA")) {
-        targetFolder = "prestavky";
-    }
+    // 1. Rozhodnutie o priečinku: ak typ obsahuje "prestavka", ide do "prestavky", inak do "dochadzka"
+    const typeToSave = typ.toUpperCase().replace('_MANUAL', '');
+    const folder = typeToSave.includes("PRESTAVKA") || typeToSave.includes("PRESTÁVKA") ? "prestavky" : "dochadzka";
 
-    const actionLabel = (typeToSave === 'PRÍCHOD' || typeToSave === 'ODCHOD') 
-                        ? `${typeToSave} (Manuálne)` 
-                        : typeToSave;
-
-    // 3. Zadanie mena
-    [cite_start]const inputName = prompt(`Ready. Zadaj meno používateľa pre ${actionLabel} (napr. 'Martin'):`).trim(); [cite: 200]
+    // 2. Opýtanie sa na meno
+    const inputName = prompt(`Zadaj meno používateľa pre ${typeToSave}:`).trim();
     if (!inputName) return;
 
-    // 4. Vyhľadanie UID podľa mena
+    // 3. Nájdenie UID podľa mena v cache
     let userId = null;
     let userName = null;
-    
     for (const key in allUsersCache) {
         if ((allUsersCache[key].name || "").toLowerCase() === inputName.toLowerCase()) {
             userId = key;
@@ -246,37 +236,126 @@ window.addLog = async function(type, typ){
     }
     
     if (!userId) {
-        alert("Používateľ s menom '" + inputName + "' nebol nájdený. Meno musí presne sedieť.");
+        alert("Používateľ s menom '" + inputName + "' nebol nájdený.");
         return;
     }
     
-    // 5. Zápis do databázy
+    // 4. Vygenerovanie času (DD.MM.RRRR HH:MM)
     const now = new Date();
     const timestamp = now.getDate().toString().padStart(2, "0") + "." +
-                        (now.getMonth() + 1).toString().padStart(2, "0") + "." +
-                        now.getFullYear() + " " +
-                        now.getHours().toString().padStart(2, "0") + ":" +
-                        now.getMinutes().toString().padStart(2, "0");
+                      (now.getMonth() + 1).toString().padStart(2, "0") + "." +
+                      now.getFullYear() + " " +
+                      now.getHours().toString().padStart(2, "0") + ":" +
+                      now.getMinutes().toString().padStart(2, "0");
 
+    // 5. Zápis do Firebase do správneho priečinka (folder)
     try {
-        // Použijeme targetFolder (prestavky/dochadzka) namiesto parametra 'type'
-        [cite_start]const newLogRef = push(child(ref(db, `users/${userId}`), targetFolder)); [cite: 207]
-        const logData = { cas: timestamp, typ: typeToSave };
-        
-        await set(newLogRef, logData);
+        const newLogRef = push(child(ref(db, `users/${userId}`), folder));
+        await set(newLogRef, { cas: timestamp, typ: typeToSave });
 
-        // Hotovo
-        alert(`Log (${typeToSave}) bol pridaný pre ${userName} do sekcie ${targetFolder}.`);
+        alert(`Log pridaný pre ${userName} do priečinka: ${folder}`);
         
-        // Reset a obnovenie zobrazenia
+        // Vynútenie obnovenia tabuľky
         allAdminRecordsCache = [];
-        window.loadSection(targetFolder); // Načíta sekciu, do ktorej sme práve zapisovali
-
+        window.loadSection(folder); 
     } catch (e) {
-        alert("Chyba pri zápise logu do databázy.");
-        console.error("Chyba zápisu:", e);
+        alert("Chyba pri zápise!");
+        console.error(e);
     }
 };
+
+    // 2. Aplikovanie filtrov
+    const dateFilter = document.getElementById(dateId)?.value || "";
+    const search = document.getElementById(searchId)?.value.toLowerCase().trim() || "";  
+    const expectedStav = {
+      dochadzka: ["prichod", "odchod"],
+      prestavky: ["prestavka"],
+      pn: ["pn"]
+    }[type];
+
+    const filteredRecords = allAdminRecordsCache
+      .filter(r => {
+          const dateMatch = !dateFilter || r.date === dateFilter;
+          const nameMatch = !search || r.userName.toLowerCase().includes(search);
+          const typeMatch = expectedStav.includes(r.stav);
+          return dateMatch && nameMatch && typeMatch;
+      })
+      .sort((a, b) => new Date(b.cas) - new Date(a.cas)); // Triedenie od najnovšieho
+
+
+    // 3. Generovanie HTML
+    let html="<table><tr><th>Meno</th><th>Čas</th><th>Typ</th></tr>";
+    let entriesFound = false;
+
+    filteredRecords.forEach(log => {
+        entriesFound = true;
+        const logTypNormalized = log.stav;
+        const rawType = log.rawType;
+        
+        // Aplikovanie triedy status-prichod, status-odchod, status-prestavka, status-pn
+        let statusClass = 'status-' + logTypNormalized;
+        
+        html += `<tr>
+            <td>${log.userName}</td>
+            <td>${log.casDisplay || '-'}</td>
+            <td><span class="status-badge ${statusClass}">${rawType}</span></td>
+          </tr>`;
+    });
+    
+    if (!entriesFound) {
+      html += '<tr><td colspan="3">Žiadne záznamy podľa filtra.</td></tr>';
+    }
+    
+    html += "</table>";
+    el.innerHTML = html;
+}
+
+// --- POMOCNÉ FUNKCIE A MODAL LOGIKA ---
+
+// Konverzia milisekúnd na formát HH:MM
+function msToHhMm(ms) {
+    const totalMinutes = Math.floor(ms / (1000 * 60));
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+}
+
+// Funkcia pre export Používateľov
+async function exportUsersToXLSX() {
+    const btn = document.querySelector(`[data-export-table="users"]`);
+    if(btn) btn.textContent = "Generujem XLSX...";
+
+    const exportData = [
+        ["Export používateľov a čipov"],
+        [],
+        ["UID", "Meno", "Heslo", "Čip UID", "Status"]
+    ];
+    
+    for (const userId in allUsersCache) {
+        const user = allUsersCache[userId];
+        if (userId === 'admin') continue;
+        const chipStatus = user.chipUid ? `Priradený: ${user.chipUid}` : 'Nepriradený';
+        exportData.push([
+            userId,
+            user.name || "(bez mena)",
+            user.password || "",
+            user.chipUid || "",
+            chipStatus
+        ]);
+    }
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(exportData);
+    ws['!cols'] = [{ wpx: 150 }, { wpx: 150 }, { wpx: 100 }, { wpx: 150 }, { wpx: 150 }];
+    XLSX.utils.book_append_sheet(wb, ws, "Používatelia");
+
+    XLSX.writeFile(wb, "pouzivatelia_export.xlsx");
+
+    if(btn) {
+        btn.textContent = "Súbor stiahnutý!";
+        setTimeout(() => btn.textContent = "Exportovať používateľov", 2000);
+    }
+}
 
 
 // Hlavná funkcia pre export dát do XLSX
@@ -671,4 +750,3 @@ window.addLog = async function(type, typ){
 </script>
 
 </body>
-
