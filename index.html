@@ -3,106 +3,167 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Prihlásenie – Dochádzka</title>
+  <title>Prihlásenie – Dochádzkový systém</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg-light: #f4f7fe;
+      --white: #ffffff;
+      --success-green: #10b981; /* To pekné zelené tlačidlo */
+      --text-muted: #888;
+    }
+
     body {
       font-family: 'Poppins', sans-serif;
+      background-color: var(--bg-light);
+      margin: 0;
       display: flex;
       align-items: center;
       justify-content: center;
       height: 100vh;
-      background: linear-gradient(135deg, #007bff, #6f42c1);
-      margin: 0;
     }
-    .login-container {
-      background: white;
-      padding: 40px 45px;
-      border-radius: 18px;
-      box-shadow: 0 5px 25px rgba(0,0,0,0.25);
-      text-align: center;
-      width: 310px;
+
+    /* Karta prihlásenia vycentrovaná na stred */
+    .login-card {
+      background: var(--white);
+      width: 100%;
+      max-width: 400px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+      padding: 40px;
       animation: fadeIn 0.5s ease-in-out;
     }
+
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
+      from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    h2 {
-      color: #007bff;
-      margin-bottom: 18px;
-      font-size: 22px;
+
+    .card-header {
+      margin-bottom: 30px;
+      text-align: center;
     }
+
+    .card-header h2 {
+      margin: 0;
+      font-size: 24px;
+      color: #111827;
+      font-weight: 600;
+    }
+
+    .card-header p {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-top: 5px;
+    }
+
     .input-group {
+      margin-bottom: 20px;
       position: relative;
-      width: 100%;
-      margin: 10px 0;
     }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: #374151;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
     input {
       width: 100%;
-      padding: 10px 40px 10px 12px;
-      border: 1.5px solid #ccc;
+      padding: 12px 15px;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      outline: none;
+      box-sizing: border-box;
+      transition: all 0.2s;
+      background-color: #f9fafb;
+    }
+
+    input:focus {
+      border-color: var(--success-green);
+      background-color: #fff;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+
+    /* Zelené tlačidlo podľa vášho výberu */
+    .btn-login {
+      width: 100%;
+      background: var(--success-green);
+      color: white;
+      border: none;
+      padding: 12px;
       border-radius: 10px;
       font-size: 15px;
-      outline: none;
-      transition: 0.3s;
-      box-sizing: border-box;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+      margin-top: 10px;
     }
-    input:focus {
-      border-color: #007bff;
-      box-shadow: 0 0 6px rgba(0,123,255,0.25);
+
+    .btn-login:hover {
+      background: #059669;
+      transform: translateY(-1px);
     }
+
     .eye-toggle {
       position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
+      right: 15px;
+      top: 38px;
       cursor: pointer;
-      font-size: 18px;
-      color: #666;
-      user-select: none;
+      color: #9ca3af;
     }
-    button {
-      width: 100%;
-      background: #007bff;
-      border: none;
-      color: white;
-      padding: 10px;
-      border-radius: 10px;
-      font-size: 16px;
-      cursor: pointer;
-      margin-top: 15px;
-      transition: background 0.3s;
-    }
-    button:hover { background: #0056b3; }
+
     .error-msg {
-      background: #f8d7da;
-      color: #721c24;
-      padding: 8px;
+      background: #fef2f2;
+      color: #dc2626;
+      padding: 10px;
       border-radius: 8px;
-      margin-top: 10px;
+      margin-top: 20px;
       font-size: 13px;
       display: none;
+      text-align: center;
+      border: 1px solid #fee2e2;
     }
-    .footer {
-      margin-top: 20px;
-      color: #888;
-      font-size: 13px;
+
+    .footer-text {
+      text-align: center;
+      margin-top: 25px;
+      font-size: 12px;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
     }
   </style>
 </head>
 <body>
-  <div class="login-container">
-    <h2>Prihlásenie</h2>
-    <div class="input-group">
-      <input type="text" id="username" placeholder="Meno">
+
+  <div class="login-card">
+    <div class="card-header">
+      <h2>Prihlásenie</h2>
+      <p>Zadajte svoje údaje pre prístup</p>
     </div>
+    
     <div class="input-group">
-      <input type="password" id="password" placeholder="Heslo">
+      <label>Meno</label>
+      <input type="text" id="username" placeholder="Vaše meno">
+    </div>
+    
+    <div class="input-group">
+      <label>Heslo</label>
+      <input type="password" id="password" placeholder="••••••••">
       <span class="eye-toggle" id="togglePassword">👁️‍🗨️</span>
     </div>
-    <button id="loginBtn">Prihlásiť sa</button>
+    
+    <button id="loginBtn" class="btn-login">Prihlásiť sa</button>
+    
     <div id="errorMsg" class="error-msg"></div>
-    <div class="footer">© Dochádzkový systém</div>
+    
+    <div class="footer-text">
+      © 2025 DOCHÁDZKOVÝ SYSTÉM
+    </div>
   </div>
 
   <script type="module">
@@ -131,7 +192,6 @@
     togglePassword.addEventListener("click", () => {
       const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
       passwordInput.setAttribute("type", type);
-      togglePassword.textContent = type === "password" ? "👁️‍🗨️" : "👁️";
     });
 
     function showError(message) {
@@ -145,39 +205,32 @@
       const password = passwordInput.value.trim();
 
       if (!name || !password) {
-        showError("Zadaj meno aj heslo!");
+        showError("Zadajte prihlasovacie údaje!");
         return;
       }
 
-      // 🔐 ADMIN login opravený
       if (name === "admin" && password === "1234") {
-        localStorage.setItem("uid", "admin"); // 👈 kľúč, ktorý admin.html očakáva
+        localStorage.setItem("uid", "admin");
         window.location.href = "admin.html";
         return;
       }
 
       try {
         const snapshot = await get(ref(db, "users/"));
-        if (!snapshot.exists()) {
-          showError("Žiadni používatelia v databáze!");
-          return;
-        }
-
         let found = false;
-        snapshot.forEach(child => {
-          const user = child.val();
-          if (user.name === name && user.password === password) {
-            localStorage.setItem("uid", child.key);
-            found = true;
-            window.location.href = "employee.html";
-          }
-        });
-
+        if (snapshot.exists()) {
+          snapshot.forEach(child => {
+            const user = child.val();
+            if (user.name === name && user.password === password) {
+              localStorage.setItem("uid", child.key);
+              found = true;
+              window.location.href = "employee.html";
+            }
+          });
+        }
         if (!found) showError("Nesprávne meno alebo heslo!");
-
       } catch (err) {
-        console.error(err);
-        showError("Chyba pri prihlasovaní!");
+        showError("Chyba pripojenia!");
       }
     });
   </script>
