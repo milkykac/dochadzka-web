@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin Panel – Dochádzka</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
@@ -32,6 +32,26 @@
     --radius: 10px;
     --radius-sm: 6px;
     --radius-lg: 14px;
+    --sidebar-w: 240px;
+  }
+
+  /* DARK MODE */
+  body.dark {
+    --bg: #0F1117;
+    --surface: #1A1D27;
+    --surface-2: #22263A;
+    --border: #2D3148;
+    --text-primary: #F1F5F9;
+    --text-secondary: #94A3B8;
+    --text-muted: #64748B;
+    --accent-light: #1e3a5f;
+    --success-light: #052e16;
+    --danger-light: #3b0a0a;
+    --warning-light: #2d1a00;
+    --purple-light: #1e1040;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+    --shadow-lg: 0 10px 30px rgba(0,0,0,0.5);
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -43,13 +63,14 @@
     color: var(--text-primary);
     font-size: 14px;
     line-height: 1.5;
+    transition: background 0.3s, color 0.3s;
   }
 
   .layout { display: flex; min-height: 100vh; }
 
   /* ── SIDEBAR ── */
   .sidebar {
-    width: 240px;
+    width: var(--sidebar-w);
     background: var(--surface);
     border-right: 1px solid var(--border);
     display: flex;
@@ -58,13 +79,13 @@
     top: 0; left: 0; bottom: 0;
     z-index: 50;
     box-shadow: var(--shadow-sm);
+    transition: transform 0.25s ease, background 0.3s;
   }
 
   .sidebar-logo {
     padding: 24px 20px 20px;
     border-bottom: 1px solid var(--border);
   }
-
   .sidebar-logo .logo-mark {
     width: 36px; height: 36px;
     background: var(--accent);
@@ -72,9 +93,7 @@
     display: flex; align-items: center; justify-content: center;
     margin-bottom: 12px;
   }
-
   .sidebar-logo .logo-mark svg { width: 18px; height: 18px; fill: white; }
-
   .sidebar-logo h1 { font-size: 15px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.3px; }
   .sidebar-logo p { font-size: 11px; color: var(--text-muted); margin-top: 2px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
 
@@ -89,13 +108,12 @@
     font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
     cursor: pointer; transition: all 0.15s ease; width: 100%; text-align: left;
   }
-
   .nav-btn:hover { background: var(--surface-2); color: var(--text-primary); }
   .nav-btn.active { background: var(--accent-light); color: var(--accent); font-weight: 600; }
   .nav-btn .nav-icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; opacity: 0.7; }
   .nav-btn.active .nav-icon { opacity: 1; }
 
-  .sidebar-footer { padding: 16px 12px; border-top: 1px solid var(--border); }
+  .sidebar-footer { padding: 16px 12px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; }
 
   .logout-btn {
     display: flex; align-items: center; gap: 10px;
@@ -104,21 +122,45 @@
     font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
     cursor: pointer; transition: all 0.15s ease; width: 100%; text-align: left;
   }
-
   .logout-btn:hover { background: var(--danger-light); }
 
+  /* dark mode toggle */
+  .dark-toggle {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: var(--radius-sm);
+    border: none; background: transparent; color: var(--text-secondary);
+    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s ease; width: 100%; text-align: left;
+  }
+  .dark-toggle:hover { background: var(--surface-2); color: var(--text-primary); }
+
+  /* ── MOBILE OVERLAY ── */
+  .sidebar-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    z-index: 49; backdrop-filter: blur(2px);
+  }
+  .sidebar-overlay.open { display: block; }
+
+  /* ── HAMBURGER ── */
+  .hamburger {
+    display: none; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); background: var(--surface-2);
+    cursor: pointer; flex-direction: column; gap: 4px; padding: 8px;
+  }
+  .hamburger span { display: block; width: 16px; height: 2px; background: var(--text-primary); border-radius: 2px; transition: all 0.25s; }
+
   /* ── MAIN ── */
-  .main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+  .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
 
   .topbar {
     background: var(--surface); border-bottom: 1px solid var(--border);
     padding: 16px 32px; display: flex; align-items: center; justify-content: space-between;
     position: sticky; top: 0; z-index: 40; box-shadow: var(--shadow-sm);
+    transition: background 0.3s;
   }
-
   .topbar-left h2 { font-size: 18px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.4px; }
   .topbar-left p { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
-
   .topbar-right { display: flex; align-items: center; gap: 10px; }
 
   .notif-btn {
@@ -128,16 +170,13 @@
     align-items: center; justify-content: center; transition: all 0.15s;
   }
   .notif-btn:hover { background: var(--border); }
-
-  .notif-dot {
-    position: absolute; top: 6px; right: 6px;
-    width: 8px; height: 8px; background: var(--danger);
-    border-radius: 50%; border: 2px solid var(--surface);
-    display: none;
-  }
+  .notif-dot { position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid var(--surface); display: none; }
   .notif-dot.active { display: block; }
-
   .topbar-badge { background: var(--accent-light); color: var(--accent); font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; border: 1px solid #BFDBFE; }
+
+  /* live indicator */
+  .live-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: var(--success); background: var(--success-light); padding: 3px 9px; border-radius: 20px; border: 1px solid #A7F3D0; }
+  .live-badge::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--success); display:inline-block; animation: pulse 1.5s infinite; }
 
   /* ── NOTIF PANEL ── */
   .notif-panel {
@@ -147,18 +186,15 @@
     box-shadow: var(--shadow-lg); z-index: 200;
     display: none; overflow: hidden;
     animation: slideDown 0.2s ease;
+    transition: background 0.3s;
   }
   .notif-panel.open { display: block; }
   @keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
-
   .notif-header { padding: 14px 16px 10px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
   .notif-header span { font-weight: 700; font-size: 14px; }
   .notif-clear { font-size: 12px; color: var(--accent); cursor: pointer; background: none; border: none; font-family: 'DM Sans', sans-serif; }
-  .notif-clear:hover { text-decoration: underline; }
-
   .notif-list { max-height: 300px; overflow-y: auto; }
   .notif-item { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; gap: 10px; align-items: flex-start; }
-  .notif-item:last-child { border-bottom: none; }
   .notif-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px; }
   .notif-icon.warn { background: var(--warning-light); color: var(--warning); }
   .notif-icon.info { background: var(--accent-light); color: var(--accent); }
@@ -168,20 +204,13 @@
   .notif-empty { padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px; }
 
   .content { padding: 28px 32px; }
-
   section { display: none; animation: fadeIn 0.2s ease; }
   section.active { display: block; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
   /* ── STAT CARDS ── */
   .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 14px; margin-bottom: 24px; }
-
-  .stat-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius-lg); padding: 18px 20px;
-    box-shadow: var(--shadow-sm);
-  }
-
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 20px; box-shadow: var(--shadow-sm); transition: background 0.3s; }
   .stat-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
   .stat-value { font-size: 28px; font-weight: 700; color: var(--text-primary); letter-spacing: -1px; line-height: 1; }
   .stat-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
@@ -191,10 +220,15 @@
   .stat-card.warning { border-left: 3px solid var(--warning); }
   .stat-card.purple { border-left: 3px solid var(--purple); }
 
-  /* ── CARDS ── */
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; }
-  .card + .card { margin-top: 20px; }
+  /* trend indicator */
+  .stat-trend { font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 3px; margin-top: 6px; padding: 2px 7px; border-radius: 12px; }
+  .stat-trend.up { background: var(--success-light); color: var(--success); }
+  .stat-trend.down { background: var(--danger-light); color: var(--danger); }
+  .stat-trend.neutral { background: var(--surface-2); color: var(--text-muted); }
 
+  /* ── CARDS ── */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; transition: background 0.3s; }
+  .card + .card { margin-top: 20px; }
   .card-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
   .card-title { font-size: 15px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.3px; }
   .card-body { padding: 20px 24px; }
@@ -204,55 +238,41 @@
 
   /* ── BUTTONS ── */
   .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: var(--radius-sm); border: none; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s ease; white-space: nowrap; letter-spacing: -0.1px; }
-
   .btn-primary { background: var(--accent); color: white; }
   .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 10px rgba(29,78,216,0.25); }
-
   .btn-success { background: var(--success); color: white; }
-  .btn-success:hover { background: #047857; transform: translateY(-1px); box-shadow: 0 4px 10px rgba(5,150,105,0.25); }
-
+  .btn-success:hover { background: #047857; transform: translateY(-1px); }
   .btn-danger { background: var(--danger); color: white; }
   .btn-danger:hover { background: #B91C1C; transform: translateY(-1px); }
-
   .btn-warning { background: var(--warning); color: white; }
   .btn-warning:hover { background: #B45309; transform: translateY(-1px); }
-
   .btn-purple { background: var(--purple); color: white; }
   .btn-purple:hover { background: #6D28D9; transform: translateY(-1px); }
-
   .btn-ghost { background: var(--surface-2); color: var(--text-secondary); border: 1px solid var(--border); }
   .btn-ghost:hover { background: var(--border); color: var(--text-primary); }
-
   .btn-outline-danger { background: var(--danger-light); color: var(--danger); border: 1px solid #FECACA; }
   .btn-outline-danger:hover { background: var(--danger); color: white; }
-
   .btn-outline-info { background: #EFF6FF; color: #2563EB; border: 1px solid #BFDBFE; }
   .btn-outline-info:hover { background: #2563EB; color: white; }
-
   .btn-outline-success { background: var(--success-light); color: var(--success); border: 1px solid #A7F3D0; }
   .btn-outline-success:hover { background: var(--success); color: white; }
-
   .btn-sm { padding: 5px 10px; font-size: 12px; }
 
   /* ── FILTERS ── */
   .filters { display: flex; gap: 10px; flex-wrap: wrap; padding: 16px 24px; background: var(--surface-2); border-bottom: 1px solid var(--border); }
-
   .filter-input { padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text-primary); background: var(--surface); transition: border-color 0.15s; outline: none; }
   .filter-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(29,78,216,0.08); }
   .filter-input[type="date"] { flex: 0 0 160px; }
   .filter-input[type="text"] { flex: 1; min-width: 200px; }
-  .filter-input[type="number"] { width: 100px; }
 
   /* ── TABLE ── */
-  .table-wrap { overflow-x: auto; }
-
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
   thead tr { background: var(--surface-2); border-bottom: 2px solid var(--border); }
   th { padding: 11px 16px; text-align: left; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; white-space: nowrap; }
   td { padding: 13px 16px; border-bottom: 1px solid var(--border); color: var(--text-primary); vertical-align: middle; }
   tbody tr:last-child td { border-bottom: none; }
   tbody tr:hover { background: var(--surface-2); }
-
   .empty-row td { text-align: center; color: var(--text-muted); padding: 40px; font-size: 14px; }
   .loader-row td { text-align: center; color: var(--accent); padding: 32px; font-weight: 500; }
   .loader-row td::before { content: ''; display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; margin-right: 8px; vertical-align: -3px; }
@@ -261,7 +281,6 @@
   /* ── BADGES ── */
   .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; letter-spacing: -0.1px; white-space: nowrap; }
   .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-
   .badge-success { background: var(--success-light); color: var(--success); border: 1px solid #A7F3D0; }
   .badge-success::before { background: var(--success); }
   .badge-danger { background: var(--danger-light); color: var(--danger); border: 1px solid #FECACA; }
@@ -278,7 +297,6 @@
   /* ── USER CELLS ── */
   .user-cell { display: flex; align-items: center; gap: 10px; }
   .user-avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #7C3AED); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: white; flex-shrink: 0; letter-spacing: -0.5px; }
-
   .time-cell { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text-secondary); }
 
   /* ── CHIP GRID ── */
@@ -290,7 +308,7 @@
   /* ── MODAL ── */
   .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); justify-content: center; align-items: center; z-index: 300; }
   .modal.open { display: flex; }
-  .modal-box { background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); width: 90%; max-width: 440px; padding: 28px; animation: modalSlide 0.25s ease; border: 1px solid var(--border); }
+  .modal-box { background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); width: 90%; max-width: 440px; padding: 28px; animation: modalSlide 0.25s ease; border: 1px solid var(--border); max-height: 90vh; overflow-y: auto; }
   @keyframes modalSlide { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
   .modal-header h3 { font-size: 16px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.3px; }
@@ -302,15 +320,9 @@
   .modal-footer { display: flex; gap: 8px; margin-top: 16px; }
   .modal-footer .btn { flex: 1; justify-content: center; }
 
-  /* ── SMENY (ZMENY) ── */
+  /* ── SMENY ── */
   .smeny-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-bottom: 20px; }
-
-  .smena-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius-lg); padding: 18px 20px;
-    box-shadow: var(--shadow-sm);
-  }
-
+  .smena-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 20px; box-shadow: var(--shadow-sm); }
   .smena-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
   .smena-name { font-size: 15px; font-weight: 700; }
   .smena-time { font-family: 'DM Mono', monospace; font-size: 22px; font-weight: 500; color: var(--text-primary); margin-bottom: 4px; }
@@ -318,28 +330,31 @@
 
   /* ── DOVOLENKA ── */
   .dovolenka-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  @media (max-width: 600px) { .dovolenka-form { grid-template-columns: 1fr; } }
-
   .form-group { display: flex; flex-direction: column; gap: 5px; }
   .form-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.4px; }
   .form-input { padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text-primary); background: var(--surface); outline: none; transition: border-color 0.15s; }
   .form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(29,78,216,0.08); }
 
-  /* ── AUDIT LOG ── */
-  .audit-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+  /* ── AUDIT ── */
+  .audit-timeline { display: flex; flex-direction: column; gap: 0; }
+  .audit-entry { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .audit-entry:last-child { border-bottom: none; }
+  .audit-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px; }
 
-  /* ── MZDY ── */
-  .mzda-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
-  .mzda-row:last-child { border-bottom: none; }
-  .mzda-total { font-size: 18px; font-weight: 700; color: var(--accent); }
+  /* ── TABS ── */
+  .tab-bar { display: flex; gap: 2px; padding: 0 24px; background: var(--surface-2); border-bottom: 1px solid var(--border); overflow-x: auto; }
+  .tab-btn { padding: 12px 16px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; color: var(--text-muted); background: none; border: none; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s; white-space: nowrap; }
+  .tab-btn:hover { color: var(--text-primary); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
 
-  /* ── ONLINE BADGE ── */
+  /* ── ONLINE/OFFLINE ── */
   .online-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: var(--success); }
   .online-badge::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--success); display: inline-block; animation: pulse 2s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
-
   .offline-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: var(--text-muted); }
   .offline-badge::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted); display: inline-block; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
 
   /* ── BAR CHART ── */
   .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 100px; padding: 0 4px; }
@@ -347,6 +362,21 @@
   .bar { width: 100%; background: var(--accent); border-radius: 4px 4px 0 0; transition: height 0.4s ease; min-height: 2px; }
   .bar-label { font-size: 10px; color: var(--text-muted); font-weight: 500; }
   .bar-val { font-size: 10px; color: var(--text-secondary); font-weight: 600; }
+
+  /* ── MONTHLY CHART ── */
+  .month-chart { display: flex; align-items: flex-end; gap: 3px; height: 120px; padding: 0 2px; overflow-x: auto; }
+  .month-bar-col { min-width: 22px; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .month-bar { width: 100%; background: var(--accent); border-radius: 3px 3px 0 0; transition: height 0.4s ease; min-height: 2px; opacity: 0.8; }
+  .month-bar.weekend { opacity: 0.4; }
+  .month-bar-label { font-size: 9px; color: var(--text-muted); font-weight: 500; }
+
+  /* ── LEADERBOARD ── */
+  .leader-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .leader-item:last-child { border-bottom: none; }
+  .leader-rank { font-size: 13px; font-weight: 700; color: var(--text-muted); width: 20px; text-align: center; }
+  .leader-bar-bg { flex: 1; height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
+  .leader-bar-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.6s ease; }
+  .leader-val { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text-secondary); min-width: 50px; text-align: right; }
 
   /* ── MINI CALENDAR ── */
   .mini-cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
@@ -357,6 +387,7 @@
   .cal-day.today { background: var(--accent); color: white; font-weight: 700; }
   .cal-day.has-dov { background: var(--warning-light); color: var(--warning); font-weight: 600; }
   .cal-day.has-pn { background: var(--purple-light); color: var(--purple); font-weight: 600; }
+  .cal-day.has-smena { background: var(--accent-light); color: var(--accent); font-weight: 600; }
   .cal-day.empty { cursor: default; }
 
   /* ── PRESENT LIST ── */
@@ -365,37 +396,56 @@
   .present-item-left { display: flex; align-items: center; gap: 10px; }
   .present-since { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text-muted); }
 
-  /* ── AUDIT TIMELINE ── */
-  .audit-timeline { display: flex; flex-direction: column; gap: 0; }
-  .audit-entry { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); }
-  .audit-entry:last-child { border-bottom: none; }
-  .audit-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px; }
+  /* ── ROZPIS ZMIEN ── */
+  .rozpis-grid { display: grid; grid-template-columns: 120px repeat(7,1fr); gap: 1px; background: var(--border); border-radius: var(--radius-sm); overflow: hidden; font-size: 12px; }
+  .rozpis-cell { background: var(--surface); padding: 8px 6px; text-align: center; }
+  .rozpis-header { background: var(--surface-2); font-weight: 700; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
+  .rozpis-name { text-align: left; font-weight: 600; font-size: 13px; }
+  .rozpis-smena { border-radius: 4px; font-size: 11px; font-weight: 600; padding: 3px 6px; }
+  .rozpis-free { color: var(--text-muted); font-size: 11px; }
+  .rozpis-weekend { background: var(--surface-2); }
 
-  /* ── TABS ── */
-  .tab-bar { display: flex; gap: 2px; padding: 0 24px; background: var(--surface-2); border-bottom: 1px solid var(--border); }
-  .tab-btn { padding: 12px 16px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; color: var(--text-muted); background: none; border: none; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s; }
-  .tab-btn:hover { color: var(--text-primary); }
-  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
-
-  .tab-content { display: none; }
-  .tab-content.active { display: block; }
+  /* ── TOP ABSENT ── */
+  .top-absent-item { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .top-absent-item:last-child { border-bottom: none; }
+  .absent-count { font-family: 'DM Mono', monospace; font-weight: 700; font-size: 14px; }
+  .absent-count.high { color: var(--danger); }
+  .absent-count.mid { color: var(--warning); }
+  .absent-count.low { color: var(--text-muted); }
 
   /* ── RESPONSIVE ── */
-  @media (max-width: 768px) {
-    .sidebar { display: none; }
+  @media (max-width: 900px) {
+    .sidebar {
+      transform: translateX(-100%);
+      z-index: 60;
+    }
+    .sidebar.mobile-open { transform: translateX(0); box-shadow: var(--shadow-lg); }
     .main { margin-left: 0; }
     .content { padding: 16px; }
     .topbar { padding: 14px 16px; }
+    .hamburger { display: flex; }
     .notif-panel { right: 16px; width: calc(100vw - 32px); }
+    .dovolenka-form { grid-template-columns: 1fr; }
+    .stat-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+    #dovLayout { grid-template-columns: 1fr !important; }
+    .smeny-grid { grid-template-columns: 1fr; }
+    .rozpis-grid { grid-template-columns: 90px repeat(7,1fr); font-size: 10px; }
+  }
+  @media (max-width: 600px) {
+    .stat-grid { grid-template-columns: 1fr 1fr; }
+    .card-header { flex-direction: column; align-items: flex-start; }
+    th, td { padding: 10px 10px; }
   }
 </style>
 </head>
 <body>
-
 <div class="layout">
 
+  <!-- MOBILE OVERLAY -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
   <!-- SIDEBAR -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
       <div class="logo-mark">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -405,112 +455,49 @@
       <h1>Dochádzka</h1>
       <p>Admin Panel</p>
     </div>
-
     <nav class="sidebar-nav">
       <div class="nav-label">Prehľad</div>
-
       <button class="nav-btn active" data-target="dashboard">
-        <span class="nav-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-            <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-          </svg>
-        </span>
-        Dashboard
+        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span>Dashboard
       </button>
-
       <button class="nav-btn" data-target="dochadzka">
-        <span class="nav-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
-        </span>
-        Dochádzka
+        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Dochádzka
       </button>
-
       <button class="nav-btn" data-target="prestavky">
-        <span class="nav-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-          </svg>
-        </span>
-        Prestávky
+        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>Prestávky
       </button>
-
       <button class="nav-btn" data-target="pn">
-        <span class="nav-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-          </svg>
-        </span>
-        PN
+        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>PN
       </button>
-
       <div class="nav-label" style="margin-top:8px;">Plánovanie</div>
-
       <button class="nav-btn" data-target="smeny">
-        <span class="nav-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/>
-            <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-          </svg>
-        </span>
-        Zmeny
+        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>Zmeny
       </button>
-
+      <button class="nav-btn" data-target="rozpis">
+        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="3" y1="16" x2="21" y2="16"/><line x1="9" y1="4" x2="9" y2="22"/><line x1="15" y1="4" x2="15" y2="22"/></svg></span>Rozpis zmien
+      </button>
       <button class="nav-btn" data-target="dovolenka">
-        <span class="nav-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z"/>
-            <line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/>
-          </svg>
-        </span>
-        Dovolenka
+        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg></span>Dovolenka
       </button>
-
       <div class="nav-label" style="margin-top:8px;">Financie</div>
-
       <button class="nav-btn" data-target="mzdy">
-        <span class="nav-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-          </svg>
-        </span>
-        Mzdový výkaz
+        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>Mzdový výkaz
       </button>
-
       <div class="nav-label" style="margin-top:8px;">Správa</div>
-
       <button class="nav-btn" data-target="pouzivatelia">
-        <span class="nav-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-            <circle cx="12" cy="7" r="4"/>
-          </svg>
-        </span>
-        Používatelia
+        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>Používatelia
       </button>
-
       <button class="nav-btn" data-target="audit">
-        <span class="nav-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-            <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-            <polyline points="10 9 9 9 8 9"/>
-          </svg>
-        </span>
-        Audit log
+        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span>Audit log
       </button>
     </nav>
-
     <div class="sidebar-footer">
+      <button class="dark-toggle" onclick="toggleDark()" id="darkToggleBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        Tmavý režim
+      </button>
       <button class="logout-btn" onclick="logout()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-          <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-        </svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         Odhlásiť sa
       </button>
     </div>
@@ -519,17 +506,24 @@
   <!-- MAIN -->
   <div class="main">
     <header class="topbar">
-      <div class="topbar-left">
-        <h2 id="topbarTitle">Dashboard</h2>
-        <p id="topbarSub">Prehľad dochádzky</p>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <button class="hamburger" id="hamburgerBtn" onclick="openSidebar()">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="topbar-left">
+          <h2 id="topbarTitle">Dashboard</h2>
+          <p id="topbarSub">Prehľad dochádzky</p>
+        </div>
       </div>
       <div class="topbar-right">
+        <span class="live-badge" id="liveIndicator" style="display:none;">Live</span>
         <button class="notif-btn" onclick="toggleNotifPanel()" title="Notifikácie">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-          </svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
           <span class="notif-dot" id="notifDot"></span>
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="exportAll()" title="Hromadný export">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export všetko
         </button>
         <span class="topbar-badge">Admin</span>
       </div>
@@ -555,6 +549,7 @@
             <div class="stat-label">Prítomní dnes</div>
             <div class="stat-value" id="statPresent">—</div>
             <div class="stat-sub" id="statPresentSub">načítavam…</div>
+            <div id="statPresentTrend"></div>
           </div>
           <div class="stat-card danger">
             <div class="stat-label">Absentní dnes</div>
@@ -569,7 +564,7 @@
           <div class="stat-card purple">
             <div class="stat-label">Na dovolenke</div>
             <div class="stat-value" id="statDov">—</div>
-            <div class="stat-sub">tento mesiac</div>
+            <div class="stat-sub">dnes</div>
           </div>
           <div class="stat-card success">
             <div class="stat-label">Celkovo zamestnancov</div>
@@ -578,40 +573,66 @@
           </div>
         </div>
 
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;">
+        <!-- ANALYTIKA TABS -->
+        <div class="card" style="margin-bottom:20px;">
+          <div class="tab-bar">
+            <button class="tab-btn active" data-tab="tabWeek">Týždeň</button>
+            <button class="tab-btn" data-tab="tabMonth">Mesiac</button>
+            <button class="tab-btn" data-tab="tabTopAbsent">Top absencie</button>
+            <button class="tab-btn" data-tab="tabMesko">Meskania</button>
+          </div>
+          <div class="tab-content active" id="tabWeek">
+            <div class="card-body">
+              <div style="font-size:12px; color:var(--text-muted); margin-bottom:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.4px;">Odpracované hodiny — aktuálny týždeň</div>
+              <div class="bar-chart" id="weekChart"><p style="color:var(--text-muted); font-size:13px;">Načítavam…</p></div>
+            </div>
+          </div>
+          <div class="tab-content" id="tabMonth">
+            <div class="card-body">
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+                <div style="font-size:12px; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.4px;">Odpracované hodiny — <span id="monthChartLabel"></span></div>
+                <div style="display:flex; gap:6px;">
+                  <button class="btn btn-ghost btn-sm" onclick="monthChartPrev()">‹</button>
+                  <button class="btn btn-ghost btn-sm" onclick="monthChartNext()">›</button>
+                </div>
+              </div>
+              <div class="month-chart" id="monthChart"><p style="color:var(--text-muted); font-size:13px;">Načítavam…</p></div>
+              <div style="margin-top:8px; font-family:'DM Mono',monospace; font-size:12px; color:var(--text-secondary);">Celkom: <strong id="monthTotalHours">—</strong> h | Priemerná dochádzka: <strong id="monthAvgPct">—</strong>%</div>
+            </div>
+          </div>
+          <div class="tab-content" id="tabTopAbsent">
+            <div class="card-body">
+              <div style="font-size:12px; color:var(--text-muted); margin-bottom:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.4px;">Najviac absencií — posledných 30 dní</div>
+              <div id="topAbsentList"><p style="color:var(--text-muted); font-size:13px;">Načítavam…</p></div>
+            </div>
+          </div>
+          <div class="tab-content" id="tabMesko">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Zamestnanec</th><th>Dátum</th><th>Typ</th><th>Definovaná zmena</th><th>Skutočný čas</th><th>Rozdiel</th></tr></thead>
+                <tbody id="meskTable"><tr class="loader-row"><td>Načítavam…</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;" class="two-col-grid">
           <div class="card">
             <div class="card-header">
               <span class="card-title">Prítomní práve teraz</span>
               <button class="btn btn-ghost btn-sm" onclick="loadDashboard()">↻ Obnoviť</button>
             </div>
             <div class="card-body" style="padding:12px 16px;">
-              <div class="present-list" id="presentList">
-                <p style="color:var(--text-muted); font-size:13px; padding:12px 0;">Načítavam…</p>
-              </div>
+              <div class="present-list" id="presentList"><p style="color:var(--text-muted); font-size:13px; padding:12px 0;">Načítavam…</p></div>
             </div>
           </div>
-
           <div class="card">
             <div class="card-header">
-              <span class="card-title">Odpracované hodiny — týždeň</span>
+              <span class="card-title">Top hodiny — tento mesiac</span>
             </div>
-            <div class="card-body">
-              <div class="bar-chart" id="weekChart">
-                <p style="color:var(--text-muted); font-size:13px;">Načítavam…</p>
-              </div>
+            <div class="card-body" style="padding:12px 16px;">
+              <div id="topHoursList"><p style="color:var(--text-muted); font-size:13px;">Načítavam…</p></div>
             </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">Meškania a skoré odchody — posledných 7 dní</span>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Zamestnanec</th><th>Dátum</th><th>Typ</th><th>Definovaná zmena</th><th>Skutočný čas</th><th>Rozdiel</th></tr></thead>
-              <tbody id="meskTable"><tr class="loader-row"><td>Načítavam…</td></tr></tbody>
-            </table>
           </div>
         </div>
       </section>
@@ -623,20 +644,19 @@
             <span class="card-title">Záznamy dochádzky</span>
             <div class="toolbar">
               <button class="btn btn-success btn-sm" onclick="addLog('dochadzka','prichod')">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-                Príchod
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>Príchod
               </button>
               <button class="btn btn-danger btn-sm" onclick="addLog('dochadzka','odchod')">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                Odchod
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Odchod
               </button>
               <button class="btn btn-warning btn-sm" onclick="addLog('prestavky','prestavka_manual')">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                Prestávka
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Prestávka
               </button>
               <button class="btn btn-ghost btn-sm" onclick="exportTable('dochadzka')" data-export-table="dochadzka">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Export XLSX
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export XLSX
+              </button>
+              <button class="btn btn-ghost btn-sm" onclick="exportPDF('dochadzka')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Export PDF
               </button>
             </div>
           </div>
@@ -659,10 +679,8 @@
           <div class="card-header">
             <span class="card-title">Prestávky</span>
             <div class="toolbar">
-              <button class="btn btn-ghost btn-sm" onclick="exportTable('prestavky')" data-export-table="prestavky">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Export XLSX
-              </button>
+              <button class="btn btn-ghost btn-sm" onclick="exportTable('prestavky')" data-export-table="prestavky">Export XLSX</button>
+              <button class="btn btn-ghost btn-sm" onclick="exportPDF('prestavky')">Export PDF</button>
             </div>
           </div>
           <div class="filters">
@@ -684,10 +702,8 @@
           <div class="card-header">
             <span class="card-title">PN — Pracovná neschopnosť</span>
             <div class="toolbar">
-              <button class="btn btn-ghost btn-sm" onclick="exportTable('pn')" data-export-table="pn">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Export XLSX
-              </button>
+              <button class="btn btn-ghost btn-sm" onclick="exportTable('pn')" data-export-table="pn">Export XLSX</button>
+              <button class="btn btn-ghost btn-sm" onclick="exportPDF('pn')">Export PDF</button>
             </div>
           </div>
           <div class="filters">
@@ -709,38 +725,47 @@
           <div class="card-header">
             <span class="card-title">Pracovné zmeny</span>
             <button class="btn btn-primary btn-sm" onclick="openAddSmena()">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Pridať zmenu
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Pridať zmenu
             </button>
           </div>
           <div class="card-body">
-            <div class="smeny-grid" id="smenyGrid">
-              <p style="color:var(--text-muted); font-size:13px;">Načítavam zmeny…</p>
-            </div>
+            <div class="smeny-grid" id="smenyGrid"><p style="color:var(--text-muted); font-size:13px;">Načítavam zmeny…</p></div>
           </div>
         </div>
-
         <div class="card">
-          <div class="card-header">
-            <span class="card-title">Priradenie zamestnancov k zmenám</span>
-          </div>
+          <div class="card-header"><span class="card-title">Priradenie zamestnancov k zmenám</span></div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Zamestnanec</th><th>Priradená zmena</th><th>Začiatok</th><th>Koniec</th><th>Akcie</th></tr></thead>
+              <thead><tr><th>Zamestnanec</th><th>Priradená zmena</th><th>Začiatok</th><th>Koniec</th><th>Stav</th></tr></thead>
               <tbody id="smenyAssignTable"><tr class="loader-row"><td>Načítavam…</td></tr></tbody>
             </table>
           </div>
         </div>
       </section>
 
+      <!-- ── ROZPIS ZMIEN ── -->
+      <section id="rozpis">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Týždenný rozpis zmien</span>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <button class="btn btn-ghost btn-sm" onclick="rozpisPrev()">‹ Predch.</button>
+              <span id="rozpisWeekLabel" style="font-size:13px; font-weight:600; color:var(--text-secondary);"></span>
+              <button class="btn btn-ghost btn-sm" onclick="rozpisNext()">Ďalší ›</button>
+            </div>
+          </div>
+          <div class="card-body" style="padding:16px; overflow-x:auto;">
+            <div id="rozpisGrid"></div>
+          </div>
+        </div>
+      </section>
+
       <!-- ── DOVOLENKA ── -->
       <section id="dovolenka">
-        <div style="display:grid; grid-template-columns:1fr 360px; gap:20px; align-items:start;">
+        <div id="dovLayout" style="display:grid; grid-template-columns:1fr 360px; gap:20px; align-items:start;">
           <div>
             <div class="card" style="margin-bottom:20px;">
-              <div class="card-header">
-                <span class="card-title">Pridať neprítomnosť</span>
-              </div>
+              <div class="card-header"><span class="card-title">Pridať neprítomnosť</span></div>
               <div class="card-body">
                 <div class="dovolenka-form">
                   <div class="form-group" style="grid-column:1/-1;">
@@ -774,11 +799,13 @@
                 </div>
               </div>
             </div>
-
             <div class="card">
               <div class="card-header">
                 <span class="card-title">Evidencia neprítomností</span>
-                <button class="btn btn-ghost btn-sm" onclick="exportDovolenka()">Export XLSX</button>
+                <div style="display:flex; gap:6px;">
+                  <button class="btn btn-ghost btn-sm" onclick="exportDovolenka()">Export XLSX</button>
+                  <button class="btn btn-ghost btn-sm" onclick="exportPDF('dovolenka')">Export PDF</button>
+                </div>
               </div>
               <div class="table-wrap">
                 <table>
@@ -788,11 +815,8 @@
               </div>
             </div>
           </div>
-
           <div class="card">
-            <div class="card-header">
-              <span class="card-title">Kalendár</span>
-            </div>
+            <div class="card-header"><span class="card-title">Kalendár</span></div>
             <div class="card-body">
               <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
                 <button class="btn btn-ghost btn-sm" onclick="calPrev()">&#8249;</button>
@@ -801,19 +825,20 @@
               </div>
               <div class="cal-header">
                 <div class="cal-day-name">Po</div><div class="cal-day-name">Ut</div>
-                <div class="cal-day-name">St</div><div class="cal-day-name">St</div>
+                <div class="cal-day-name">St</div><div class="cal-day-name">Št</div>
                 <div class="cal-day-name">Pi</div><div class="cal-day-name">So</div>
                 <div class="cal-day-name">Ne</div>
               </div>
               <div class="mini-cal" id="miniCal"></div>
               <div style="margin-top:14px; display:flex; flex-direction:column; gap:6px;">
                 <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-secondary);">
-                  <span style="width:12px; height:12px; border-radius:3px; background:var(--warning-light); border:1px solid var(--warning); display:inline-block;"></span>
-                  Dovolenka
+                  <span style="width:12px; height:12px; border-radius:3px; background:var(--warning-light); border:1px solid var(--warning); display:inline-block;"></span>Dovolenka
                 </div>
                 <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-secondary);">
-                  <span style="width:12px; height:12px; border-radius:3px; background:var(--purple-light); border:1px solid var(--purple); display:inline-block;"></span>
-                  PN
+                  <span style="width:12px; height:12px; border-radius:3px; background:var(--purple-light); border:1px solid var(--purple); display:inline-block;"></span>PN
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-secondary);">
+                  <span style="width:12px; height:12px; border-radius:3px; background:var(--accent-light); border:1px solid var(--accent); display:inline-block;"></span>Zmena
                 </div>
               </div>
             </div>
@@ -824,9 +849,7 @@
       <!-- ── MZDY ── -->
       <section id="mzdy">
         <div class="card" style="margin-bottom:20px;">
-          <div class="card-header">
-            <span class="card-title">Nastavenia mzdového výpočtu</span>
-          </div>
+          <div class="card-header"><span class="card-title">Nastavenia mzdového výpočtu</span></div>
           <div class="card-body" style="display:flex; gap:16px; align-items:flex-end; flex-wrap:wrap;">
             <div class="form-group">
               <label class="form-label">Mesiac</label>
@@ -842,13 +865,11 @@
             </div>
             <button class="btn btn-primary" onclick="calcMzdy()">Vypočítať</button>
             <button class="btn btn-ghost" onclick="exportMzdy()">Export XLSX</button>
+            <button class="btn btn-ghost" onclick="exportPDF('mzdy')">Export PDF</button>
           </div>
         </div>
-
         <div class="card">
-          <div class="card-header">
-            <span class="card-title" id="mzdyTitle">Mzdový výkaz</span>
-          </div>
+          <div class="card-header"><span class="card-title" id="mzdyTitle">Mzdový výkaz</span></div>
           <div class="table-wrap">
             <table>
               <thead><tr><th>Zamestnanec</th><th>Odprac. hodín</th><th>Hodinová sadzba</th><th>Hrubá mzda</th><th>Poznámka</th></tr></thead>
@@ -864,13 +885,9 @@
           <div class="card-header">
             <span class="card-title">Zoznam používateľov</span>
             <div class="toolbar">
-              <button class="btn btn-ghost btn-sm" onclick="exportTable('users')" data-export-table="users">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Export
-              </button>
+              <button class="btn btn-ghost btn-sm" onclick="exportTable('users')">Export</button>
               <button class="btn btn-primary btn-sm" onclick="addUser()">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Pridať
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Pridať
               </button>
             </div>
           </div>
@@ -881,15 +898,10 @@
             </table>
           </div>
         </div>
-
         <div class="card">
-          <div class="card-header">
-            <span class="card-title">Nepriradené čipy</span>
-          </div>
+          <div class="card-header"><span class="card-title">Nepriradené čipy</span></div>
           <div class="card-body">
-            <div id="newChipsContainer">
-              <p style="color:var(--text-muted); font-size:13px;">Načítavam čipy…</p>
-            </div>
+            <div id="newChipsContainer"><p style="color:var(--text-muted); font-size:13px;">Načítavam čipy…</p></div>
           </div>
         </div>
       </section>
@@ -902,6 +914,7 @@
             <div class="toolbar">
               <input type="date" id="auditDate" class="filter-input" style="flex:0 0 160px;" onchange="renderAudit()">
               <button class="btn btn-ghost btn-sm" onclick="document.getElementById('auditDate').value=''; renderAudit();">Všetky</button>
+              <button class="btn btn-ghost btn-sm" onclick="exportPDF('audit')">Export PDF</button>
             </div>
           </div>
           <div class="card-body" style="padding: 8px 24px;">
@@ -978,7 +991,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-import { getDatabase, ref, get, set, child, push, remove } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+import { getDatabase, ref, get, set, push, remove, onValue, off } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBsYrbYtP4E5blWbKlrJ6iI9v6YPAYYp0g",
@@ -994,7 +1007,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// STATE
+// ── STATE ──
 let allAdminRecordsCache = [];
 let allUsersCache = {};
 let smenyCache = {};
@@ -1003,25 +1016,26 @@ let auditLog = [];
 let notifications = [];
 let calYear = new Date().getFullYear();
 let calMonth = new Date().getMonth();
+let monthChartYear = new Date().getFullYear();
+let monthChartMonth = new Date().getMonth();
+let rozpisWeekOffset = 0;
+let realtimeListenerRef = null;
+let dataLoaded = false;
 
-// HELPERS
+// ── HELPERS ──
 function initials(name) {
   return (name || '?').split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 2);
 }
 
-function badgeFor(stav, rawType) {
+function badgeFor(stav) {
   const map = { prichod:'badge-success', odchod:'badge-danger', prestavka:'badge-warning', pn:'badge-purple' };
-  return '<span class="badge ' + (map[stav] || 'badge-neutral') + '">' + rawType + '</span>';
+  return map[stav] || 'badge-neutral';
 }
 
 function msToHhMm(ms) {
   if (!ms || ms < 0) return '00:00';
   const m = Math.floor(ms / 60000), h = Math.floor(m / 60);
   return String(h).padStart(2,'0') + ':' + String(m % 60).padStart(2,'0');
-}
-
-function msToH(ms) {
-  return (ms / 3600000).toFixed(2);
 }
 
 function todayStr() {
@@ -1034,31 +1048,47 @@ function nowStr() {
   return String(n.getDate()).padStart(2,'0') + '.' + String(n.getMonth()+1).padStart(2,'0') + '.' + n.getFullYear() + ' ' + String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
 }
 
-function pushAudit(action, details, type) {
-  type = type || 'info';
+function pushAudit(action, details, type = 'info') {
   const entry = { time: nowStr(), action, details, type, ts: Date.now() };
   auditLog.unshift(entry);
   localStorage.setItem('auditLog', JSON.stringify(auditLog.slice(0, 200)));
 }
 
-function pushNotif(text, type) {
-  type = type || 'info';
+function pushNotif(text, type = 'info') {
   notifications.unshift({ text, type, time: nowStr(), id: Date.now() });
   localStorage.setItem('notifs', JSON.stringify(notifications.slice(0, 50)));
   document.getElementById('notifDot').classList.add('active');
   renderNotifPanel();
 }
 
-// NOTIF PANEL
+// ── SIDEBAR MOBILE ──
+window.openSidebar = function() {
+  document.getElementById('sidebar').classList.add('mobile-open');
+  document.getElementById('sidebarOverlay').classList.add('open');
+};
+window.closeSidebar = function() {
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+};
+
+// ── DARK MODE ──
+window.toggleDark = function() {
+  document.body.classList.toggle('dark');
+  const isDark = document.body.classList.contains('dark');
+  localStorage.setItem('darkMode', isDark ? '1' : '0');
+  document.getElementById('darkToggleBtn').innerHTML = isDark
+    ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg> Svetlý režim'
+    : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg> Tmavý režim';
+};
+
+// ── NOTIF PANEL ──
 window.toggleNotifPanel = function() {
   const p = document.getElementById('notifPanel');
   p.classList.toggle('open');
-  if (p.classList.contains('open')) {
-    document.getElementById('notifDot').classList.remove('active');
-  }
+  if (p.classList.contains('open')) document.getElementById('notifDot').classList.remove('active');
 };
 
-document.addEventListener('click', function(e) {
+document.addEventListener('click', e => {
   const p = document.getElementById('notifPanel');
   if (!p.contains(e.target) && !e.target.closest('.notif-btn')) p.classList.remove('open');
 });
@@ -1072,71 +1102,139 @@ window.clearNotifs = function() {
 function renderNotifPanel() {
   const list = document.getElementById('notifList');
   if (!notifications.length) { list.innerHTML = '<div class="notif-empty">Žiadne notifikácie.</div>'; return; }
-  const icons = { warn:'&#9888;', info:'&#8505;', danger:'&#10005;' };
-  list.innerHTML = notifications.map(function(n) {
-    return '<div class="notif-item"><div class="notif-icon ' + n.type + '">' + (icons[n.type] || '&#8505;') + '</div><div><div class="notif-text">' + n.text + '</div><div class="notif-time">' + n.time + '</div></div></div>';
-  }).join('');
+  const icons = { warn:'⚠', info:'ℹ', danger:'✕' };
+  list.innerHTML = notifications.map(n =>
+    `<div class="notif-item"><div class="notif-icon ${n.type}">${icons[n.type]||'ℹ'}</div><div><div class="notif-text">${n.text}</div><div class="notif-time">${n.time}</div></div></div>`
+  ).join('');
 }
 
-// LOAD ALL DATA
-async function ensureDataLoaded() {
-  if (allAdminRecordsCache.length > 0 || Object.keys(allUsersCache).length > 0) return;
-  try {
-    const snap = await get(ref(db, 'users'));
+// ── REAL-TIME LISTENER ──
+function startRealtimeListener() {
+  if (realtimeListenerRef) return;
+  realtimeListenerRef = ref(db, 'users');
+  document.getElementById('liveIndicator').style.display = 'inline-flex';
+  onValue(realtimeListenerRef, async snap => {
     if (!snap.exists()) return;
+    // rebuild cache on change
     const allRecords = [];
-    snap.forEach(function(userSnap) {
+    const newUsersCache = {};
+    snap.forEach(userSnap => {
       const userData = userSnap.val();
       const userId = userSnap.key;
       const userName = userData.name || '(bez mena)';
-      allUsersCache[userId] = userData;
-
-      ['dochadzka','prestavky','pn'].forEach(function(logType) {
+      newUsersCache[userId] = userData;
+      ['dochadzka','prestavky','pn'].forEach(logType => {
         const logsObj = userData[logType] || {};
-        Object.entries(logsObj).forEach(function([logKey, log]) {
+        Object.entries(logsObj).forEach(([logKey, log]) => {
           if (!log || !log.cas || !log.typ) return;
-          let cleanTime = String(log.cas);
-          let validIsoTime = cleanTime;
-          const dateRegex = /(\d{1,2})\.(\d{1,2})\.(\d{4}) (\d{1,2}:\d{2})/;
-          const match = cleanTime.match(dateRegex);
-          if (match) {
-            const day = match[1], month = match[2], year = match[3], time = match[4];
-            validIsoTime = year + '-' + month.padStart(2,'0') + '-' + day.padStart(2,'0') + ' ' + time;
-          } else if (cleanTime.includes('T') && cleanTime.includes('-')) {
-            validIsoTime = cleanTime.replace('T',' ');
-          } else if (cleanTime.includes('-') && cleanTime.length >= 16) {
-            validIsoTime = cleanTime;
-          } else return;
-
-          const cleanType = String(log.typ).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-          let recordType = null;
-          if (cleanType.includes('prestavka')) recordType = 'prestavka';
-          else if (cleanType.includes('prichod')) recordType = 'prichod';
-          else if (cleanType.includes('odchod')) recordType = 'odchod';
-          else if (cleanType.includes('pn')) recordType = 'pn';
-
-          if (recordType) {
-            allRecords.push({
-              userId, userName,
-              cas: validIsoTime,
-              casDisplay: cleanTime,
-              date: validIsoTime.substring(0,10),
-              time: validIsoTime.substring(11,16),
-              stav: recordType,
-              rawType: log.typ.toUpperCase(),
-              komentar: log.komentar || '',
-              logKey, logType
-            });
-          }
+          const parsed = parseRecord(userId, userName, log, logKey, logType);
+          if (parsed) allRecords.push(parsed);
         });
       });
     });
     allAdminRecordsCache = allRecords;
+    allUsersCache = newUsersCache;
+    dataLoaded = true;
+    // refresh active section silently
+    const activeSection = document.querySelector('section.active');
+    if (activeSection) {
+      const id = activeSection.id;
+      if (id === 'dashboard') loadDashboard();
+      else if (['dochadzka','prestavky','pn'].includes(id)) loadSection(id);
+    }
+  });
+}
+
+function parseRecord(userId, userName, log, logKey, logType) {
+  let cleanTime = String(log.cas);
+  let validIsoTime = cleanTime;
+  const dateRegex = /(\d{1,2})\.(\d{1,2})\.(\d{4}) (\d{1,2}:\d{2})/;
+  const match = cleanTime.match(dateRegex);
+  if (match) {
+    validIsoTime = match[3] + '-' + match[2].padStart(2,'0') + '-' + match[1].padStart(2,'0') + ' ' + match[4];
+  } else if (cleanTime.includes('T') && cleanTime.includes('-')) {
+    validIsoTime = cleanTime.replace('T',' ');
+  } else if (cleanTime.includes('-') && cleanTime.length >= 16) {
+    validIsoTime = cleanTime;
+  } else return null;
+
+  const cleanType = String(log.typ).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  let recordType = null;
+  if (cleanType.includes('prestavka')) recordType = 'prestavka';
+  else if (cleanType.includes('prichod')) recordType = 'prichod';
+  else if (cleanType.includes('odchod')) recordType = 'odchod';
+  else if (cleanType.includes('pn')) recordType = 'pn';
+  if (!recordType) return null;
+
+  return {
+    userId, userName,
+    cas: validIsoTime,
+    casDisplay: cleanTime,
+    date: validIsoTime.substring(0,10),
+    time: validIsoTime.substring(11,16),
+    stav: recordType,
+    rawType: log.typ.toUpperCase(),
+    komentar: log.komentar || '',
+    logKey, logType
+  };
+}
+
+// ── LOAD ALL DATA (initial) ──
+async function ensureDataLoaded() {
+  if (dataLoaded) return;
+  try {
+    const snap = await get(ref(db, 'users'));
+    if (!snap.exists()) { dataLoaded = true; return; }
+    const allRecords = [];
+    snap.forEach(userSnap => {
+      const userData = userSnap.val();
+      const userId = userSnap.key;
+      const userName = userData.name || '(bez mena)';
+      allUsersCache[userId] = userData;
+      ['dochadzka','prestavky','pn'].forEach(logType => {
+        const logsObj = userData[logType] || {};
+        Object.entries(logsObj).forEach(([logKey, log]) => {
+          if (!log || !log.cas || !log.typ) return;
+          const parsed = parseRecord(userId, userName, log, logKey, logType);
+          if (parsed) allRecords.push(parsed);
+        });
+      });
+    });
+    allAdminRecordsCache = allRecords;
+    dataLoaded = true;
     checkMesko();
+    startRealtimeListener();
   } catch(e) { console.error(e); }
 }
 
-// MESKANIA CHECK
+// ── DOVOLENKY (Firebase) ──
+async function getDovolenky() {
+  try {
+    const snap = await get(ref(db, 'dovolenky'));
+    if (!snap.exists()) return [];
+    return Object.entries(snap.val()).map(([k, v]) => ({ ...v, _key: k }));
+  } catch(e) { return JSON.parse(localStorage.getItem('dovolenky') || '[]'); }
+}
+
+async function addDovolenka(entry) {
+  try {
+    const newRef = push(ref(db, 'dovolenky'));
+    await set(newRef, entry);
+  } catch(e) {
+    // fallback to localStorage
+    const arr = JSON.parse(localStorage.getItem('dovolenky') || '[]');
+    arr.push(entry);
+    localStorage.setItem('dovolenky', JSON.stringify(arr));
+  }
+}
+
+async function removeDovolenka(key) {
+  try {
+    if (key) await set(ref(db, 'dovolenky/' + key), null);
+  } catch(e) { console.error(e); }
+}
+
+// ── MESKANIA CHECK ──
 function checkMesko() {
   const today = todayStr();
   for (const uid in smenyCache) {
@@ -1145,84 +1243,86 @@ function checkMesko() {
     if (!user || !user.smena) continue;
     const smena = smenyCache[user.smena];
     if (!smena) continue;
-    const prichody = allAdminRecordsCache.filter(function(r) { return r.userId === uid && r.date === today && r.stav === 'prichod'; });
-    if (prichody.length === 0) return;
-    const firstPrichod = prichody.sort(function(a,b) { return a.cas.localeCompare(b.cas); })[0];
+    const prichody = allAdminRecordsCache.filter(r => r.userId === uid && r.date === today && r.stav === 'prichod');
+    if (!prichody.length) return;
+    const firstPrichod = prichody.sort((a,b) => a.cas.localeCompare(b.cas))[0];
     const shm = smena.start.split(':').map(Number);
     const phm = firstPrichod.time.split(':').map(Number);
     const diffMin = (phm[0] * 60 + phm[1]) - (shm[0] * 60 + shm[1]);
-    if (diffMin > 5) {
-      pushNotif('&#9888; ' + user.name + ' prisiel o ' + diffMin + ' min neskor ako zmena (' + smena.name + ' ' + smena.start + ')', 'warn');
-    }
+    if (diffMin > 5) pushNotif(`${user.name} prišiel o ${diffMin} min neskôr ako zmena (${smena.name} ${smena.start})`, 'warn');
   }
 }
 
-// DASHBOARD
+// ── DASHBOARD ──
 window.loadDashboard = async function() {
   await ensureDataLoaded();
   const today = todayStr();
-  const totalUsers = Object.keys(allUsersCache).filter(function(k) { return k !== 'admin'; }).length;
+  const totalUsers = Object.keys(allUsersCache).filter(k => k !== 'admin').length;
   document.getElementById('statTotal').textContent = totalUsers;
 
   const presentUsers = [];
   for (const uid in allUsersCache) {
     if (uid === 'admin') continue;
-    const todayLogs = allAdminRecordsCache.filter(function(r) {
-      return r.userId === uid && r.date === today && (r.stav === 'prichod' || r.stav === 'odchod');
-    }).sort(function(a,b) { return a.cas.localeCompare(b.cas); });
+    const todayLogs = allAdminRecordsCache.filter(r =>
+      r.userId === uid && r.date === today && (r.stav === 'prichod' || r.stav === 'odchod')
+    ).sort((a,b) => a.cas.localeCompare(b.cas));
     if (!todayLogs.length) continue;
     const last = todayLogs[todayLogs.length - 1];
     if (last.stav === 'prichod') {
-      const firstPrichod = todayLogs.find(function(l) { return l.stav === 'prichod'; });
+      const firstPrichod = todayLogs.find(l => l.stav === 'prichod');
       presentUsers.push({ uid, name: allUsersCache[uid].name, since: firstPrichod.time });
     }
   }
 
-  const pnToday = [...new Set(allAdminRecordsCache.filter(function(r) { return r.date === today && r.stav === 'pn'; }).map(function(r) { return r.userId; }))].length;
-  const absentCount = Math.max(0, totalUsers - presentUsers.length - pnToday);
+  const pnToday = [...new Set(allAdminRecordsCache.filter(r => r.date === today && r.stav === 'pn').map(r => r.userId))].length;
+  const dovs = await getDovolenky();
+  dovolCache = dovs;
+  const dovCount = dovs.filter(d => d.od <= today && d.do >= today).length;
+  const absentCount = Math.max(0, totalUsers - presentUsers.length - pnToday - dovCount);
 
   document.getElementById('statPresent').textContent = presentUsers.length;
-  document.getElementById('statPresentSub').textContent = presentUsers.map(function(u) { return u.name; }).join(', ') || 'nikto';
+  document.getElementById('statPresentSub').textContent = presentUsers.map(u => u.name).join(', ') || 'nikto';
   document.getElementById('statAbsent').textContent = absentCount;
-  document.getElementById('statAbsentSub').textContent = 'nezaregistrovani dnes';
+  document.getElementById('statAbsentSub').textContent = 'nezaregistrovaní dnes';
   document.getElementById('statPN').textContent = pnToday;
-
-  const dovs = JSON.parse(localStorage.getItem('dovolenky') || '[]');
-  const dovCount = dovs.filter(function(d) { return d.od <= today && d.do >= today; }).length;
   document.getElementById('statDov').textContent = dovCount;
 
+  // present list
   const pl = document.getElementById('presentList');
   if (!presentUsers.length) {
-    pl.innerHTML = '<p style="color:var(--text-muted); font-size:13px; padding:8px 0;">Dnes nikto neprihlaseny.</p>';
+    pl.innerHTML = '<p style="color:var(--text-muted); font-size:13px; padding:8px 0;">Dnes nikto prihlásený.</p>';
   } else {
-    pl.innerHTML = presentUsers.map(function(u) {
-      return '<div class="present-item"><div class="present-item-left"><div class="user-avatar">' + initials(u.name) + '</div><span style="font-weight:500; font-size:13px;">' + u.name + '</span></div><div><span class="online-badge">Pritomny</span><span class="present-since" style="margin-left:8px;">od ' + u.since + '</span></div></div>';
-    }).join('');
+    pl.innerHTML = presentUsers.map(u =>
+      `<div class="present-item"><div class="present-item-left"><div class="user-avatar">${initials(u.name)}</div><span style="font-weight:500; font-size:13px;">${u.name}</span></div><div><span class="online-badge">Prítomný</span><span class="present-since" style="margin-left:8px;">od ${u.since}</span></div></div>`
+    ).join('');
   }
 
   buildWeekChart();
+  buildMonthChart();
+  buildTopAbsent();
   buildMeskTable();
+  buildTopHours();
 };
 
 function buildWeekChart() {
-  const days = ['Po','Ut','St','St','Pi','So','Ne'];
+  const days = ['Po','Ut','St','Št','Pi','So','Ne'];
   const now = new Date();
   const dayOfWeek = (now.getDay() + 6) % 7;
   const monday = new Date(now);
   monday.setDate(now.getDate() - dayOfWeek);
 
-  const data = days.map(function(label, i) {
+  const data = days.map((label, i) => {
     const d = new Date(monday);
     d.setDate(monday.getDate() + i);
     const dateStr = d.toISOString().substring(0, 10);
     let totalMs = 0;
     for (const uid in allUsersCache) {
       if (uid === 'admin') continue;
-      const logs = allAdminRecordsCache.filter(function(r) {
-        return r.userId === uid && r.date === dateStr && (r.stav === 'prichod' || r.stav === 'odchod');
-      }).sort(function(a,b) { return a.cas.localeCompare(b.cas); });
+      const logs = allAdminRecordsCache.filter(r =>
+        r.userId === uid && r.date === dateStr && (r.stav === 'prichod' || r.stav === 'odchod')
+      ).sort((a,b) => a.cas.localeCompare(b.cas));
       let lastPrichod = null;
-      logs.forEach(function(l) {
+      logs.forEach(l => {
         if (l.stav === 'prichod') lastPrichod = new Date(l.cas);
         else if (l.stav === 'odchod' && lastPrichod) { totalMs += new Date(l.cas) - lastPrichod; lastPrichod = null; }
       });
@@ -1230,12 +1330,138 @@ function buildWeekChart() {
     return { label, hours: totalMs / 3600000 };
   });
 
-  const maxH = Math.max.apply(null, data.map(function(d) { return d.hours; }).concat([1]));
+  const maxH = Math.max(...data.map(d => d.hours), 1);
   const chart = document.getElementById('weekChart');
-  chart.innerHTML = data.map(function(d) {
+  const todayIdx = (now.getDay() + 6) % 7;
+  chart.innerHTML = data.map((d, i) => {
     const h = Math.round((d.hours / maxH) * 80);
-    const isToday = days[(now.getDay() + 6) % 7] === d.label;
-    return '<div class="bar-col"><div class="bar-val">' + (d.hours > 0 ? d.hours.toFixed(1)+'h' : '') + '</div><div class="bar" style="height:' + h + 'px; background:' + (isToday ? 'var(--accent)' : '#BFDBFE') + ';"></div><div class="bar-label">' + d.label + '</div></div>';
+    const isToday = i === todayIdx;
+    return `<div class="bar-col"><div class="bar-val">${d.hours > 0 ? d.hours.toFixed(1)+'h' : ''}</div><div class="bar" style="height:${h}px; background:${isToday ? 'var(--accent)' : '#BFDBFE'};"></div><div class="bar-label">${d.label}</div></div>`;
+  }).join('');
+}
+
+window.monthChartPrev = function() { monthChartMonth--; if (monthChartMonth < 0) { monthChartMonth = 11; monthChartYear--; } buildMonthChart(); };
+window.monthChartNext = function() { monthChartMonth++; if (monthChartMonth > 11) { monthChartMonth = 0; monthChartYear++; } buildMonthChart(); };
+
+function buildMonthChart() {
+  const months = ['Január','Február','Marec','Apríl','Máj','Jún','Júl','August','September','Október','November','December'];
+  document.getElementById('monthChartLabel').textContent = months[monthChartMonth] + ' ' + monthChartYear;
+  const prefix = monthChartYear + '-' + String(monthChartMonth+1).padStart(2,'0');
+  const daysInMonth = new Date(monthChartYear, monthChartMonth+1, 0).getDate();
+  const today = todayStr();
+
+  const dayData = [];
+  let totalMs = 0;
+  let workDaysWithData = 0;
+  let workDaysTotal = 0;
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = prefix + '-' + String(d).padStart(2,'0');
+    const dow = new Date(dateStr).getDay();
+    const isWeekend = dow === 0 || dow === 6;
+    if (!isWeekend) workDaysTotal++;
+    let dayMs = 0;
+    for (const uid in allUsersCache) {
+      if (uid === 'admin') continue;
+      const logs = allAdminRecordsCache.filter(r =>
+        r.userId === uid && r.date === dateStr && (r.stav === 'prichod' || r.stav === 'odchod')
+      ).sort((a,b) => a.cas.localeCompare(b.cas));
+      let lastPrichod = null;
+      logs.forEach(l => {
+        if (l.stav === 'prichod') lastPrichod = new Date(l.cas);
+        else if (l.stav === 'odchod' && lastPrichod) { dayMs += new Date(l.cas) - lastPrichod; lastPrichod = null; }
+      });
+    }
+    if (dayMs > 0 && !isWeekend) workDaysWithData++;
+    totalMs += dayMs;
+    dayData.push({ d, hours: dayMs/3600000, isWeekend, dateStr });
+  }
+
+  const maxH = Math.max(...dayData.map(d => d.hours), 1);
+  const chart = document.getElementById('monthChart');
+  chart.innerHTML = dayData.map(d => {
+    const h = Math.round((d.hours / maxH) * 100);
+    const isToday = d.dateStr === today;
+    const color = isToday ? 'var(--accent)' : d.isWeekend ? 'var(--border)' : '#BFDBFE';
+    return `<div class="month-bar-col"><div class="month-bar${d.isWeekend?' weekend':''}" style="height:${h}px; background:${color};"></div><div class="month-bar-label">${d.d}</div></div>`;
+  }).join('');
+
+  document.getElementById('monthTotalHours').textContent = (totalMs/3600000).toFixed(1);
+  const pct = workDaysTotal > 0 ? Math.round((workDaysWithData / workDaysTotal) * 100) : 0;
+  document.getElementById('monthAvgPct').textContent = pct;
+}
+
+function buildTopAbsent() {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 30);
+  const cutoffStr = cutoff.toISOString().substring(0,10);
+
+  const absentDays = {};
+  for (const uid in allUsersCache) {
+    if (uid === 'admin') continue;
+    const name = allUsersCache[uid].name || uid;
+    const workDays = new Set();
+    for (let i = 0; i < 30; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dow = d.getDay();
+      if (dow !== 0 && dow !== 6) workDays.add(d.toISOString().substring(0,10));
+    }
+    const daysPresent = new Set(
+      allAdminRecordsCache
+        .filter(r => r.userId === uid && r.date >= cutoffStr && r.stav === 'prichod')
+        .map(r => r.date)
+    );
+    const absent = workDays.size - daysPresent.size;
+    absentDays[uid] = { name, absent, total: workDays.size };
+  }
+
+  const sorted = Object.values(absentDays).sort((a,b) => b.absent - a.absent).slice(0,8);
+  const maxAbsent = Math.max(...sorted.map(s => s.absent), 1);
+  const el = document.getElementById('topAbsentList');
+  if (!sorted.length) { el.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">Žiadne dáta.</p>'; return; }
+
+  el.innerHTML = sorted.map((s, i) => {
+    const pct = Math.round((s.absent / maxAbsent) * 100);
+    const cls = s.absent > 10 ? 'high' : s.absent > 5 ? 'mid' : 'low';
+    return `<div class="top-absent-item">
+      <div class="leader-rank">${i+1}</div>
+      <div class="user-cell" style="min-width:140px;"><div class="user-avatar">${initials(s.name)}</div>${s.name}</div>
+      <div class="leader-bar-bg"><div class="leader-bar-fill" style="width:${pct}%; background:var(--danger);"></div></div>
+      <div class="absent-count ${cls}">${s.absent}</div>
+    </div>`;
+  }).join('');
+}
+
+function buildTopHours() {
+  const prefix = new Date().toISOString().substring(0,7);
+  const hours = {};
+  for (const uid in allUsersCache) {
+    if (uid === 'admin') continue;
+    const logs = allAdminRecordsCache.filter(r =>
+      r.userId === uid && r.date.startsWith(prefix) && (r.stav === 'prichod' || r.stav === 'odchod')
+    ).sort((a,b) => a.cas.localeCompare(b.cas));
+    let totalMs = 0, lastPrichod = null;
+    logs.forEach(l => {
+      if (l.stav === 'prichod') lastPrichod = new Date(l.cas);
+      else if (l.stav === 'odchod' && lastPrichod) { totalMs += new Date(l.cas) - lastPrichod; lastPrichod = null; }
+    });
+    hours[uid] = { name: allUsersCache[uid].name || uid, hours: totalMs/3600000 };
+  }
+
+  const sorted = Object.values(hours).sort((a,b) => b.hours - a.hours).slice(0,6);
+  const maxH = Math.max(...sorted.map(s => s.hours), 1);
+  const el = document.getElementById('topHoursList');
+  if (!sorted.length) { el.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">Žiadne dáta.</p>'; return; }
+
+  el.innerHTML = sorted.map((s, i) => {
+    const pct = Math.round((s.hours / maxH) * 100);
+    return `<div class="leader-item">
+      <div class="leader-rank">${i+1}</div>
+      <div class="user-cell" style="min-width:120px;"><div class="user-avatar">${initials(s.name)}</div>${s.name}</div>
+      <div class="leader-bar-bg"><div class="leader-bar-fill" style="width:${pct}%;"></div></div>
+      <div class="leader-val">${s.hours.toFixed(1)}h</div>
+    </div>`;
   }).join('');
 }
 
@@ -1252,30 +1478,32 @@ function buildMeskTable() {
       const user = allUsersCache[uid];
       const smena = user.smena ? smenyCache[user.smena] : null;
       if (!smena) continue;
-      const prichody = allAdminRecordsCache.filter(function(r) {
-        return r.userId === uid && r.date === dateStr && r.stav === 'prichod';
-      }).sort(function(a,b) { return a.cas.localeCompare(b.cas); });
+      const prichody = allAdminRecordsCache.filter(r =>
+        r.userId === uid && r.date === dateStr && r.stav === 'prichod'
+      ).sort((a,b) => a.cas.localeCompare(b.cas));
       if (!prichody.length) continue;
       const first = prichody[0];
       const shm = smena.start.split(':').map(Number);
       const phm = first.time.split(':').map(Number);
       const diffMin = (phm[0] * 60 + phm[1]) - (shm[0] * 60 + shm[1]);
-      if (Math.abs(diffMin) > 5) {
-        rows.push({ name: user.name || uid, date: dateStr, time: first.time, smena, diffMin });
-      }
+      if (Math.abs(diffMin) > 5) rows.push({ name: user.name||uid, date: dateStr, time: first.time, smena, diffMin });
     }
   }
-
   if (!rows.length) {
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Žiadne meskania ani skore odchody za poslednych 7 dni.</td></tr>';
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Žiadne meskania za posledných 7 dní.</td></tr>';
     return;
   }
-  tbody.innerHTML = rows.map(function(r) {
-    return '<tr><td><div class="user-cell"><div class="user-avatar">' + initials(r.name) + '</div>' + r.name + '</div></td><td>' + r.date + '</td><td>' + (r.diffMin > 0 ? '<span class="badge badge-danger">Meskanie</span>' : '<span class="badge badge-warning">Skory odchod</span>') + '</td><td>' + r.smena.name + ' (' + r.smena.start + '&#8211;' + r.smena.end + ')</td><td class="time-cell">' + r.time + '</td><td><span style="font-family:\'DM Mono\',monospace; font-size:13px; color:' + (r.diffMin > 0 ? 'var(--danger)' : 'var(--warning)') + ';">' + (r.diffMin > 0 ? '+' : '') + r.diffMin + ' min</span></td></tr>';
-  }).join('');
+  tbody.innerHTML = rows.map(r =>
+    `<tr><td><div class="user-cell"><div class="user-avatar">${initials(r.name)}</div>${r.name}</div></td>
+    <td>${r.date}</td>
+    <td>${r.diffMin > 0 ? '<span class="badge badge-danger">Meskanie</span>' : '<span class="badge badge-warning">Skorý odchod</span>'}</td>
+    <td>${r.smena.name} (${r.smena.start}–${r.smena.end})</td>
+    <td class="time-cell">${r.time}</td>
+    <td><span style="font-family:'DM Mono',monospace; font-size:13px; color:${r.diffMin > 0 ? 'var(--danger)':'var(--warning)'};">${r.diffMin > 0?'+':''}${r.diffMin} min</span></td></tr>`
+  ).join('');
 }
 
-// LOAD SECTION
+// ── LOAD SECTION ──
 window.loadSection = function(id) {
   if (id === 'dochadzka') loadAttendance('dochadzka','dochadzkaTable','dateDochadzka','searchDochadzka');
   else if (id === 'prestavky') loadAttendance('prestavky','prestavkyTable','datePrestavky','searchPrestavky');
@@ -1286,6 +1514,7 @@ window.loadSection = function(id) {
   else if (id === 'dovolenka') { loadDovolenka(); renderCal(); }
   else if (id === 'mzdy') { const m = new Date(); document.getElementById('mzdaMesiac').value = m.getFullYear() + '-' + String(m.getMonth()+1).padStart(2,'0'); }
   else if (id === 'audit') renderAudit();
+  else if (id === 'rozpis') renderRozpis();
 };
 
 async function loadAttendance(type, tableId, dateId, searchId) {
@@ -1293,27 +1522,31 @@ async function loadAttendance(type, tableId, dateId, searchId) {
   tbody.innerHTML = '<tr class="loader-row"><td>Načítavam dáta…</td></tr>';
   await ensureDataLoaded();
 
-  const dateFilter = document.getElementById(dateId) ? document.getElementById(dateId).value : '';
-  const search = document.getElementById(searchId) ? document.getElementById(searchId).value.toLowerCase().trim() : '';
+  const dateFilter = document.getElementById(dateId)?.value || '';
+  const search = (document.getElementById(searchId)?.value || '').toLowerCase().trim();
   const expectedStav = { dochadzka:['prichod','odchod'], prestavky:['prestavka'], pn:['pn'] }[type];
 
-  const filtered = allAdminRecordsCache.filter(function(r) {
-    const dateMatch = !dateFilter || r.date === dateFilter;
-    const nameMatch = !search || r.userName.toLowerCase().includes(search);
-    return dateMatch && nameMatch && expectedStav.includes(r.stav);
-  }).sort(function(a,b) { return new Date(b.cas) - new Date(a.cas); });
+  const filtered = allAdminRecordsCache.filter(r => {
+    return (!dateFilter || r.date === dateFilter) &&
+           (!search || r.userName.toLowerCase().includes(search)) &&
+           expectedStav.includes(r.stav);
+  }).sort((a,b) => new Date(b.cas) - new Date(a.cas));
 
   if (!filtered.length) {
     tbody.innerHTML = '<tr class="empty-row"><td colspan="4">Žiadne záznamy podľa filtra.</td></tr>';
     return;
   }
-
-  tbody.innerHTML = filtered.map(function(log) {
-    return '<tr><td><div class="user-cell"><div class="user-avatar">' + initials(log.userName) + '</div>' + log.userName + '</div></td><td><span class="time-cell">' + (log.casDisplay || '—') + '</span></td><td>' + badgeFor(log.stav, log.rawType) + '</td><td>' + (log.komentar ? '<span style="font-size:12px; color:var(--text-secondary);">' + log.komentar + '</span>' : '') + '<button class="btn btn-ghost btn-sm" onclick="openKomentar(\'' + log.userId + '\',\'' + log.logKey + '\',\'' + log.logType + '\')" style="margin-left:4px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Komentar</button></td></tr>';
-  }).join('');
+  tbody.innerHTML = filtered.map(log =>
+    `<tr><td><div class="user-cell"><div class="user-avatar">${initials(log.userName)}</div>${log.userName}</div></td>
+    <td><span class="time-cell">${log.casDisplay||'—'}</span></td>
+    <td><span class="badge ${badgeFor(log.stav)}">${log.rawType}</span></td>
+    <td>${log.komentar ? `<span style="font-size:12px; color:var(--text-secondary);">${log.komentar}</span>` : ''}
+    <button class="btn btn-ghost btn-sm" onclick="openKomentar('${log.userId}','${log.logKey}','${log.logType}')" style="margin-left:4px;">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Komentár</button></td></tr>`
+  ).join('');
 }
 
-// KOMENTAR
+// ── KOMENTAR ──
 window.openKomentar = function(userId, logKey, logType) {
   document.getElementById('komentarModal').classList.add('open');
   document.getElementById('komentarLogId').value = userId + '|' + logKey + '|' + logType;
@@ -1322,21 +1555,20 @@ window.openKomentar = function(userId, logKey, logType) {
 
 window.saveKomentar = async function() {
   const parts = document.getElementById('komentarLogId').value.split('|');
-  const userId = parts[0], logKey = parts[1], logType = parts[2];
+  const [userId, logKey, logType] = parts;
   const text = document.getElementById('komentarText').value.trim();
   if (!text) return;
   try {
-    await set(ref(db, 'users/' + userId + '/' + logType + '/' + logKey + '/komentar'), text);
-    const rec = allAdminRecordsCache.find(function(r) { return r.userId === userId && r.logKey === logKey; });
+    await set(ref(db, `users/${userId}/${logType}/${logKey}/komentar`), text);
+    const rec = allAdminRecordsCache.find(r => r.userId === userId && r.logKey === logKey);
     if (rec) rec.komentar = text;
-    pushAudit('Komentar pridany', 'Zaznam: ' + userId + '/' + logType + '/' + logKey, 'info');
-    alert('Komentar ulozeny.');
+    pushAudit('Komentár pridaný', `Záznam: ${userId}/${logType}/${logKey}`, 'info');
+    alert('Komentár uložený.');
     closeModal('komentarModal');
-    loadSection(document.querySelector('section.active') ? document.querySelector('section.active').id : 'dochadzka');
   } catch(e) { alert('Chyba.'); console.error(e); }
 };
 
-// SMENY
+// ── SMENY ──
 async function loadSmenyFromDB() {
   try {
     const snap = await get(ref(db, 'smeny'));
@@ -1355,46 +1587,54 @@ function renderSmenyGrid() {
   const grid = document.getElementById('smenyGrid');
   const smenyArr = Object.entries(smenyCache);
   if (!smenyArr.length) { grid.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">Žiadne zmeny.</p>'; return; }
-
   const colorMap = { accent:'var(--accent)', success:'var(--success)', warning:'var(--warning)', purple:'var(--purple)', danger:'var(--danger)' };
   const workers = {};
   for (const uid in allUsersCache) {
     const smId = allUsersCache[uid].smena;
-    if (smId) workers[smId] = (workers[smId] || 0) + 1;
+    if (smId) workers[smId] = (workers[smId]||0) + 1;
   }
-
-  grid.innerHTML = smenyArr.map(function([id, s]) {
-    return '<div class="smena-card" style="border-left: 3px solid ' + (colorMap[s.color] || 'var(--accent)') + ';"><div class="smena-card-header"><span class="smena-name">' + s.name + '</span><button class="btn btn-outline-danger btn-sm" onclick="deleteSmena(\'' + id + '\')">Odstranit</button></div><div class="smena-time">' + s.start + ' &#8211; ' + s.end + '</div><div class="smena-workers">' + (workers[id] || 0) + ' zamestnancov</div></div>';
-  }).join('');
+  grid.innerHTML = smenyArr.map(([id, s]) =>
+    `<div class="smena-card" style="border-left: 3px solid ${colorMap[s.color]||'var(--accent)'};">
+      <div class="smena-card-header"><span class="smena-name">${s.name}</span>
+      <button class="btn btn-outline-danger btn-sm" onclick="deleteSmena('${id}')">Odstrániť</button></div>
+      <div class="smena-time">${s.start} – ${s.end}</div>
+      <div class="smena-workers">${workers[id]||0} zamestnancov</div></div>`
+  ).join('');
 }
 
 function renderSmenyAssign() {
   const tbody = document.getElementById('smenyAssignTable');
-  const users = Object.entries(allUsersCache).filter(function([k]) { return k !== 'admin'; });
+  const users = Object.entries(allUsersCache).filter(([k]) => k !== 'admin');
   if (!users.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="5">Žiadni používatelia.</td></tr>'; return; }
-  const smenyOptions = Object.entries(smenyCache).map(function([id, s]) { return '<option value="' + id + '">' + s.name + '</option>'; }).join('');
-
-  tbody.innerHTML = users.map(function([uid, u]) {
+  const smenyOptions = Object.entries(smenyCache).map(([id, s]) => `<option value="${id}">${s.name}</option>`).join('');
+  tbody.innerHTML = users.map(([uid, u]) => {
     const smena = u.smena ? smenyCache[u.smena] : null;
-    return '<tr><td><div class="user-cell"><div class="user-avatar">' + initials(u.name) + '</div>' + (u.name||'—') + '</div></td><td><select class="filter-input" style="padding:5px 8px; font-size:12px;" onchange="assignSmena(\'' + uid + '\', this.value)"><option value="">— Nepriradena —</option>' + smenyOptions + '</select></td><td><span class="time-cell">' + (smena ? smena.start : '—') + '</span></td><td><span class="time-cell">' + (smena ? smena.end : '—') + '</span></td><td>' + (smena ? '<span class="badge badge-accent">' + smena.name + '</span>' : '<span class="badge badge-neutral">Nepriradena</span>') + '</td></tr>';
+    return `<tr><td><div class="user-cell"><div class="user-avatar">${initials(u.name)}</div>${u.name||'—'}</div></td>
+    <td><select class="filter-input" style="padding:5px 8px; font-size:12px;" onchange="assignSmena('${uid}', this.value)">
+    <option value="">— Nepriradená —</option>${smenyOptions}</select></td>
+    <td><span class="time-cell">${smena?smena.start:'—'}</span></td>
+    <td><span class="time-cell">${smena?smena.end:'—'}</span></td>
+    <td>${smena ? `<span class="badge badge-accent">${smena.name}</span>` : '<span class="badge badge-neutral">Nepriradená</span>'}</td></tr>`;
   }).join('');
-
-  setTimeout(function() {
-    users.forEach(function([uid, u]) {
-      const row = Array.from(document.querySelectorAll('#smenyAssignTable tr')).find(function(r) { return r.textContent.includes(u.name||uid); });
-      if (row && u.smena) {
-        const sel = row.querySelector('select');
-        if (sel) sel.value = u.smena;
-      }
+  setTimeout(() => {
+    users.forEach(([uid, u]) => {
+      if (!u.smena) return;
+      const rows = document.querySelectorAll('#smenyAssignTable tr');
+      rows.forEach(row => {
+        if (row.textContent.includes(u.name||uid)) {
+          const sel = row.querySelector('select');
+          if (sel) sel.value = u.smena;
+        }
+      });
     });
   }, 50);
 }
 
 window.assignSmena = async function(uid, smenaId) {
   try {
-    await set(ref(db, 'users/' + uid + '/smena'), smenaId || null);
+    await set(ref(db, `users/${uid}/smena`), smenaId || null);
     if (allUsersCache[uid]) allUsersCache[uid].smena = smenaId || null;
-    pushAudit('Zmena priradena', (allUsersCache[uid] ? allUsersCache[uid].name : uid) + ' -> ' + (smenaId ? (smenyCache[smenaId] ? smenyCache[smenaId].name : smenaId) : 'ziadna'), 'info');
+    pushAudit('Zmena priradená', `${allUsersCache[uid]?.name||uid} → ${smenaId ? smenyCache[smenaId]?.name||smenaId : 'žiadna'}`, 'info');
   } catch(e) { console.error(e); }
 };
 
@@ -1416,55 +1656,108 @@ window.saveSmena = async function() {
     const obj = { name, start, end, color };
     await set(newRef, obj);
     smenyCache[newRef.key] = obj;
-    pushAudit('Zmena pridana', name + ' (' + start + '-' + end + ')', 'info');
+    pushAudit('Zmena pridaná', `${name} (${start}-${end})`, 'info');
     closeModal('smenaModal');
-    renderSmenyGrid();
-    renderSmenyAssign();
+    renderSmenyGrid(); renderSmenyAssign();
   } catch(e) { alert('Chyba.'); console.error(e); }
 };
 
 window.deleteSmena = async function(id) {
-  const smenaName = smenyCache[id] ? smenyCache[id].name : id;
-  if (!confirm('Odstranit zmenu "' + smenaName + '"?')) return;
+  const smenaName = smenyCache[id]?.name || id;
+  if (!confirm(`Odstrániť zmenu "${smenaName}"?`)) return;
   await set(ref(db, 'smeny/' + id), null);
   delete smenyCache[id];
-  pushAudit('Zmena odstranena', smenaName, 'danger');
-  renderSmenyGrid();
-  renderSmenyAssign();
+  pushAudit('Zmena odstránená', smenaName, 'danger');
+  renderSmenyGrid(); renderSmenyAssign();
 };
 
-// DOVOLENKA
-function getDovolenky() { return JSON.parse(localStorage.getItem('dovolenky') || '[]'); }
-function saveDovolenky(arr) { localStorage.setItem('dovolenky', JSON.stringify(arr)); dovolCache = arr; }
+// ── ROZPIS ZMIEN ──
+window.rozpisPrev = function() { rozpisWeekOffset--; renderRozpis(); };
+window.rozpisNext = function() { rozpisWeekOffset++; renderRozpis(); };
 
-function loadDovolenka() {
-  dovolCache = getDovolenky();
+async function renderRozpis() {
+  await ensureDataLoaded();
+  await loadSmenyFromDB();
+
+  const now = new Date();
+  const dayOfWeek = (now.getDay() + 6) % 7;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - dayOfWeek + rozpisWeekOffset * 7);
+
+  const weekDays = [];
+  const dayNames = ['Po','Ut','St','Št','Pi','So','Ne'];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    weekDays.push({ label: dayNames[i], date: d.toISOString().substring(0,10), isWeekend: i >= 5 });
+  }
+
+  const startStr = weekDays[0].date;
+  const endStr = weekDays[6].date;
+  document.getElementById('rozpisWeekLabel').textContent = startStr + ' — ' + endStr;
+
+  const colorMap = { accent:'#1D4ED8', success:'#059669', warning:'#D97706', purple:'#7C3AED', danger:'#DC2626' };
+  const colorLightMap = { accent:'#EFF6FF', success:'#ECFDF5', warning:'#FFFBEB', purple:'#F5F3FF', danger:'#FEF2F2' };
+
+  const users = Object.entries(allUsersCache).filter(([k]) => k !== 'admin');
+
+  let html = '<div class="rozpis-grid">';
+  // header
+  html += '<div class="rozpis-cell rozpis-header rozpis-name">Zamestnanec</div>';
+  weekDays.forEach(d => {
+    html += `<div class="rozpis-cell rozpis-header${d.isWeekend?' rozpis-weekend':''}">${d.label}<br><span style="font-size:10px; font-weight:400; color:var(--text-muted);">${d.date.substring(5)}</span></div>`;
+  });
+
+  users.forEach(([uid, u]) => {
+    html += `<div class="rozpis-cell rozpis-name"><div class="user-cell" style="gap:6px;"><div class="user-avatar" style="width:24px;height:24px;font-size:9px;">${initials(u.name)}</div><span style="font-size:12px;">${u.name||'—'}</span></div></div>`;
+    weekDays.forEach(d => {
+      const smena = u.smena ? smenyCache[u.smena] : null;
+      if (!smena || d.isWeekend) {
+        html += `<div class="rozpis-cell${d.isWeekend?' rozpis-weekend':''}"><span class="rozpis-free">${d.isWeekend?'—':'voľno'}</span></div>`;
+      } else {
+        const c = smena.color || 'accent';
+        html += `<div class="rozpis-cell" title="${smena.name}"><span class="rozpis-smena" style="background:${colorLightMap[c]||'#EFF6FF'}; color:${colorMap[c]||'#1D4ED8'};">${smena.start}–${smena.end}</span></div>`;
+      }
+    });
+  });
+
+  html += '</div>';
+  document.getElementById('rozpisGrid').innerHTML = html;
+}
+
+// ── DOVOLENKA ──
+async function loadDovolenka() {
+  dovolCache = await getDovolenky();
   renderDovolTable();
 }
 
 function renderDovolTable() {
   const tbody = document.getElementById('dovolTable');
   if (!dovolCache.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Žiadne záznamy.</td></tr>'; return; }
-  const typeLabel = { dovolenka:'Dovolenka', navsteva_lekara:'Lekar', ospravedlnena:'Ospravedlnena', ine:'Ine' };
+  const typeLabel = { dovolenka:'Dovolenka', navsteva_lekara:'Lekár', ospravedlnena:'Ospravedlnená', ine:'Iné' };
   const typeBadge = { dovolenka:'badge-warning', navsteva_lekara:'badge-accent', ospravedlnena:'badge-neutral', ine:'badge-neutral' };
-  tbody.innerHTML = [...dovolCache].reverse().map(function(d, ri) {
-    const i = dovolCache.length - 1 - ri;
-    return '<tr><td><div class="user-cell"><div class="user-avatar">' + initials(d.meno) + '</div>' + d.meno + '</div></td><td>' + d.od + '</td><td>' + d.do + '</td><td><span class="badge ' + (typeBadge[d.typ] || 'badge-neutral') + '">' + (typeLabel[d.typ] || d.typ) + '</span></td><td style="font-size:12px; color:var(--text-muted);">' + (d.poznamka || '—') + '</td><td><button class="btn btn-outline-danger btn-sm" onclick="deleteDovol(' + i + ')">Odstranit</button></td></tr>';
+  tbody.innerHTML = [...dovolCache].reverse().map((d, ri) => {
+    const key = d._key;
+    return `<tr><td><div class="user-cell"><div class="user-avatar">${initials(d.meno)}</div>${d.meno}</div></td>
+    <td>${d.od}</td><td>${d.do}</td>
+    <td><span class="badge ${typeBadge[d.typ]||'badge-neutral'}">${typeLabel[d.typ]||d.typ}</span></td>
+    <td style="font-size:12px; color:var(--text-muted);">${d.poznamka||'—'}</td>
+    <td><button class="btn btn-outline-danger btn-sm" onclick="deleteDovol('${key}')">Odstrániť</button></td></tr>`;
   }).join('');
 }
 
-window.saveDovol = function() {
+window.saveDovol = async function() {
   const meno = document.getElementById('dovMeno').value.trim();
   const od = document.getElementById('dovOd').value;
   const doDo = document.getElementById('dovDo').value;
   const typ = document.getElementById('dovTyp').value;
   const poznamka = document.getElementById('dovPoznamka').value.trim();
   if (!meno || !od || !doDo) return alert('Vyplň meno, od a do.');
-  if (od > doDo) return alert('Datum "od" musi byt pred "do".');
-  const arr = getDovolenky();
-  arr.push({ meno, od, do: doDo, typ, poznamka });
-  saveDovolenky(arr);
-  pushAudit('Nepritomnost pridana', meno + ': ' + od + ' - ' + doDo + ' (' + typ + ')', 'warn');
+  if (od > doDo) return alert('Dátum "od" musí byť pred "do".');
+  const entry = { meno, od, do: doDo, typ, poznamka };
+  await addDovolenka(entry);
+  pushAudit('Neprítomnosť pridaná', `${meno}: ${od} - ${doDo} (${typ})`, 'warn');
+  dovolCache = await getDovolenky();
   renderDovolTable();
   renderCal();
   document.getElementById('dovMeno').value = '';
@@ -1473,36 +1766,37 @@ window.saveDovol = function() {
   document.getElementById('dovPoznamka').value = '';
 };
 
-window.deleteDovol = function(i) {
-  const arr = getDovolenky();
-  if (!confirm('Odstranit nepritomnost pre ' + arr[i].meno + '?')) return;
-  arr.splice(i, 1);
-  saveDovolenky(arr);
+window.deleteDovol = async function(key) {
+  const entry = dovolCache.find(d => d._key === key);
+  if (!confirm(`Odstrániť neprítomnosť pre ${entry?.meno||'?'}?`)) return;
+  await removeDovolenka(key);
+  dovolCache = await getDovolenky();
   renderDovolTable();
   renderCal();
 };
 
 window.exportDovolenka = function() {
-  const arr = getDovolenky();
   const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet([['Meno','Od','Do','Typ','Poznamka'], ...arr.map(function(d) { return [d.meno, d.od, d.do, d.typ, d.poznamka || '']; })]);
-  XLSX.utils.book_append_sheet(wb, ws, 'Nepritomnosti');
+  const ws = XLSX.utils.aoa_to_sheet([['Meno','Od','Do','Typ','Poznámka'], ...dovolCache.map(d => [d.meno, d.od, d.do, d.typ, d.poznamka||''])]);
+  XLSX.utils.book_append_sheet(wb, ws, 'Neprítomnosti');
   XLSX.writeFile(wb, 'nepritomnosti.xlsx');
 };
 
-// KALENDAR
+// ── KALENDAR ──
 window.calPrev = function() { calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCal(); };
 window.calNext = function() { calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCal(); };
 
-function renderCal() {
-  const months = ['Januar','Februar','Marec','April','Maj','Jun','Jul','August','September','Oktober','November','December'];
+async function renderCal() {
+  const months = ['Január','Február','Marec','Apríl','Máj','Jún','Júl','August','September','Október','November','December'];
   document.getElementById('calMonthLabel').textContent = months[calMonth] + ' ' + calYear;
 
-  const dovs = getDovolenky();
-  const pnDates = new Set(allAdminRecordsCache.filter(function(r) {
-    return r.stav === 'pn' && r.date.startsWith(calYear + '-' + String(calMonth+1).padStart(2,'0'));
-  }).map(function(r) { return r.date; }));
+  const dovs = dovolCache.length ? dovolCache : await getDovolenky();
+  const pnDates = new Set(allAdminRecordsCache.filter(r =>
+    r.stav === 'pn' && r.date.startsWith(calYear + '-' + String(calMonth+1).padStart(2,'0'))
+  ).map(r => r.date));
 
+  // days with shifts
+  const smenaUsers = Object.values(allUsersCache).filter(u => u.smena);
   const firstDay = new Date(calYear, calMonth, 1);
   const startDow = (firstDay.getDay() + 6) % 7;
   const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
@@ -1510,92 +1804,101 @@ function renderCal() {
 
   let html = '';
   for (let i = 0; i < startDow; i++) html += '<div class="cal-day empty"></div>';
-
   for (let d = 1; d <= daysInMonth; d++) {
     const dateStr = calYear + '-' + String(calMonth+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    const dow = new Date(dateStr).getDay();
+    const isWeekend = dow === 0 || dow === 6;
     const isToday = dateStr === today;
-    const hasDov = dovs.some(function(dv) { return dv.od <= dateStr && dv.do >= dateStr; });
+    const hasDov = dovs.some(dv => dv.od <= dateStr && dv.do >= dateStr);
     const hasPN = pnDates.has(dateStr);
+    const hasSmena = !isWeekend && smenaUsers.length > 0;
     let cls = 'cal-day';
     if (isToday) cls += ' today';
     else if (hasPN) cls += ' has-pn';
     else if (hasDov) cls += ' has-dov';
-    html += '<div class="' + cls + '">' + d + '</div>';
+    else if (hasSmena) cls += ' has-smena';
+    html += `<div class="${cls}">${d}</div>`;
   }
-
   document.getElementById('miniCal').innerHTML = html;
 }
 
-// MZDY
+// ── MZDY ──
 window.calcMzdy = async function() {
   await ensureDataLoaded();
   const mesiac = document.getElementById('mzdaMesiac').value;
   const sadzba = parseFloat(document.getElementById('mzdaSadzba').value) || 5;
   const filter = document.getElementById('mzdaFilter').value.toLowerCase().trim();
   if (!mesiac) return alert('Vyber mesiac.');
-
-  document.getElementById('mzdyTitle').textContent = 'Mzdovy vyskaz — ' + mesiac;
+  document.getElementById('mzdyTitle').textContent = 'Mzdový výkaz — ' + mesiac;
 
   const result = {};
   for (const uid in allUsersCache) {
     if (uid === 'admin') continue;
     const name = allUsersCache[uid].name || uid;
     if (filter && !name.toLowerCase().includes(filter)) continue;
-    const logs = allAdminRecordsCache.filter(function(r) {
-      return r.userId === uid && r.date.startsWith(mesiac) && (r.stav === 'prichod' || r.stav === 'odchod');
-    }).sort(function(a,b) { return a.cas.localeCompare(b.cas); });
+    const logs = allAdminRecordsCache.filter(r =>
+      r.userId === uid && r.date.startsWith(mesiac) && (r.stav === 'prichod' || r.stav === 'odchod')
+    ).sort((a,b) => a.cas.localeCompare(b.cas));
     let totalMs = 0, lastPrichod = null;
-    logs.forEach(function(l) {
+    logs.forEach(l => {
       if (l.stav === 'prichod') lastPrichod = new Date(l.cas);
       else if (l.stav === 'odchod' && lastPrichod) { totalMs += new Date(l.cas) - lastPrichod; lastPrichod = null; }
     });
-    result[uid] = { name, totalMs, hours: totalMs / 3600000 };
+    result[uid] = { name, totalMs, hours: totalMs/3600000 };
   }
 
-  const tbody = document.getElementById('mzdyTable');
   const entries = Object.values(result);
-  if (!entries.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="5">Žiadne záznamy pre dany mesiac.</td></tr>'; return; }
+  const tbody = document.getElementById('mzdyTable');
+  if (!entries.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="5">Žiadne záznamy pre daný mesiac.</td></tr>'; return; }
 
   let totalMzda = 0;
-  tbody.innerHTML = entries.map(function(e) {
+  tbody.innerHTML = entries.map(e => {
     const mzda = e.hours * sadzba;
     totalMzda += mzda;
-    return '<tr><td><div class="user-cell"><div class="user-avatar">' + initials(e.name) + '</div>' + e.name + '</div></td><td><span class="time-cell">' + msToHhMm(e.totalMs) + '</span></td><td>' + sadzba.toFixed(2) + ' &#8364;/h</td><td><strong>' + mzda.toFixed(2) + ' &#8364;</strong></td><td style="font-size:12px; color:var(--text-muted);">' + (e.hours < 100 ? '&#9888; Nizky pocet hodin' : '') + '</td></tr>';
-  }).join('') + '<tr style="background:var(--surface-2);"><td colspan="3" style="font-weight:700; text-align:right; color:var(--text-secondary);">CELKOM</td><td><strong style="color:var(--accent); font-size:16px;">' + totalMzda.toFixed(2) + ' &#8364;</strong></td><td></td></tr>';
+    return `<tr><td><div class="user-cell"><div class="user-avatar">${initials(e.name)}</div>${e.name}</div></td>
+    <td><span class="time-cell">${msToHhMm(e.totalMs)}</span></td>
+    <td>${sadzba.toFixed(2)} €/h</td>
+    <td><strong>${mzda.toFixed(2)} €</strong></td>
+    <td style="font-size:12px; color:var(--text-muted);">${e.hours < 10 ? '⚠ Nízky počet hodín' : ''}</td></tr>`;
+  }).join('') +
+  `<tr style="background:var(--surface-2);"><td colspan="3" style="font-weight:700; text-align:right; color:var(--text-secondary);">CELKOM</td>
+  <td><strong style="color:var(--accent); font-size:16px;">${totalMzda.toFixed(2)} €</strong></td><td></td></tr>`;
 };
 
 window.exportMzdy = function() {
-  const rows = Array.from(document.querySelectorAll('#mzdyTable tr')).map(function(r) {
-    return Array.from(r.querySelectorAll('td')).map(function(td) { return td.textContent.trim(); });
-  });
-  if (!rows.length) return alert('Najprv vypocitaj mzdy.');
+  const rows = Array.from(document.querySelectorAll('#mzdyTable tr')).map(r =>
+    Array.from(r.querySelectorAll('td')).map(td => td.textContent.trim())
+  );
+  if (!rows.length) return alert('Najprv vypočítaj mzdy.');
   const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet([['Zamestnanec','Hodiny','Sadzba','Hruba mzda','Poznamka'], ...rows]);
+  const ws = XLSX.utils.aoa_to_sheet([['Zamestnanec','Hodiny','Sadzba','Hrubá mzda','Poznámka'], ...rows]);
   XLSX.utils.book_append_sheet(wb, ws, 'Mzdy');
   XLSX.writeFile(wb, 'mzdy_' + document.getElementById('mzdaMesiac').value + '.xlsx');
 };
 
-// USERS
+// ── USERS ──
 async function loadUsers() {
   const tbody = document.getElementById('usersTable');
   tbody.innerHTML = '<tr class="loader-row"><td>Načítavam…</td></tr>';
   await ensureDataLoaded();
   if (!Object.keys(allUsersCache).length) { tbody.innerHTML='<tr class="empty-row"><td colspan="5">Žiadni používatelia.</td></tr>'; return; }
 
-  tbody.innerHTML = Object.entries(allUsersCache).filter(function([k]) { return k !== 'admin'; }).map(function([key, d]) {
+  tbody.innerHTML = Object.entries(allUsersCache).filter(([k]) => k !== 'admin').map(([key, d]) => {
     const chip = d.chipUid;
-    const chipBadge = chip ? '<span class="badge badge-success">Priradeny · ' + chip.substring(0,8) + '...</span>' : '<span class="badge badge-neutral">Nepriradeny</span>';
-    const smena = d.smena && smenyCache[d.smena] ? '<span class="badge badge-accent">' + smenyCache[d.smena].name + '</span>' : '<span class="badge badge-neutral">—</span>';
+    const chipBadge = chip ? `<span class="badge badge-success">Priradený · ${chip.substring(0,8)}...</span>` : '<span class="badge badge-neutral">Nepriradený</span>';
+    const smena = d.smena && smenyCache[d.smena] ? `<span class="badge badge-accent">${smenyCache[d.smena].name}</span>` : '<span class="badge badge-neutral">—</span>';
     const today = todayStr();
-    const todayLogs = allAdminRecordsCache.filter(function(r) {
-      return r.userId === key && r.date === today && (r.stav === 'prichod' || r.stav === 'odchod');
-    }).sort(function(a,b) { return a.cas.localeCompare(b.cas); });
-    let statusHtml = '<span class="offline-badge">Nepritomny</span>';
-    if (todayLogs.length) {
-      const last = todayLogs[todayLogs.length - 1];
-      if (last.stav === 'prichod') statusHtml = '<span class="online-badge">Pritomny</span>';
-    }
-    return '<tr><td><div class="user-cell"><div class="user-avatar">' + initials(d.name) + '</div>' + (d.name||'(bez mena)') + '</div></td><td>' + chipBadge + '</td><td>' + smena + '</td><td>' + statusHtml + '</td><td><div style="display:flex; gap:6px;"><button class="btn btn-outline-danger btn-sm" onclick="removeUser(\'' + key + '\')">Odstranit</button><button class="btn btn-outline-info btn-sm" onclick="openChangePassword(\'' + key + '\')">Heslo</button></div></td></tr>';
+    const todayLogs = allAdminRecordsCache.filter(r =>
+      r.userId === key && r.date === today && (r.stav === 'prichod' || r.stav === 'odchod')
+    ).sort((a,b) => a.cas.localeCompare(b.cas));
+    let statusHtml = '<span class="offline-badge">Neprítomný</span>';
+    if (todayLogs.length && todayLogs[todayLogs.length-1].stav === 'prichod') statusHtml = '<span class="online-badge">Prítomný</span>';
+    return `<tr><td><div class="user-cell"><div class="user-avatar">${initials(d.name)}</div>${d.name||'(bez mena)'}</div></td>
+    <td>${chipBadge}</td><td>${smena}</td><td>${statusHtml}</td>
+    <td><div style="display:flex; gap:6px;">
+    <button class="btn btn-outline-danger btn-sm" onclick="removeUser('${key}')">Odstrániť</button>
+    <button class="btn btn-outline-info btn-sm" onclick="openChangePassword('${key}')">Heslo</button>
+    </div></td></tr>`;
   }).join('');
 }
 
@@ -1606,63 +1909,66 @@ async function loadNewChips() {
     const snap = await get(ref(db, 'newChips'));
     if (!snap.exists()) { el.innerHTML='<p style="color:var(--text-muted);font-size:13px;">Žiadne nové čipy na priradenie.</p>'; return; }
     el.innerHTML = '<div class="chip-grid">' +
-      Object.keys(snap.val()).reverse().map(function(chip) {
-        return '<div class="chip-item"><span class="chip-uid">' + chip + '</span><div class="chip-actions"><button class="btn btn-primary btn-sm" onclick="assignChip(\'' + chip + '\')">Priradit</button><button class="btn btn-outline-danger btn-sm" onclick="removeChip(\'' + chip + '\')">Odstranit</button></div></div>';
-      }).join('') + '</div>';
+      Object.keys(snap.val()).reverse().map(chip =>
+        `<div class="chip-item"><span class="chip-uid">${chip}</span><div class="chip-actions">
+        <button class="btn btn-primary btn-sm" onclick="assignChip('${chip}')">Priradiť</button>
+        <button class="btn btn-outline-danger btn-sm" onclick="removeChip('${chip}')">Odstrániť</button>
+        </div></div>`
+      ).join('') + '</div>';
   } catch(e) { el.innerHTML='<p style="color:var(--text-muted);">Chyba.</p>'; console.error(e); }
 }
 
 window.addUser = async function() {
-  const name = (prompt('Meno noveho pouzivatela:') || '').trim();
+  const name = (prompt('Meno nového používateľa:') || '').trim();
   if (!name) return;
-  const password = (prompt('Heslo pre ' + name + ':') || '').trim();
-  if (!password || password.length < 4) return alert('Heslo musi mat aspon 4 znaky.');
+  const password = (prompt(`Heslo pre ${name}:`) || '').trim();
+  if (!password || password.length < 4) return alert('Heslo musí mať aspoň 4 znaky.');
   try {
     const newRef = push(ref(db,'users'));
     const obj = { name, password, chipUid: null };
     await set(newRef, obj);
     allUsersCache[newRef.key] = obj;
-    pushAudit('Pouzivatel pridany', name, 'info');
-    alert('Pouzivatel ' + name + ' bol pridany.');
+    pushAudit('Používateľ pridaný', name, 'info');
+    alert(`Používateľ ${name} bol pridaný.`);
     loadUsers();
   } catch(e) { alert('Chyba.'); console.error(e); }
 };
 
 window.removeUser = async function(id) {
-  if (!confirm('Odstranit pouzivatela a jeho zaznamy?')) return;
-  const name = allUsersCache[id] ? allUsersCache[id].name : id;
-  const chipUid = allUsersCache[id] ? allUsersCache[id].chipUid : null;
+  if (!confirm('Odstrániť používateľa a jeho záznamy?')) return;
+  const name = allUsersCache[id]?.name || id;
+  const chipUid = allUsersCache[id]?.chipUid || null;
   await set(ref(db,'users/' + id), null);
   if (chipUid) await set(ref(db,'chipToUser/' + chipUid), null);
   delete allUsersCache[id];
-  allAdminRecordsCache = allAdminRecordsCache.filter(function(r) { return r.userId !== id; });
-  pushAudit('Pouzivatel odstraneny', name, 'danger');
-  alert('Pouzivatel odstraneny.');
+  allAdminRecordsCache = allAdminRecordsCache.filter(r => r.userId !== id);
+  pushAudit('Používateľ odstránený', name, 'danger');
+  alert('Používateľ odstránený.');
   loadUsers();
 };
 
 window.assignChip = async function(chipUid) {
-  const name = (prompt('Meno pouzivatela pre priradenie cipu:') || '').trim();
+  const name = (prompt('Meno používateľa pre priradenie čipu:') || '').trim();
   if (!name) return;
   let uid = null;
   for (const k in allUsersCache) {
     if ((allUsersCache[k].name||'').toLowerCase() === name.toLowerCase()) { uid=k; break; }
   }
-  if (!uid) return alert('Pouzivatel nenajdeny.');
+  if (!uid) return alert('Používateľ nenájdený.');
   try {
     if (allUsersCache[uid].chipUid) await set(ref(db,'chipToUser/' + allUsersCache[uid].chipUid), null);
     await set(ref(db,'users/' + uid + '/chipUid'), chipUid);
     await set(ref(db,'chipToUser/' + chipUid), uid);
     await set(ref(db,'newChips/' + chipUid), null);
     allUsersCache[uid].chipUid = chipUid;
-    pushAudit('Cip priradeny', name + ' <- ' + chipUid, 'info');
-    alert('Cip priradeny k ' + name + '.');
+    pushAudit('Čip priradený', `${name} ← ${chipUid}`, 'info');
+    alert(`Čip priradený k ${name}.`);
     loadUsers(); loadNewChips();
   } catch(e) { alert('Chyba.'); console.error(e); }
 };
 
 window.removeChip = async function(chipUid) {
-  if (!confirm('Odstranit cip ' + chipUid + '?')) return;
+  if (!confirm(`Odstrániť čip ${chipUid}?`)) return;
   await set(ref(db,'newChips/' + chipUid), null);
   loadNewChips();
 };
@@ -1676,171 +1982,232 @@ window.openChangePassword = function(id) {
 window.saveNewPassword = async function() {
   const id = document.getElementById('changePasswordUserId').value;
   const pass = document.getElementById('newPassword').value.trim();
-  if (!pass || pass.length < 4) return alert('Heslo musi mat aspon 4 znaky.');
+  if (!pass || pass.length < 4) return alert('Heslo musí mať aspoň 4 znaky.');
   try {
     await set(ref(db,'users/' + id + '/password'), pass);
     if (allUsersCache[id]) allUsersCache[id].password = pass;
-    pushAudit('Heslo zmenene', allUsersCache[id] ? allUsersCache[id].name : id, 'warn');
-    alert('Heslo zmenene.');
+    pushAudit('Heslo zmenené', allUsersCache[id]?.name||id, 'warn');
+    alert('Heslo zmenené.');
     closeModal('changePasswordModal');
   } catch(e) { alert('Chyba.'); console.error(e); }
 };
 
-// AUDIT
+// ── AUDIT ──
 window.renderAudit = function() {
   const dateFilter = document.getElementById('auditDate').value;
   const list = document.getElementById('auditList');
-  const filtered = auditLog.filter(function(e) {
-    return !dateFilter || e.time.includes(dateFilter.split('-').reverse().join('.'));
-  });
+  const filtered = auditLog.filter(e => !dateFilter || e.time.includes(dateFilter.split('-').reverse().join('.')));
   if (!filtered.length) { list.innerHTML = '<p style="color:var(--text-muted); font-size:13px; padding:16px 0;">Žiadne záznamy.</p>'; return; }
-  const icons = { info:'&#8505;', warn:'&#9888;', danger:'&#10005;' };
+  const icons = { info:'ℹ', warn:'⚠', danger:'✕' };
   const colors = { info:'var(--accent-light)', warn:'var(--warning-light)', danger:'var(--danger-light)' };
   const textC = { info:'var(--accent)', warn:'var(--warning)', danger:'var(--danger)' };
-  list.innerHTML = filtered.map(function(e) {
-    return '<div class="audit-entry"><div class="audit-icon" style="background:' + (colors[e.type]||colors.info) + '; color:' + (textC[e.type]||textC.info) + ';">' + (icons[e.type]||'&#8505;') + '</div><div style="flex:1;"><div style="font-size:13px; font-weight:600;">' + e.action + '</div><div style="font-size:12px; color:var(--text-secondary); margin-top:1px;">' + e.details + '</div><div style="font-size:11px; color:var(--text-muted); margin-top:3px; font-family:\'DM Mono\',monospace;">' + e.time + '</div></div></div>';
-  }).join('');
+  list.innerHTML = filtered.map(e =>
+    `<div class="audit-entry">
+    <div class="audit-icon" style="background:${colors[e.type]||colors.info}; color:${textC[e.type]||textC.info};">${icons[e.type]||'ℹ'}</div>
+    <div style="flex:1;"><div style="font-size:13px; font-weight:600;">${e.action}</div>
+    <div style="font-size:12px; color:var(--text-secondary); margin-top:1px;">${e.details}</div>
+    <div style="font-size:11px; color:var(--text-muted); margin-top:3px; font-family:'DM Mono',monospace;">${e.time}</div>
+    </div></div>`
+  ).join('');
 };
 
-// EXPORT
+// ── PDF EXPORT ──
+window.exportPDF = function(section) {
+  const title = {
+    dochadzka: 'Dochádzka', prestavky: 'Prestávky', pn: 'PN – Pracovná neschopnosť',
+    dovolenka: 'Neprítomnosti', mzdy: 'Mzdový výkaz', audit: 'Audit log'
+  }[section] || section;
+
+  const tableId = {
+    dochadzka: 'dochadzkaTable', prestavky: 'prestavkyTable', pn: 'pnTable',
+    dovolenka: 'dovolTable', mzdy: 'mzdyTable', audit: null
+  }[section];
+
+  let bodyHTML = '';
+
+  if (section === 'audit') {
+    bodyHTML = auditLog.slice(0, 100).map(e =>
+      `<tr><td>${e.time}</td><td>${e.action}</td><td>${e.details}</td></tr>`
+    ).join('');
+    bodyHTML = `<table><thead><tr><th>Čas</th><th>Akcia</th><th>Detail</th></tr></thead><tbody>${bodyHTML}</tbody></table>`;
+  } else if (tableId) {
+    const tbl = document.getElementById(tableId);
+    if (tbl) {
+      const thead = tbl.closest('table')?.querySelector('thead');
+      bodyHTML = `<table>${thead ? thead.outerHTML : ''}<tbody>${tbl.innerHTML}</tbody></table>`;
+    }
+  }
+
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title>
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 12px; margin: 20px; color: #111; }
+    h1 { font-size: 18px; margin-bottom: 4px; }
+    p { color: #666; font-size: 11px; margin-bottom: 16px; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #f3f4f6; padding: 8px 10px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e5ea; }
+    td { padding: 8px 10px; border-bottom: 1px solid #e2e5ea; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    @media print { body { margin: 10px; } }
+  </style></head><body>
+  <h1>${title}</h1><p>Vygenerované: ${nowStr()}</p>
+  ${bodyHTML}
+  <script>window.onload = function(){ window.print(); }<\/script>
+  </body></html>`);
+  win.document.close();
+};
+
+// ── EXPORT ALL ──
+window.exportAll = async function() {
+  await ensureDataLoaded();
+  const dovs = await getDovolenky();
+  const wb = XLSX.utils.book_new();
+
+  // Dochádzka
+  const docRows = [['Zamestnanec','Dátum','Čas','Typ','Komentár']];
+  allAdminRecordsCache.filter(r => r.stav === 'prichod' || r.stav === 'odchod')
+    .sort((a,b) => a.cas.localeCompare(b.cas))
+    .forEach(r => docRows.push([r.userName, r.date, r.time, r.rawType, r.komentar||'']));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(docRows), 'Dochádzka');
+
+  // Prestávky
+  const prestRows = [['Zamestnanec','Dátum','Čas','Typ']];
+  allAdminRecordsCache.filter(r => r.stav === 'prestavka')
+    .forEach(r => prestRows.push([r.userName, r.date, r.time, r.rawType]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(prestRows), 'Prestávky');
+
+  // PN
+  const pnRows = [['Zamestnanec','Dátum','Čas','Typ']];
+  allAdminRecordsCache.filter(r => r.stav === 'pn')
+    .forEach(r => pnRows.push([r.userName, r.date, r.time, r.rawType]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(pnRows), 'PN');
+
+  // Dovolenky
+  const dovRows = [['Zamestnanec','Od','Do','Typ','Poznámka']];
+  dovs.forEach(d => dovRows.push([d.meno, d.od, d.do, d.typ, d.poznamka||'']));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dovRows), 'Neprítomnosti');
+
+  // Pouzivatelia
+  const usrRows = [['Meno','Čip UID','Zmena']];
+  Object.entries(allUsersCache).filter(([k]) => k !== 'admin')
+    .forEach(([, u]) => usrRows.push([u.name||'', u.chipUid||'', u.smena ? smenyCache[u.smena]?.name||'' : '']));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(usrRows), 'Používatelia');
+
+  XLSX.writeFile(wb, 'dochadzka_export_' + todayStr() + '.xlsx');
+  pushAudit('Hromadný export', 'Všetky sekcie exportované', 'info');
+};
+
+// ── EXPORT TABLE ──
 async function exportUsersToXLSX() {
   await ensureDataLoaded();
-  const exportData = [['Export pouzivatelov'],[],['UID','Meno','Heslo','Cip UID','Zmena']];
+  const exportData = [['Export používateľov'],[],['UID','Meno','Čip UID','Zmena']];
   for (const userId in allUsersCache) {
     if (userId === 'admin') continue;
     const u = allUsersCache[userId];
     const smena = u.smena && smenyCache[u.smena] ? smenyCache[u.smena].name : '';
-    exportData.push([userId, u.name||'', u.password||'', u.chipUid||'', smena]);
+    exportData.push([userId, u.name||'', u.chipUid||'', smena]);
   }
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(exportData);
-  ws['!cols'] = [{wpx:150},{wpx:150},{wpx:100},{wpx:150},{wpx:120}];
-  XLSX.utils.book_append_sheet(wb, ws, 'Pouzivatelia');
+  ws['!cols'] = [{wpx:150},{wpx:150},{wpx:150},{wpx:120}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Používatelia');
   XLSX.writeFile(wb, 'pouzivatelia_export.xlsx');
 }
 
 window.exportTable = async function(sectionType) {
   if (sectionType === 'users') return exportUsersToXLSX();
   await ensureDataLoaded();
-  const btn = document.querySelector('[data-export-table="' + sectionType + '"]');
+  const btn = document.querySelector(`[data-export-table="${sectionType}"]`);
   if(btn) btn.textContent = 'Generujem...';
 
   const capFirst = sectionType.charAt(0).toUpperCase() + sectionType.slice(1);
-  const dateId = 'date' + capFirst;
-  const searchId = 'search' + capFirst;
-  const dateFilter = document.getElementById(dateId) ? document.getElementById(dateId).value : '';
-  const searchFilter = document.getElementById(searchId) ? document.getElementById(searchId).value.toLowerCase().trim() : '';
+  const dateFilter = document.getElementById('date'+capFirst)?.value || '';
+  const searchFilter = (document.getElementById('search'+capFirst)?.value || '').toLowerCase().trim();
   const expectedStav = { dochadzka:['prichod','odchod'], prestavky:['prestavka'], pn:['pn'] }[sectionType];
 
-  const records = allAdminRecordsCache.filter(function(r) {
-    const dateMatch = !dateFilter || r.date === dateFilter;
-    const nameMatch = !searchFilter || r.userName.toLowerCase().includes(searchFilter);
-    return dateMatch && nameMatch && expectedStav.includes(r.stav);
-  }).sort(function(a,b) { return new Date(a.cas)-new Date(b.cas); });
+  const records = allAdminRecordsCache.filter(r => {
+    return (!dateFilter || r.date === dateFilter) &&
+           (!searchFilter || r.userName.toLowerCase().includes(searchFilter)) &&
+           expectedStav.includes(r.stav);
+  }).sort((a,b) => new Date(a.cas)-new Date(b.cas));
 
   const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([
+    ['Zamestnanec','Dátum a Čas','Typ','Komentár'],
+    ...records.map(r => [r.userName, r.casDisplay, r.rawType, r.komentar||''])
+  ]);
+  ws['!cols'] = [{wpx:150},{wpx:150},{wpx:100},{wpx:200}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Záznamy');
+  XLSX.writeFile(wb, `${sectionType}_export.xlsx`);
 
-  if (!searchFilter) {
-    const ws = XLSX.utils.aoa_to_sheet([['Export zaznamov',''],['Filter:',dateFilter||'Vsetky'],[],['Meno','Datum a Cas','Typ','Komentar'],...records.map(function(r){ return [r.userName,r.casDisplay,r.rawType,r.komentar||'']; })]);
-    ws['!cols'] = [{wpx:150},{wpx:150},{wpx:100},{wpx:200}];
-    XLSX.utils.book_append_sheet(wb,ws,'Zaznamy');
-  } else {
-    const byUser = records.reduce(function(acc,r){ acc[r.userId]=acc[r.userId]||{userName:r.userName,records:[]}; acc[r.userId].records.push(r); return acc; },{});
-    for (const uid in byUser) {
-      const userName = byUser[uid].userName;
-      const ur = byUser[uid].records;
-      let data = [['Pouzivatel:',userName],['Typ:',sectionType.toUpperCase()],['Datum filtra:',dateFilter||'Vsetky'],[]];
-      if (sectionType === 'dochadzka') {
-        data.push(['Datum','Cas','Typ','Odprac. cas','Komentar']);
-        let totalMs=0, lastPrichod=null, lastDate=null, dayMs=0;
-        ur.forEach(function(r) {
-          const dt = new Date(r.cas);
-          if (lastDate && lastDate !== r.date) {
-            if (dayMs > 0) data.push([lastDate,'Sumarizacia dna:','',msToHhMm(dayMs),'']);
-            dayMs = 0;
-          }
-          if (r.stav === 'prichod') {
-            lastPrichod = dt;
-            data.push([r.date, r.time, r.rawType, '', r.komentar||'']);
-          } else if (r.stav === 'odchod' && lastPrichod) {
-            const ms = dt - lastPrichod;
-            totalMs += ms;
-            dayMs += ms;
-            data.push([r.date, r.time, r.rawType, msToHhMm(ms), r.komentar||'']);
-            lastPrichod = null;
-          } else {
-            data.push([r.date, r.time, r.rawType, 'Chyba PRICHOD', r.komentar||'']);
-          }
-          lastDate = r.date;
-        });
-        if (dayMs > 0) data.push([lastDate, 'Sumarizacia dna:', '', msToHhMm(dayMs), '']);
-        data.push([], [' Celkova odpracovana doba:', '', '', msToHhMm(totalMs), '']);
-      } else {
-        data.push(['Datum a Cas','Typ','Komentar']);
-        ur.forEach(function(r){ data.push([r.casDisplay, r.rawType, r.komentar||'']); });
-      }
-      const ws = XLSX.utils.aoa_to_sheet(data);
-      ws['!cols'] = [{wpx:100},{wpx:150},{wpx:100},{wpx:150},{wpx:200}];
-      XLSX.utils.book_append_sheet(wb, ws, (userName.replace(/[^a-zA-Z0-9]/g,'').substring(0,30)||'Export'));
-    }
-  }
-
-  XLSX.writeFile(wb, (searchFilter||sectionType) + '_export.xlsx');
   if(btn) {
-    btn.textContent = 'Stiahute';
-    setTimeout(function(){
-      btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export XLSX';
-    }, 2000);
+    btn.textContent = 'Stiahnuté';
+    setTimeout(() => { btn.textContent = 'Export XLSX'; }, 2000);
   }
 };
 
-// ADD LOG
+// ── ADD LOG ──
 window.addLog = async function(type, typ) {
   await ensureDataLoaded();
-  let typeToSave = typ.toUpperCase().replace('_MANUAL','');
-  const inputName = (prompt('Zadaj meno zamestnanca pre ' + typeToSave + ':') || '').trim();
+  const typeToSave = typ.toUpperCase().replace('_MANUAL','');
+  const inputName = (prompt(`Zadaj meno zamestnanca pre ${typeToSave}:`) || '').trim();
   if (!inputName) return;
   let userId=null, userName=null;
   for (const k in allUsersCache) {
     if ((allUsersCache[k].name||'').toLowerCase() === inputName.toLowerCase()) { userId=k; userName=allUsersCache[k].name; break; }
   }
-  if (!userId) return alert('Pouzivatel \'' + inputName + '\' nenajdeny.');
+  if (!userId) return alert(`Používateľ '${inputName}' nenájdený.`);
   const timestamp = nowStr();
   try {
-    const newLogRef = push(child(ref(db,'users/' + userId), type));
+    const newLogRef = push(ref(db, `users/${userId}/${type}`));
     await set(newLogRef, { cas: timestamp, typ: typeToSave });
-    pushAudit('Manualny zaznam: ' + typeToSave, userName + ' — ' + timestamp, 'info');
-    alert('Log (' + typeToSave + ') pridany pre ' + userName + '.');
-    allAdminRecordsCache = [];
-    allUsersCache = {};
-    await ensureDataLoaded();
-    window.loadSection(type);
-  } catch(e) { alert('Chyba zapisu.'); console.error(e); }
+    pushAudit(`Manuálny záznam: ${typeToSave}`, `${userName} — ${timestamp}`, 'info');
+    alert(`Log (${typeToSave}) pridaný pre ${userName}.`);
+    // realtime listener will refresh automatically
+  } catch(e) { alert('Chyba zápisu.'); console.error(e); }
 };
 
-// MODAL
+// ── MODAL ──
 window.closeModal = function(id) {
-  document.getElementById(id || 'changePasswordModal').classList.remove('open');
+  document.getElementById(id).classList.remove('open');
 };
 
-// LOGOUT
+// ── LOGOUT ──
 window.logout = function() { localStorage.removeItem('uid'); window.location.href='index.html'; };
 
-// NAV
+// ── TAB BAR ──
+document.querySelectorAll('.tab-btn[data-tab]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const parent = btn.closest('.card');
+    parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    parent.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ── NAV ──
 const sectionMeta = {
-  dashboard:    { title: 'Dashboard',    sub: 'Prehlad dochadzky' },
-  dochadzka:    { title: 'Dochadzka',    sub: 'Prichody a odchody zamestnancov' },
-  prestavky:    { title: 'Prestavky',    sub: 'Zaznamy prestavok' },
-  pn:           { title: 'PN',           sub: 'Pracovna neschopnost' },
-  smeny:        { title: 'Zmeny',        sub: 'Pracovne zmeny a priradenia' },
-  dovolenka:    { title: 'Dovolenka',    sub: 'Evidencia nepritomnosti a kalendar' },
-  mzdy:         { title: 'Mzdovy vyskaz',sub: 'Vypocet miezd podla odpracovanych hodin' },
-  pouzivatelia: { title: 'Pouzivatelia', sub: 'Sprava uctov a cipov' },
-  audit:        { title: 'Audit log',    sub: 'Historia zmien v systeme' },
+  dashboard:    { title: 'Dashboard',       sub: 'Prehľad dochádzky' },
+  dochadzka:    { title: 'Dochádzka',       sub: 'Príchody a odchody zamestnancov' },
+  prestavky:    { title: 'Prestávky',       sub: 'Záznamy prestávok' },
+  pn:           { title: 'PN',              sub: 'Pracovná neschopnosť' },
+  smeny:        { title: 'Zmeny',           sub: 'Pracovné zmeny a priradenia' },
+  rozpis:       { title: 'Rozpis zmien',    sub: 'Týždenný prehľad zmien' },
+  dovolenka:    { title: 'Dovolenka',       sub: 'Evidencia neprítomností a kalendár' },
+  mzdy:         { title: 'Mzdový výkaz',    sub: 'Výpočet miezd podľa odpracovaných hodín' },
+  pouzivatelia: { title: 'Používatelia',    sub: 'Správa účtov a čipov' },
+  audit:        { title: 'Audit log',       sub: 'História zmien v systéme' },
 };
 
-// INIT
+// ── INIT ──
 document.addEventListener('DOMContentLoaded', async function() {
+  // dark mode
+  if (localStorage.getItem('darkMode') === '1') {
+    document.body.classList.add('dark');
+    document.getElementById('darkToggleBtn').innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg> Svetlý režim';
+  }
+
   auditLog = JSON.parse(localStorage.getItem('auditLog') || '[]');
   notifications = JSON.parse(localStorage.getItem('notifs') || '[]');
   if (notifications.length) document.getElementById('notifDot').classList.add('active');
@@ -1848,16 +2215,17 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   await loadSmenyFromDB();
 
-  document.querySelectorAll('.nav-btn[data-target]').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      document.querySelectorAll('.nav-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.querySelectorAll('.nav-btn[data-target]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      document.querySelectorAll('section').forEach(function(s){ s.classList.remove('active'); });
+      document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
       document.getElementById(btn.dataset.target).classList.add('active');
       const meta = sectionMeta[btn.dataset.target] || {};
       document.getElementById('topbarTitle').textContent = meta.title || '';
       document.getElementById('topbarSub').textContent = meta.sub || '';
       window.loadSection(btn.dataset.target);
+      closeSidebar();
     });
   });
 
