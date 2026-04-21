@@ -26,6 +26,8 @@
     --warning-light: #FFFBEB;
     --purple: #7C3AED;
     --purple-light: #F5F3FF;
+    --teal: #0D9488;
+    --teal-light: #F0FDFA;
     --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
     --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
     --shadow-lg: 0 10px 30px rgba(0,0,0,0.10), 0 4px 8px rgba(0,0,0,0.05);
@@ -48,6 +50,7 @@
     --danger-light: #3b0a0a;
     --warning-light: #2d1a00;
     --purple-light: #1e1040;
+    --teal-light: #042f2e;
     --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
     --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
     --shadow-lg: 0 10px 30px rgba(0,0,0,0.5);
@@ -211,11 +214,6 @@
   .stat-card.warning { border-left: 3px solid var(--warning); }
   .stat-card.purple { border-left: 3px solid var(--purple); }
 
-  .stat-trend { font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 3px; margin-top: 6px; padding: 2px 7px; border-radius: 12px; }
-  .stat-trend.up { background: var(--success-light); color: var(--success); }
-  .stat-trend.down { background: var(--danger-light); color: var(--danger); }
-  .stat-trend.neutral { background: var(--surface-2); color: var(--text-muted); }
-
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; transition: background 0.3s; }
   .card + .card { margin-top: 20px; }
   .card-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
@@ -277,10 +275,49 @@
   .badge-neutral::before { background: var(--text-muted); }
   .badge-accent { background: var(--accent-light); color: var(--accent); border: 1px solid #BFDBFE; }
   .badge-accent::before { background: var(--accent); }
+  .badge-teal { background: var(--teal-light); color: var(--teal); border: 1px solid #99F6E4; }
+  .badge-teal::before { background: var(--teal); }
 
   .user-cell { display: flex; align-items: center; gap: 10px; }
   .user-avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #7C3AED); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: white; flex-shrink: 0; letter-spacing: -0.5px; }
   .time-cell { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text-secondary); }
+
+  /* ── ROLY ── */
+  .roles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+  .role-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px 18px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    transition: box-shadow 0.15s;
+  }
+  .role-card:hover { box-shadow: var(--shadow-md); }
+  .role-card-left { display: flex; align-items: center; gap: 12px; }
+  .role-icon {
+    width: 38px; height: 38px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .role-name { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+  .role-count { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .role-badge-preview { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+
+  .role-stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .role-stat-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .role-stat-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+  .role-stat-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  .role-stat-count { font-size: 12px; color: var(--text-muted); }
 
   .chip-grid { display: flex; flex-direction: column; gap: 8px; }
   .chip-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); gap: 12px; }
@@ -300,6 +337,22 @@
   .modal-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 5px; display: block; text-transform: uppercase; letter-spacing: 0.4px; }
   .modal-footer { display: flex; gap: 8px; margin-top: 16px; }
   .modal-footer .btn { flex: 1; justify-content: center; }
+
+  .emoji-picker { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .emoji-opt {
+    width: 36px; height: 36px; border-radius: 8px; border: 2px solid var(--border);
+    background: var(--surface-2); cursor: pointer; display: flex; align-items: center;
+    justify-content: center; font-size: 18px; transition: all 0.15s;
+  }
+  .emoji-opt:hover { border-color: var(--accent); background: var(--accent-light); }
+  .emoji-opt.selected { border-color: var(--accent); background: var(--accent-light); }
+
+  .color-picker { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .color-opt {
+    width: 28px; height: 28px; border-radius: 50%; border: 3px solid transparent;
+    cursor: pointer; transition: all 0.15s; flex-shrink: 0;
+  }
+  .color-opt.selected { border-color: var(--text-primary); transform: scale(1.15); }
 
   .smeny-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-bottom: 20px; }
   .smena-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 20px; box-shadow: var(--shadow-sm); }
@@ -383,27 +436,8 @@
   .absent-count.low { color: var(--text-muted); }
 
   /* ── VÝKAZ PRÁCE ── */
-  .vykaz-user-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    margin-bottom: 16px;
-    box-shadow: var(--shadow-sm);
-    transition: background 0.3s;
-  }
-  .vykaz-user-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 20px;
-    background: var(--surface-2);
-    border-bottom: 1px solid var(--border);
-    cursor: pointer;
-    user-select: none;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
+  .vykaz-user-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 16px; box-shadow: var(--shadow-sm); transition: background 0.3s; }
+  .vykaz-user-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; background: var(--surface-2); border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; gap: 12px; flex-wrap: wrap; }
   .vykaz-user-header:hover { background: var(--border); }
   .vykaz-user-info { display: flex; align-items: center; gap: 12px; }
   .vykaz-user-stats { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
@@ -415,43 +449,18 @@
 
   .vykaz-day-block { border-bottom: 1px solid var(--border); }
   .vykaz-day-block:last-child { border-bottom: none; }
-  .vykaz-day-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 20px;
-    background: var(--surface);
-    gap: 12px;
-  }
+  .vykaz-day-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; background: var(--surface); gap: 12px; }
   .vykaz-day-date { font-size: 13px; font-weight: 700; color: var(--text-primary); }
   .vykaz-day-summary { display: flex; gap: 12px; align-items: center; }
   .vykaz-day-hours { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--accent); font-weight: 600; }
 
   .vykaz-events { padding: 0 20px 12px 44px; display: flex; flex-direction: column; gap: 4px; }
-  .vykaz-event {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 6px 10px;
-    border-radius: var(--radius-sm);
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    font-size: 12px;
-  }
+  .vykaz-event { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-radius: var(--radius-sm); background: var(--surface-2); border: 1px solid var(--border); font-size: 12px; }
   .vykaz-event-time { font-family: 'DM Mono', monospace; color: var(--text-muted); min-width: 50px; }
   .vykaz-event-type { flex: 0 0 auto; }
   .vykaz-event-comment { color: var(--text-secondary); font-style: italic; flex: 1; }
-  .vykaz-event-dur { font-family: 'DM Mono', monospace; color: var(--success); font-weight: 600; font-size: 11px; margin-left: auto; }
 
-  .vykaz-summary-bar {
-    display: flex;
-    gap: 20px;
-    padding: 16px 24px;
-    background: var(--surface-2);
-    border-bottom: 1px solid var(--border);
-    flex-wrap: wrap;
-    align-items: center;
-  }
+  .vykaz-summary-bar { display: flex; gap: 20px; padding: 16px 24px; background: var(--surface-2); border-bottom: 1px solid var(--border); flex-wrap: wrap; align-items: center; }
   .vykaz-summary-item { display: flex; flex-direction: column; gap: 2px; }
   .vykaz-summary-label { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
   .vykaz-summary-val { font-family: 'DM Mono', monospace; font-size: 16px; font-weight: 700; color: var(--text-primary); }
@@ -474,6 +483,8 @@
     .smeny-grid { grid-template-columns: 1fr; }
     .rozpis-grid { grid-template-columns: 90px repeat(7,1fr); font-size: 10px; }
     .vykaz-user-header { flex-direction: column; align-items: flex-start; }
+    .two-col-grid { grid-template-columns: 1fr !important; }
+    .roles-grid { grid-template-columns: 1fr; }
   }
   @media (max-width: 600px) {
     .stat-grid { grid-template-columns: 1fr 1fr; }
@@ -528,6 +539,9 @@
       <div class="nav-label" style="margin-top:8px;">Správa</div>
       <button class="nav-btn" data-target="pouzivatelia">
         <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>Používatelia
+      </button>
+      <button class="nav-btn" data-target="roly">
+        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></span>Roly / Pozície
       </button>
       <button class="nav-btn" data-target="audit">
         <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span>Audit log
@@ -650,7 +664,7 @@
           <div class="tab-content" id="tabMesko">
             <div class="table-wrap">
               <table>
-                <thead><tr><th>Zamestnanec</th><th>Dátum</th><th>Typ</th><th>Definovaná zmena</th><th>Skutočný čas</th><th>Rozdiel</th></tr></thead>
+                <thead><tr><th>Zamestnanec</th><th>Pozícia</th><th>Dátum</th><th>Typ</th><th>Definovaná zmena</th><th>Skutočný čas</th><th>Rozdiel</th></tr></thead>
                 <tbody id="meskTable"><tr class="loader-row"><td>Načítavam…</td></tr></tbody>
               </table>
             </div>
@@ -688,9 +702,6 @@
               <button class="btn btn-danger btn-sm" onclick="addLog('dochadzka','odchod')">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Odchod
               </button>
-              <button class="btn btn-warning btn-sm" onclick="addLog('prestavky','prestavka_manual')">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Prestávka
-              </button>
               <button class="btn btn-ghost btn-sm" onclick="exportTable('dochadzka')" data-export-table="dochadzka">Export XLSX</button>
               <button class="btn btn-ghost btn-sm" onclick="exportPDF('dochadzka')">Export PDF</button>
             </div>
@@ -698,10 +709,13 @@
           <div class="filters">
             <input type="date" id="dateDochadzka" class="filter-input" onchange="loadSection('dochadzka')">
             <input type="text" id="searchDochadzka" class="filter-input" placeholder="Hľadať podľa mena…" oninput="loadSection('dochadzka')">
+            <select id="roleDochadzka" class="filter-input" style="flex:0 0 180px;" onchange="loadSection('dochadzka')">
+              <option value="">— Všetky pozície —</option>
+            </select>
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Zamestnanec</th><th>Čas</th><th>Typ</th><th>Komentár</th></tr></thead>
+              <thead><tr><th>Zamestnanec</th><th>Pozícia</th><th>Čas</th><th>Typ</th><th>Komentár</th></tr></thead>
               <tbody id="dochadzkaTable"><tr class="loader-row"><td>Načítavam dáta…</td></tr></tbody>
             </table>
           </div>
@@ -721,10 +735,13 @@
           <div class="filters">
             <input type="date" id="datePrestavky" class="filter-input" onchange="loadSection('prestavky')">
             <input type="text" id="searchPrestavky" class="filter-input" placeholder="Hľadať podľa mena…" oninput="loadSection('prestavky')">
+            <select id="rolePrestavky" class="filter-input" style="flex:0 0 180px;" onchange="loadSection('prestavky')">
+              <option value="">— Všetky pozície —</option>
+            </select>
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Zamestnanec</th><th>Čas</th><th>Typ</th><th>Komentár</th></tr></thead>
+              <thead><tr><th>Zamestnanec</th><th>Pozícia</th><th>Čas</th><th>Typ</th><th>Komentár</th></tr></thead>
               <tbody id="prestavkyTable"><tr class="loader-row"><td>Načítavam dáta…</td></tr></tbody>
             </table>
           </div>
@@ -744,10 +761,13 @@
           <div class="filters">
             <input type="date" id="datePN" class="filter-input" onchange="loadSection('pn')">
             <input type="text" id="searchPN" class="filter-input" placeholder="Hľadať podľa mena…" oninput="loadSection('pn')">
+            <select id="rolePN" class="filter-input" style="flex:0 0 180px;" onchange="loadSection('pn')">
+              <option value="">— Všetky pozície —</option>
+            </select>
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Zamestnanec</th><th>Čas</th><th>Typ</th><th>Komentár</th></tr></thead>
+              <thead><tr><th>Zamestnanec</th><th>Pozícia</th><th>Čas</th><th>Typ</th><th>Komentár</th></tr></thead>
               <tbody id="pnTable"><tr class="loader-row"><td>Načítavam dáta…</td></tr></tbody>
             </table>
           </div>
@@ -771,7 +791,7 @@
           <div class="card-header"><span class="card-title">Priradenie zamestnancov k zmenám</span></div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Zamestnanec</th><th>Priradená zmena</th><th>Začiatok</th><th>Koniec</th><th>Stav</th></tr></thead>
+              <thead><tr><th>Zamestnanec</th><th>Pozícia</th><th>Priradená zmena</th><th>Začiatok</th><th>Koniec</th><th>Stav</th></tr></thead>
               <tbody id="smenyAssignTable"><tr class="loader-row"><td>Načítavam…</td></tr></tbody>
             </table>
           </div>
@@ -865,17 +885,6 @@
                 <div class="cal-day-name">Ne</div>
               </div>
               <div class="mini-cal" id="miniCal"></div>
-              <div style="margin-top:14px; display:flex; flex-direction:column; gap:6px;">
-                <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-secondary);">
-                  <span style="width:12px; height:12px; border-radius:3px; background:var(--warning-light); border:1px solid var(--warning); display:inline-block;"></span>Dovolenka
-                </div>
-                <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-secondary);">
-                  <span style="width:12px; height:12px; border-radius:3px; background:var(--purple-light); border:1px solid var(--purple); display:inline-block;"></span>PN
-                </div>
-                <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-secondary);">
-                  <span style="width:12px; height:12px; border-radius:3px; background:var(--accent-light); border:1px solid var(--accent); display:inline-block;"></span>Zmena
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -895,8 +904,14 @@
               <input type="number" id="mzdaSadzba" class="form-input" value="5" step="0.1" min="0">
             </div>
             <div class="form-group">
-              <label class="form-label">Meno zamestnanca (prázdne = všetci)</label>
-              <input type="text" id="mzdaFilter" class="form-input" style="width:220px;" placeholder="Hľadať…">
+              <label class="form-label">Meno / Filter</label>
+              <input type="text" id="mzdaFilter" class="form-input" style="width:180px;" placeholder="Hľadať meno…">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Filter podľa pozície</label>
+              <select id="mzdaRoleFilter" class="form-input" style="width:180px;">
+                <option value="">— Všetky pozície —</option>
+              </select>
             </div>
             <button class="btn btn-primary" onclick="calcMzdy()">Vypočítať</button>
             <button class="btn btn-ghost" onclick="exportMzdy()">Export XLSX</button>
@@ -907,8 +922,8 @@
           <div class="card-header"><span class="card-title" id="mzdyTitle">Mzdový výkaz</span></div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Zamestnanec</th><th>Odprac. hodín</th><th>Hodinová sadzba</th><th>Hrubá mzda</th><th>Poznámka</th></tr></thead>
-              <tbody id="mzdyTable"><tr class="empty-row"><td colspan="5">Zadaj mesiac a klikni Vypočítať.</td></tr></tbody>
+              <thead><tr><th>Zamestnanec</th><th>Pozícia</th><th>Odprac. hodín</th><th>Hodinová sadzba</th><th>Hrubá mzda</th><th>Poznámka</th></tr></thead>
+              <tbody id="mzdyTable"><tr class="empty-row"><td colspan="6">Zadaj mesiac a klikni Vypočítať.</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -928,7 +943,7 @@
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Meno</th><th>Stav čipu</th><th>Zmena</th><th>Stav</th><th>Akcie</th></tr></thead>
+              <thead><tr><th>Meno</th><th>Pozícia</th><th>Stav čipu</th><th>Zmena</th><th>Stav</th><th>Akcie</th></tr></thead>
               <tbody id="usersTable"><tr class="loader-row"><td>Načítavam používateľov…</td></tr></tbody>
             </table>
           </div>
@@ -937,6 +952,57 @@
           <div class="card-header"><span class="card-title">Nepriradené čipy</span></div>
           <div class="card-body">
             <div id="newChipsContainer"><p style="color:var(--text-muted); font-size:13px;">Načítavam čipy…</p></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── ROLY / POZÍCIE ── -->
+      <section id="roly">
+        <!-- Štatistiky podľa rolov -->
+        <div class="stat-grid" id="roleStatGrid" style="margin-bottom:20px;"></div>
+
+        <div style="display:grid; grid-template-columns:1fr 380px; gap:20px; align-items:start;" class="two-col-grid">
+          <!-- Zoznam rolov -->
+          <div>
+            <div class="card" style="margin-bottom:20px;">
+              <div class="card-header">
+                <span class="card-title">Správa pozícií</span>
+                <button class="btn btn-primary btn-sm" onclick="openAddRole()">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Nová pozícia
+                </button>
+              </div>
+              <div class="card-body">
+                <div class="roles-grid" id="rolesGrid">
+                  <p style="color:var(--text-muted); font-size:13px;">Načítavam pozície…</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Zamestnanci podľa roly -->
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">Zamestnanci podľa pozície</span>
+                <select id="roleFilterUsers" class="filter-input" style="flex:0 0 200px;" onchange="renderUsersByRole()">
+                  <option value="">— Všetky pozície —</option>
+                </select>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Meno</th><th>Pozícia</th><th>Zmena</th><th>Stav dnes</th></tr></thead>
+                  <tbody id="roleUsersTable"><tr class="loader-row"><td>Načítavam…</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Priradenie rolí zamestnancom -->
+          <div class="card">
+            <div class="card-header"><span class="card-title">Priradiť pozíciu</span></div>
+            <div class="card-body" style="padding:16px;">
+              <div id="roleAssignList" style="display:flex; flex-direction:column; gap:8px;">
+                <p style="color:var(--text-muted); font-size:13px;">Načítavam zamestnancov…</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -978,13 +1044,15 @@
             <select id="vykazUser" class="filter-input" style="flex:0 0 200px;">
               <option value="">— Všetci zamestnanci —</option>
             </select>
+            <select id="vykazRole" class="filter-input" style="flex:0 0 180px;">
+              <option value="">— Všetky pozície —</option>
+            </select>
             <button class="btn btn-primary btn-sm" onclick="loadVykaz()">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Zobraziť
             </button>
           </div>
         </div>
 
-        <!-- súhrnný riadok -->
         <div class="vykaz-summary-bar" id="vykazSummaryBar" style="display:none; border-radius:var(--radius-lg); border:1px solid var(--border); margin-bottom:20px;">
           <div class="vykaz-summary-item">
             <div class="vykaz-summary-label">Celkové hodiny</div>
@@ -1085,9 +1153,52 @@
   </div>
 </div>
 
+<!-- MODAL: Nová rola -->
+<div id="roleModal" class="modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="roleModalTitle">Nová pozícia</h3>
+      <button class="modal-close" onclick="closeModal('roleModal')">&#x2715;</button>
+    </div>
+    <input type="hidden" id="roleModalId">
+    <label class="modal-label">Názov pozície</label>
+    <input type="text" id="roleName" class="modal-input" placeholder="napr. Skladník, Technik, Vedúci…">
+    <label class="modal-label">Ikona</label>
+    <div class="emoji-picker" id="emojiPicker">
+      <div class="emoji-opt selected" data-emoji="👷" onclick="selectEmoji(this)">👷</div>
+      <div class="emoji-opt" data-emoji="🔧" onclick="selectEmoji(this)">🔧</div>
+      <div class="emoji-opt" data-emoji="💼" onclick="selectEmoji(this)">💼</div>
+      <div class="emoji-opt" data-emoji="🏭" onclick="selectEmoji(this)">🏭</div>
+      <div class="emoji-opt" data-emoji="📦" onclick="selectEmoji(this)">📦</div>
+      <div class="emoji-opt" data-emoji="🚛" onclick="selectEmoji(this)">🚛</div>
+      <div class="emoji-opt" data-emoji="💻" onclick="selectEmoji(this)">💻</div>
+      <div class="emoji-opt" data-emoji="🔑" onclick="selectEmoji(this)">🔑</div>
+      <div class="emoji-opt" data-emoji="📋" onclick="selectEmoji(this)">📋</div>
+      <div class="emoji-opt" data-emoji="⚙️" onclick="selectEmoji(this)">⚙️</div>
+      <div class="emoji-opt" data-emoji="🛡️" onclick="selectEmoji(this)">🛡️</div>
+      <div class="emoji-opt" data-emoji="🎯" onclick="selectEmoji(this)">🎯</div>
+    </div>
+    <label class="modal-label">Farba</label>
+    <div class="color-picker" id="colorPicker">
+      <div class="color-opt selected" data-color="accent" style="background:#1D4ED8;" onclick="selectColor(this)" title="Modrá"></div>
+      <div class="color-opt" data-color="success" style="background:#059669;" onclick="selectColor(this)" title="Zelená"></div>
+      <div class="color-opt" data-color="danger" style="background:#DC2626;" onclick="selectColor(this)" title="Červená"></div>
+      <div class="color-opt" data-color="warning" style="background:#D97706;" onclick="selectColor(this)" title="Oranžová"></div>
+      <div class="color-opt" data-color="purple" style="background:#7C3AED;" onclick="selectColor(this)" title="Fialová"></div>
+      <div class="color-opt" data-color="teal" style="background:#0D9488;" onclick="selectColor(this)" title="Teal"></div>
+    </div>
+    <label class="modal-label">Vlastná pozícia (nepovinné — vypíše sa namiesto názvu v badge)</label>
+    <input type="text" id="roleCustomLabel" class="modal-input" placeholder="Skrátený názov, napr. Skl.">
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="saveRole()">Uložiť pozíciu</button>
+      <button class="btn btn-ghost" onclick="closeModal('roleModal')">Zrušiť</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-import { getDatabase, ref, get, set, push, remove, onValue, off } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+import { getDatabase, ref, get, set, push, onValue } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBsYrbYtP4E5blWbKlrJ6iI9v6YPAYYp0g",
@@ -1106,6 +1217,7 @@ const db = getDatabase(app);
 let allAdminRecordsCache = [];
 let allUsersCache = {};
 let smenyCache = {};
+let rolesCache = {};   // { roleId: { name, emoji, color, label? } }
 let dovolCache = [];
 let auditLog = [];
 let notifications = [];
@@ -1116,6 +1228,8 @@ let monthChartMonth = new Date().getMonth();
 let rozpisWeekOffset = 0;
 let realtimeListenerRef = null;
 let dataLoaded = false;
+
+// ─── HELPERS ────────────────────────────────────────────────────────────────
 
 function initials(name) {
   return (name || '?').split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 2);
@@ -1149,6 +1263,58 @@ function pushNotif(text, type = 'info') {
   renderNotifPanel();
 }
 
+// ─── ROLY HELPERS ───────────────────────────────────────────────────────────
+
+const colorVarMap = {
+  accent: { bg: 'var(--accent-light)', text: 'var(--accent)', border: '#BFDBFE' },
+  success: { bg: 'var(--success-light)', text: 'var(--success)', border: '#A7F3D0' },
+  danger: { bg: 'var(--danger-light)', text: 'var(--danger)', border: '#FECACA' },
+  warning: { bg: 'var(--warning-light)', text: 'var(--warning)', border: '#FDE68A' },
+  purple: { bg: 'var(--purple-light)', text: 'var(--purple)', border: '#DDD6FE' },
+  teal: { bg: 'var(--teal-light)', text: 'var(--teal)', border: '#99F6E4' },
+};
+
+function getRoleBadgeHtml(userId) {
+  const user = allUsersCache[userId];
+  if (!user || !user.rola) return '<span class="badge badge-neutral" style="font-size:11px;">—</span>';
+  const role = rolesCache[user.rola];
+  if (!role) return '<span class="badge badge-neutral" style="font-size:11px;">—</span>';
+  const c = colorVarMap[role.color] || colorVarMap.accent;
+  const label = role.label || role.name;
+  return `<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:12px;font-weight:600;background:${c.bg};color:${c.text};border:1px solid ${c.border};">${role.emoji || ''} ${label}</span>`;
+}
+
+function getUserRoleName(userId) {
+  const user = allUsersCache[userId];
+  if (!user || !user.rola || !rolesCache[user.rola]) return '';
+  return rolesCache[user.rola].name || '';
+}
+
+function populateRoleFilters() {
+  const selects = ['roleDochadzka','rolePrestavky','rolePN','mzdaRoleFilter','vykazRole','roleFilterUsers'];
+  selects.forEach(selId => {
+    const sel = document.getElementById(selId);
+    if (!sel) return;
+    const current = sel.value;
+    // Remove old role options (keep first "all" option)
+    while (sel.options.length > 1) sel.remove(1);
+    Object.entries(rolesCache).forEach(([id, r]) => {
+      const opt = document.createElement('option');
+      opt.value = id;
+      opt.textContent = (r.emoji ? r.emoji + ' ' : '') + r.name;
+      sel.appendChild(opt);
+    });
+    // Also add unassigned
+    const unOpt = document.createElement('option');
+    unOpt.value = '__none__';
+    unOpt.textContent = '— Bez pozície —';
+    sel.appendChild(unOpt);
+    sel.value = current || '';
+  });
+}
+
+// ─── SIDEBAR & UI ───────────────────────────────────────────────────────────
+
 window.openSidebar = function() {
   document.getElementById('sidebar').classList.add('mobile-open');
   document.getElementById('sidebarOverlay').classList.add('open');
@@ -1157,7 +1323,6 @@ window.closeSidebar = function() {
   document.getElementById('sidebar').classList.remove('mobile-open');
   document.getElementById('sidebarOverlay').classList.remove('open');
 };
-
 window.toggleDark = function() {
   document.body.classList.toggle('dark');
   const isDark = document.body.classList.contains('dark');
@@ -1166,7 +1331,6 @@ window.toggleDark = function() {
     ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg> Svetlý režim'
     : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg> Tmavý režim';
 };
-
 window.toggleNotifPanel = function() {
   const p = document.getElementById('notifPanel');
   p.classList.toggle('open');
@@ -1189,6 +1353,8 @@ function renderNotifPanel() {
     `<div class="notif-item"><div class="notif-icon ${n.type}">${icons[n.type]||'ℹ'}</div><div><div class="notif-text">${n.text}</div><div class="notif-time">${n.time}</div></div></div>`
   ).join('');
 }
+
+// ─── FIREBASE DATA ───────────────────────────────────────────────────────────
 
 function startRealtimeListener() {
   if (realtimeListenerRef) return;
@@ -1280,8 +1446,14 @@ async function ensureDataLoaded() {
     });
     allAdminRecordsCache = allRecords;
     dataLoaded = true;
-    checkMesko();
     startRealtimeListener();
+  } catch(e) { console.error(e); }
+}
+
+async function loadRolesFromDB() {
+  try {
+    const snap = await get(ref(db, 'roles'));
+    rolesCache = snap.exists() ? snap.val() : {};
   } catch(e) { console.error(e); }
 }
 
@@ -1306,23 +1478,231 @@ async function removeDovolenka(key) {
   try { if (key) await set(ref(db, 'dovolenky/' + key), null); } catch(e) { console.error(e); }
 }
 
-function checkMesko() {
-  const today = todayStr();
-  for (const uid in smenyCache) {
-    if (uid === 'admin') continue;
-    const user = allUsersCache[uid];
-    if (!user || !user.smena) continue;
-    const smena = smenyCache[user.smena];
-    if (!smena) continue;
-    const prichody = allAdminRecordsCache.filter(r => r.userId === uid && r.date === today && r.stav === 'prichod');
-    if (!prichody.length) return;
-    const firstPrichod = prichody.sort((a,b) => a.cas.localeCompare(b.cas))[0];
-    const shm = smena.start.split(':').map(Number);
-    const phm = firstPrichod.time.split(':').map(Number);
-    const diffMin = (phm[0] * 60 + phm[1]) - (shm[0] * 60 + shm[1]);
-    if (diffMin > 5) pushNotif(`${user.name} prišiel o ${diffMin} min neskôr ako zmena (${smena.name} ${smena.start})`, 'warn');
+// ─── ROLES MANAGEMENT ────────────────────────────────────────────────────────
+
+window.openAddRole = function() {
+  document.getElementById('roleModalTitle').textContent = 'Nová pozícia';
+  document.getElementById('roleModalId').value = '';
+  document.getElementById('roleName').value = '';
+  document.getElementById('roleCustomLabel').value = '';
+  document.querySelectorAll('.emoji-opt').forEach(e => e.classList.remove('selected'));
+  document.querySelector('.emoji-opt[data-emoji="👷"]').classList.add('selected');
+  document.querySelectorAll('.color-opt').forEach(e => e.classList.remove('selected'));
+  document.querySelector('.color-opt[data-color="accent"]').classList.add('selected');
+  document.getElementById('roleModal').classList.add('open');
+};
+
+window.selectEmoji = function(el) {
+  document.querySelectorAll('.emoji-opt').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+};
+window.selectColor = function(el) {
+  document.querySelectorAll('.color-opt').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+};
+
+window.saveRole = async function() {
+  const name = document.getElementById('roleName').value.trim();
+  if (!name) return alert('Zadaj názov pozície.');
+  const emoji = document.querySelector('.emoji-opt.selected')?.dataset.emoji || '👷';
+  const color = document.querySelector('.color-opt.selected')?.dataset.color || 'accent';
+  const label = document.getElementById('roleCustomLabel').value.trim();
+  const editId = document.getElementById('roleModalId').value;
+
+  const roleObj = { name, emoji, color, ...(label ? { label } : {}) };
+  try {
+    if (editId) {
+      await set(ref(db, 'roles/' + editId), roleObj);
+      rolesCache[editId] = roleObj;
+      pushAudit('Pozícia upravená', name, 'info');
+    } else {
+      const newRef = push(ref(db, 'roles'));
+      await set(newRef, roleObj);
+      rolesCache[newRef.key] = roleObj;
+      pushAudit('Pozícia pridaná', name, 'info');
+    }
+    closeModal('roleModal');
+    populateRoleFilters();
+    renderRolesGrid();
+    renderRoleAssignList();
+    renderRoleStats();
+  } catch(e) { alert('Chyba.'); console.error(e); }
+};
+
+window.editRole = function(id) {
+  const r = rolesCache[id];
+  if (!r) return;
+  document.getElementById('roleModalTitle').textContent = 'Upraviť pozíciu';
+  document.getElementById('roleModalId').value = id;
+  document.getElementById('roleName').value = r.name;
+  document.getElementById('roleCustomLabel').value = r.label || '';
+  document.querySelectorAll('.emoji-opt').forEach(e => {
+    e.classList.toggle('selected', e.dataset.emoji === r.emoji);
+  });
+  document.querySelectorAll('.color-opt').forEach(e => {
+    e.classList.toggle('selected', e.dataset.color === r.color);
+  });
+  document.getElementById('roleModal').classList.add('open');
+};
+
+window.deleteRole = async function(id) {
+  const roleName = rolesCache[id]?.name || id;
+  if (!confirm(`Odstrániť pozíciu "${roleName}"? Zamestnancom s touto pozíciou bude odobratá.`)) return;
+  await set(ref(db, 'roles/' + id), null);
+  // Remove from all users
+  for (const uid in allUsersCache) {
+    if (allUsersCache[uid].rola === id) {
+      await set(ref(db, `users/${uid}/rola`), null);
+      allUsersCache[uid].rola = null;
+    }
   }
+  delete rolesCache[id];
+  pushAudit('Pozícia odstránená', roleName, 'danger');
+  populateRoleFilters();
+  renderRolesGrid();
+  renderRoleAssignList();
+  renderRoleStats();
+};
+
+window.assignRole = async function(uid, roleId) {
+  try {
+    await set(ref(db, `users/${uid}/rola`), roleId || null);
+    if (allUsersCache[uid]) allUsersCache[uid].rola = roleId || null;
+    const roleName = roleId ? rolesCache[roleId]?.name || roleId : 'žiadna';
+    pushAudit('Pozícia priradená', `${allUsersCache[uid]?.name||uid} → ${roleName}`, 'info');
+  } catch(e) { console.error(e); }
+};
+
+function renderRolesGrid() {
+  const grid = document.getElementById('rolesGrid');
+  const rolesArr = Object.entries(rolesCache);
+  if (!rolesArr.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:32px; color:var(--text-muted); font-size:13px;">Žiadne pozície. Pridaj prvú kliknutím na „Nová pozícia".</div>';
+    return;
+  }
+  // Count workers per role
+  const workerCount = {};
+  for (const uid in allUsersCache) {
+    const r = allUsersCache[uid].rola;
+    if (r) workerCount[r] = (workerCount[r]||0) + 1;
+  }
+  grid.innerHTML = rolesArr.map(([id, r]) => {
+    const c = colorVarMap[r.color] || colorVarMap.accent;
+    const count = workerCount[id] || 0;
+    return `<div class="role-card" style="border-left:3px solid ${c.text};">
+      <div class="role-card-left">
+        <div class="role-icon" style="background:${c.bg}; color:${c.text};">${r.emoji || '👤'}</div>
+        <div>
+          <div class="role-name">${r.name}</div>
+          <div class="role-count">${count} zamestnanc${count === 1 ? '' : count < 5 ? 'i' : 'ov'}</div>
+          ${r.label ? `<div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Skrátene: <strong>${r.label}</strong></div>` : ''}
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
+        <button class="btn btn-ghost btn-sm" onclick="editRole('${id}')">Upraviť</button>
+        <button class="btn btn-outline-danger btn-sm" onclick="deleteRole('${id}')">Odstrániť</button>
+      </div>
+    </div>`;
+  }).join('');
 }
+
+function renderRoleStats() {
+  const grid = document.getElementById('roleStatGrid');
+  const rolesArr = Object.entries(rolesCache);
+  if (!rolesArr.length) { grid.innerHTML = ''; return; }
+  const workerCount = {};
+  for (const uid in allUsersCache) {
+    if (uid === 'admin') continue;
+    const r = allUsersCache[uid].rola || '__none__';
+    workerCount[r] = (workerCount[r]||0) + 1;
+  }
+  const today = todayStr();
+  const presentByRole = {};
+  for (const uid in allUsersCache) {
+    if (uid === 'admin') continue;
+    const todayLogs = allAdminRecordsCache.filter(r =>
+      r.userId === uid && r.date === today && (r.stav === 'prichod' || r.stav === 'odchod')
+    ).sort((a,b) => a.cas.localeCompare(b.cas));
+    if (todayLogs.length && todayLogs[todayLogs.length-1].stav === 'prichod') {
+      const r = allUsersCache[uid].rola || '__none__';
+      presentByRole[r] = (presentByRole[r]||0) + 1;
+    }
+  }
+  grid.innerHTML = rolesArr.map(([id, r]) => {
+    const c = colorVarMap[r.color] || colorVarMap.accent;
+    const total = workerCount[id] || 0;
+    const present = presentByRole[id] || 0;
+    return `<div class="stat-card" style="border-left:3px solid ${c.text};">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+        <span style="font-size:18px;">${r.emoji||'👤'}</span>
+        <div class="stat-label" style="margin-bottom:0;">${r.name}</div>
+      </div>
+      <div class="stat-value" style="font-size:22px; color:${c.text};">${total}</div>
+      <div class="stat-sub">${present} prítomný${present === 1 ? '' : 'ch'} dnes</div>
+    </div>`;
+  }).join('');
+}
+
+function renderRoleAssignList() {
+  const container = document.getElementById('roleAssignList');
+  const users = Object.entries(allUsersCache).filter(([k]) => k !== 'admin');
+  if (!users.length) { container.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">Žiadni zamestnanci.</p>'; return; }
+  const roleOptions = `<option value="">— Bez pozície —</option>` +
+    Object.entries(rolesCache).map(([id, r]) => `<option value="${id}">${r.emoji||''} ${r.name}</option>`).join('');
+
+  container.innerHTML = users.map(([uid, u]) => {
+    return `<div style="display:flex; align-items:center; justify-content:space-between; padding:10px 12px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-sm); gap:10px;">
+      <div class="user-cell" style="min-width:0; flex:1;">
+        <div class="user-avatar" style="flex-shrink:0;">${initials(u.name)}</div>
+        <div style="min-width:0;">
+          <div style="font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${u.name||'—'}</div>
+          <div style="margin-top:2px;">${getRoleBadgeHtml(uid)}</div>
+        </div>
+      </div>
+      <select class="filter-input" style="padding:5px 8px; font-size:12px; flex:0 0 160px;"
+        onchange="assignRole('${uid}', this.value)">
+        ${roleOptions}
+      </select>
+    </div>`;
+  }).join('');
+
+  // Set current values
+  setTimeout(() => {
+    users.forEach(([uid, u]) => {
+      const rows = container.querySelectorAll('[onchange*="' + uid + '"]');
+      rows.forEach(sel => { if (u.rola) sel.value = u.rola; });
+    });
+  }, 30);
+}
+
+window.renderUsersByRole = function() {
+  const filterRoleId = document.getElementById('roleFilterUsers').value;
+  const tbody = document.getElementById('roleUsersTable');
+  const today = todayStr();
+  const users = Object.entries(allUsersCache).filter(([k]) => k !== 'admin').filter(([uid, u]) => {
+    if (!filterRoleId) return true;
+    if (filterRoleId === '__none__') return !u.rola;
+    return u.rola === filterRoleId;
+  });
+  if (!users.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="4">Žiadni zamestnanci pre túto pozíciu.</td></tr>'; return; }
+  tbody.innerHTML = users.map(([uid, u]) => {
+    const smena = u.smena && smenyCache[u.smena] ? `<span class="badge badge-accent" style="font-size:11px;">${smenyCache[u.smena].name}</span>` : '<span class="badge badge-neutral" style="font-size:11px;">—</span>';
+    const todayLogs = allAdminRecordsCache.filter(r =>
+      r.userId === uid && r.date === today && (r.stav === 'prichod' || r.stav === 'odchod')
+    ).sort((a,b) => a.cas.localeCompare(b.cas));
+    const statusHtml = (todayLogs.length && todayLogs[todayLogs.length-1].stav === 'prichod')
+      ? '<span class="online-badge">Prítomný</span>'
+      : '<span class="offline-badge">Neprítomný</span>';
+    return `<tr>
+      <td><div class="user-cell"><div class="user-avatar">${initials(u.name)}</div>${u.name||'—'}</div></td>
+      <td>${getRoleBadgeHtml(uid)}</td>
+      <td>${smena}</td>
+      <td>${statusHtml}</td>
+    </tr>`;
+  }).join('');
+};
+
+// ─── DASHBOARD ───────────────────────────────────────────────────────────────
 
 window.loadDashboard = async function() {
   await ensureDataLoaded();
@@ -1362,7 +1742,16 @@ window.loadDashboard = async function() {
     pl.innerHTML = '<p style="color:var(--text-muted); font-size:13px; padding:8px 0;">Dnes nikto prihlásený.</p>';
   } else {
     pl.innerHTML = presentUsers.map(u =>
-      `<div class="present-item"><div class="present-item-left"><div class="user-avatar">${initials(u.name)}</div><span style="font-weight:500; font-size:13px;">${u.name}</span></div><div><span class="online-badge">Prítomný</span><span class="present-since" style="margin-left:8px;">od ${u.since}</span></div></div>`
+      `<div class="present-item">
+        <div class="present-item-left">
+          <div class="user-avatar">${initials(u.name)}</div>
+          <div>
+            <span style="font-weight:500; font-size:13px;">${u.name}</span>
+            <div style="margin-top:2px;">${getRoleBadgeHtml(u.uid)}</div>
+          </div>
+        </div>
+        <div><span class="online-badge">Prítomný</span><span class="present-since" style="margin-left:8px;">od ${u.since}</span></div>
+      </div>`
     ).join('');
   }
 
@@ -1525,12 +1914,13 @@ function buildMeskTable() {
       const shm = smena.start.split(':').map(Number);
       const phm = first.time.split(':').map(Number);
       const diffMin = (phm[0] * 60 + phm[1]) - (shm[0] * 60 + shm[1]);
-      if (Math.abs(diffMin) > 5) rows.push({ name: user.name||uid, date: dateStr, time: first.time, smena, diffMin });
+      if (Math.abs(diffMin) > 5) rows.push({ uid, name: user.name||uid, date: dateStr, time: first.time, smena, diffMin });
     }
   }
-  if (!rows.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Žiadne meskania za posledných 7 dní.</td></tr>'; return; }
+  if (!rows.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="7">Žiadne meskania za posledných 7 dní.</td></tr>'; return; }
   tbody.innerHTML = rows.map(r =>
     `<tr><td><div class="user-cell"><div class="user-avatar">${initials(r.name)}</div>${r.name}</div></td>
+    <td>${getRoleBadgeHtml(r.uid)}</td>
     <td>${r.date}</td>
     <td>${r.diffMin > 0 ? '<span class="badge badge-danger">Meskanie</span>' : '<span class="badge badge-warning">Skorý odchod</span>'}</td>
     <td>${r.smena.name} (${r.smena.start}–${r.smena.end})</td>
@@ -1539,10 +1929,12 @@ function buildMeskTable() {
   ).join('');
 }
 
+// ─── ATTENDANCE SECTIONS ──────────────────────────────────────────────────────
+
 window.loadSection = function(id) {
-  if (id === 'dochadzka') loadAttendance('dochadzka','dochadzkaTable','dateDochadzka','searchDochadzka');
-  else if (id === 'prestavky') loadAttendance('prestavky','prestavkyTable','datePrestavky','searchPrestavky');
-  else if (id === 'pn') loadAttendance('pn','pnTable','datePN','searchPN');
+  if (id === 'dochadzka') loadAttendance('dochadzka','dochadzkaTable','dateDochadzka','searchDochadzka','roleDochadzka');
+  else if (id === 'prestavky') loadAttendance('prestavky','prestavkyTable','datePrestavky','searchPrestavky','rolePrestavky');
+  else if (id === 'pn') loadAttendance('pn','pnTable','datePN','searchPN','rolePN');
   else if (id === 'pouzivatelia') { loadUsers(); loadNewChips(); }
   else if (id === 'dashboard') loadDashboard();
   else if (id === 'smeny') loadSmeny();
@@ -1551,28 +1943,51 @@ window.loadSection = function(id) {
   else if (id === 'audit') renderAudit();
   else if (id === 'rozpis') renderRozpis();
   else if (id === 'vykaz') initVykaz();
+  else if (id === 'roly') loadRolySection();
 };
 
-async function loadAttendance(type, tableId, dateId, searchId) {
+async function loadRolySection() {
+  await ensureDataLoaded();
+  await loadRolesFromDB();
+  populateRoleFilters();
+  renderRolesGrid();
+  renderRoleStats();
+  renderRoleAssignList();
+  renderUsersByRole();
+}
+
+async function loadAttendance(type, tableId, dateId, searchId, roleSelectId) {
   const tbody = document.getElementById(tableId);
   tbody.innerHTML = '<tr class="loader-row"><td>Načítavam dáta…</td></tr>';
   await ensureDataLoaded();
   const dateFilter = document.getElementById(dateId)?.value || '';
   const search = (document.getElementById(searchId)?.value || '').toLowerCase().trim();
+  const roleFilter = document.getElementById(roleSelectId)?.value || '';
   const expectedStav = { dochadzka:['prichod','odchod'], prestavky:['prestavka'], pn:['pn'] }[type];
+
   const filtered = allAdminRecordsCache.filter(r => {
-    return (!dateFilter || r.date === dateFilter) &&
-           (!search || r.userName.toLowerCase().includes(search)) &&
-           expectedStav.includes(r.stav);
+    if (!expectedStav.includes(r.stav)) return false;
+    if (dateFilter && r.date !== dateFilter) return false;
+    if (search && !r.userName.toLowerCase().includes(search)) return false;
+    if (roleFilter) {
+      const userRole = allUsersCache[r.userId]?.rola || '';
+      if (roleFilter === '__none__' && userRole) return false;
+      if (roleFilter !== '__none__' && userRole !== roleFilter) return false;
+    }
+    return true;
   }).sort((a,b) => new Date(b.cas) - new Date(a.cas));
-  if (!filtered.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="4">Žiadne záznamy podľa filtra.</td></tr>'; return; }
+
+  if (!filtered.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="5">Žiadne záznamy podľa filtra.</td></tr>'; return; }
   tbody.innerHTML = filtered.map(log =>
-    `<tr><td><div class="user-cell"><div class="user-avatar">${initials(log.userName)}</div>${log.userName}</div></td>
-    <td><span class="time-cell">${log.casDisplay||'—'}</span></td>
-    <td><span class="badge ${badgeFor(log.stav)}">${log.rawType}</span></td>
-    <td>${log.komentar ? `<span style="font-size:12px; color:var(--text-secondary);">${log.komentar}</span>` : ''}
-    <button class="btn btn-ghost btn-sm" onclick="openKomentar('${log.userId}','${log.logKey}','${log.logType}')" style="margin-left:4px;">
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Komentár</button></td></tr>`
+    `<tr>
+      <td><div class="user-cell"><div class="user-avatar">${initials(log.userName)}</div>${log.userName}</div></td>
+      <td>${getRoleBadgeHtml(log.userId)}</td>
+      <td><span class="time-cell">${log.casDisplay||'—'}</span></td>
+      <td><span class="badge ${badgeFor(log.stav)}">${log.rawType}</span></td>
+      <td>${log.komentar ? `<span style="font-size:12px; color:var(--text-secondary);">${log.komentar}</span>` : ''}
+      <button class="btn btn-ghost btn-sm" onclick="openKomentar('${log.userId}','${log.logKey}','${log.logType}')" style="margin-left:4px;">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Komentár</button></td>
+    </tr>`
   ).join('');
 }
 
@@ -1595,6 +2010,8 @@ window.saveKomentar = async function() {
     closeModal('komentarModal');
   } catch(e) { alert('Chyba.'); console.error(e); }
 };
+
+// ─── ZMENY ───────────────────────────────────────────────────────────────────
 
 async function loadSmenyFromDB() {
   try {
@@ -1629,16 +2046,18 @@ function renderSmenyGrid() {
 function renderSmenyAssign() {
   const tbody = document.getElementById('smenyAssignTable');
   const users = Object.entries(allUsersCache).filter(([k]) => k !== 'admin');
-  if (!users.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="5">Žiadni používatelia.</td></tr>'; return; }
+  if (!users.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Žiadni používatelia.</td></tr>'; return; }
   const smenyOptions = Object.entries(smenyCache).map(([id, s]) => `<option value="${id}">${s.name}</option>`).join('');
   tbody.innerHTML = users.map(([uid, u]) => {
     const smena = u.smena ? smenyCache[u.smena] : null;
-    return `<tr><td><div class="user-cell"><div class="user-avatar">${initials(u.name)}</div>${u.name||'—'}</div></td>
-    <td><select class="filter-input" style="padding:5px 8px; font-size:12px;" onchange="assignSmena('${uid}', this.value)">
-    <option value="">— Nepriradená —</option>${smenyOptions}</select></td>
-    <td><span class="time-cell">${smena?smena.start:'—'}</span></td>
-    <td><span class="time-cell">${smena?smena.end:'—'}</span></td>
-    <td>${smena ? `<span class="badge badge-accent">${smena.name}</span>` : '<span class="badge badge-neutral">Nepriradená</span>'}</td></tr>`;
+    return `<tr>
+      <td><div class="user-cell"><div class="user-avatar">${initials(u.name)}</div>${u.name||'—'}</div></td>
+      <td>${getRoleBadgeHtml(uid)}</td>
+      <td><select class="filter-input" style="padding:5px 8px; font-size:12px;" onchange="assignSmena('${uid}', this.value)">
+      <option value="">— Nepriradená —</option>${smenyOptions}</select></td>
+      <td><span class="time-cell">${smena?smena.start:'—'}</span></td>
+      <td><span class="time-cell">${smena?smena.end:'—'}</span></td>
+      <td>${smena ? `<span class="badge badge-accent">${smena.name}</span>` : '<span class="badge badge-neutral">Nepriradená</span>'}</td></tr>`;
   }).join('');
   setTimeout(() => {
     users.forEach(([uid, u]) => {
@@ -1691,6 +2110,8 @@ window.deleteSmena = async function(id) {
   renderSmenyGrid(); renderSmenyAssign();
 };
 
+// ─── ROZPIS ───────────────────────────────────────────────────────────────────
+
 window.rozpisPrev = function() { rozpisWeekOffset--; renderRozpis(); };
 window.rozpisNext = function() { rozpisWeekOffset++; renderRozpis(); };
 async function renderRozpis() {
@@ -1715,7 +2136,8 @@ async function renderRozpis() {
     html += `<div class="rozpis-cell rozpis-header${d.isWeekend?' rozpis-weekend':''}">${d.label}<br><span style="font-size:10px; font-weight:400; color:var(--text-muted);">${d.date.substring(5)}</span></div>`;
   });
   users.forEach(([uid, u]) => {
-    html += `<div class="rozpis-cell rozpis-name"><div class="user-cell" style="gap:6px;"><div class="user-avatar" style="width:24px;height:24px;font-size:9px;">${initials(u.name)}</div><span style="font-size:12px;">${u.name||'—'}</span></div></div>`;
+    const roleEmoji = u.rola && rolesCache[u.rola] ? rolesCache[u.rola].emoji : '';
+    html += `<div class="rozpis-cell rozpis-name"><div class="user-cell" style="gap:6px;"><div class="user-avatar" style="width:24px;height:24px;font-size:9px;">${initials(u.name)}</div><div><span style="font-size:12px;">${u.name||'—'}</span>${roleEmoji ? `<div style="font-size:10px; color:var(--text-muted);">${roleEmoji} ${rolesCache[u.rola]?.name||''}</div>` : ''}</div></div></div>`;
     weekDays.forEach(d => {
       const smena = u.smena ? smenyCache[u.smena] : null;
       if (!smena || d.isWeekend) {
@@ -1730,6 +2152,8 @@ async function renderRozpis() {
   document.getElementById('rozpisGrid').innerHTML = html;
 }
 
+// ─── DOVOLENKA ────────────────────────────────────────────────────────────────
+
 async function loadDovolenka() {
   dovolCache = await getDovolenky();
   renderDovolTable();
@@ -1739,7 +2163,7 @@ function renderDovolTable() {
   if (!dovolCache.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Žiadne záznamy.</td></tr>'; return; }
   const typeLabel = { dovolenka:'Dovolenka', navsteva_lekara:'Lekár', ospravedlnena:'Ospravedlnená', ine:'Iné' };
   const typeBadge = { dovolenka:'badge-warning', navsteva_lekara:'badge-accent', ospravedlnena:'badge-neutral', ine:'badge-neutral' };
-  tbody.innerHTML = [...dovolCache].reverse().map((d, ri) => {
+  tbody.innerHTML = [...dovolCache].reverse().map(d => {
     return `<tr><td><div class="user-cell"><div class="user-avatar">${initials(d.meno)}</div>${d.meno}</div></td>
     <td>${d.od}</td><td>${d.do}</td>
     <td><span class="badge ${typeBadge[d.typ]||'badge-neutral'}">${typeLabel[d.typ]||d.typ}</span></td>
@@ -1812,11 +2236,14 @@ async function renderCal() {
   document.getElementById('miniCal').innerHTML = html;
 }
 
+// ─── MZDY ────────────────────────────────────────────────────────────────────
+
 window.calcMzdy = async function() {
   await ensureDataLoaded();
   const mesiac = document.getElementById('mzdaMesiac').value;
   const sadzba = parseFloat(document.getElementById('mzdaSadzba').value) || 5;
   const filter = document.getElementById('mzdaFilter').value.toLowerCase().trim();
+  const roleFilter = document.getElementById('mzdaRoleFilter').value;
   if (!mesiac) return alert('Vyber mesiac.');
   document.getElementById('mzdyTitle').textContent = 'Mzdový výkaz — ' + mesiac;
   const result = {};
@@ -1824,6 +2251,11 @@ window.calcMzdy = async function() {
     if (uid === 'admin') continue;
     const name = allUsersCache[uid].name || uid;
     if (filter && !name.toLowerCase().includes(filter)) continue;
+    if (roleFilter) {
+      const userRole = allUsersCache[uid].rola || '';
+      if (roleFilter === '__none__' && userRole) continue;
+      if (roleFilter !== '__none__' && userRole !== roleFilter) continue;
+    }
     const logs = allAdminRecordsCache.filter(r =>
       r.userId === uid && r.date.startsWith(mesiac) && (r.stav === 'prichod' || r.stav === 'odchod')
     ).sort((a,b) => a.cas.localeCompare(b.cas));
@@ -1836,18 +2268,23 @@ window.calcMzdy = async function() {
   }
   const entries = Object.values(result);
   const tbody = document.getElementById('mzdyTable');
-  if (!entries.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="5">Žiadne záznamy pre daný mesiac.</td></tr>'; return; }
+  if (!entries.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Žiadne záznamy pre daný mesiac/filter.</td></tr>'; return; }
   let totalMzda = 0;
-  tbody.innerHTML = entries.map(e => {
+  const uidList = Object.keys(result);
+  tbody.innerHTML = entries.map((e, i) => {
+    const uid = uidList[i];
     const mzda = e.hours * sadzba;
     totalMzda += mzda;
-    return `<tr><td><div class="user-cell"><div class="user-avatar">${initials(e.name)}</div>${e.name}</div></td>
-    <td><span class="time-cell">${msToHhMm(e.totalMs)}</span></td>
-    <td>${sadzba.toFixed(2)} €/h</td>
-    <td><strong>${mzda.toFixed(2)} €</strong></td>
-    <td style="font-size:12px; color:var(--text-muted);">${e.hours < 10 ? '⚠ Nízky počet hodín' : ''}</td></tr>`;
+    return `<tr>
+      <td><div class="user-cell"><div class="user-avatar">${initials(e.name)}</div>${e.name}</div></td>
+      <td>${getRoleBadgeHtml(uid)}</td>
+      <td><span class="time-cell">${msToHhMm(e.totalMs)}</span></td>
+      <td>${sadzba.toFixed(2)} €/h</td>
+      <td><strong>${mzda.toFixed(2)} €</strong></td>
+      <td style="font-size:12px; color:var(--text-muted);">${e.hours < 10 ? '⚠ Nízky počet hodín' : ''}</td>
+    </tr>`;
   }).join('') +
-  `<tr style="background:var(--surface-2);"><td colspan="3" style="font-weight:700; text-align:right; color:var(--text-secondary);">CELKOM</td>
+  `<tr style="background:var(--surface-2);"><td colspan="4" style="font-weight:700; text-align:right; color:var(--text-secondary);">CELKOM</td>
   <td><strong style="color:var(--accent); font-size:16px;">${totalMzda.toFixed(2)} €</strong></td><td></td></tr>`;
 };
 window.exportMzdy = function() {
@@ -1856,16 +2293,19 @@ window.exportMzdy = function() {
   );
   if (!rows.length) return alert('Najprv vypočítaj mzdy.');
   const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet([['Zamestnanec','Hodiny','Sadzba','Hrubá mzda','Poznámka'], ...rows]);
+  const ws = XLSX.utils.aoa_to_sheet([['Zamestnanec','Pozícia','Hodiny','Sadzba','Hrubá mzda','Poznámka'], ...rows]);
   XLSX.utils.book_append_sheet(wb, ws, 'Mzdy');
   XLSX.writeFile(wb, 'mzdy_' + document.getElementById('mzdaMesiac').value + '.xlsx');
 };
+
+// ─── POUŽÍVATELIA ─────────────────────────────────────────────────────────────
 
 async function loadUsers() {
   const tbody = document.getElementById('usersTable');
   tbody.innerHTML = '<tr class="loader-row"><td>Načítavam…</td></tr>';
   await ensureDataLoaded();
-  if (!Object.keys(allUsersCache).length) { tbody.innerHTML='<tr class="empty-row"><td colspan="5">Žiadni používatelia.</td></tr>'; return; }
+  await loadSmenyFromDB();
+  if (!Object.keys(allUsersCache).length) { tbody.innerHTML='<tr class="empty-row"><td colspan="6">Žiadni používatelia.</td></tr>'; return; }
   tbody.innerHTML = Object.entries(allUsersCache).filter(([k]) => k !== 'admin').map(([key, d]) => {
     const chip = d.chipUid;
     const chipBadge = chip ? `<span class="badge badge-success">Priradený · ${chip.substring(0,8)}...</span>` : '<span class="badge badge-neutral">Nepriradený</span>';
@@ -1876,12 +2316,14 @@ async function loadUsers() {
     ).sort((a,b) => a.cas.localeCompare(b.cas));
     let statusHtml = '<span class="offline-badge">Neprítomný</span>';
     if (todayLogs.length && todayLogs[todayLogs.length-1].stav === 'prichod') statusHtml = '<span class="online-badge">Prítomný</span>';
-    return `<tr><td><div class="user-cell"><div class="user-avatar">${initials(d.name)}</div>${d.name||'(bez mena)'}</div></td>
-    <td>${chipBadge}</td><td>${smena}</td><td>${statusHtml}</td>
-    <td><div style="display:flex; gap:6px;">
-    <button class="btn btn-outline-danger btn-sm" onclick="removeUser('${key}')">Odstrániť</button>
-    <button class="btn btn-outline-info btn-sm" onclick="openChangePassword('${key}')">Heslo</button>
-    </div></td></tr>`;
+    return `<tr>
+      <td><div class="user-cell"><div class="user-avatar">${initials(d.name)}</div>${d.name||'(bez mena)'}</div></td>
+      <td>${getRoleBadgeHtml(key)}</td>
+      <td>${chipBadge}</td><td>${smena}</td><td>${statusHtml}</td>
+      <td><div style="display:flex; gap:6px;">
+      <button class="btn btn-outline-danger btn-sm" onclick="removeUser('${key}')">Odstrániť</button>
+      <button class="btn btn-outline-info btn-sm" onclick="openChangePassword('${key}')">Heslo</button>
+      </div></td></tr>`;
   }).join('');
 }
 async function loadNewChips() {
@@ -1968,6 +2410,8 @@ window.saveNewPassword = async function() {
   } catch(e) { alert('Chyba.'); console.error(e); }
 };
 
+// ─── AUDIT ───────────────────────────────────────────────────────────────────
+
 window.renderAudit = function() {
   const dateFilter = document.getElementById('auditDate').value;
   const list = document.getElementById('auditList');
@@ -1986,13 +2430,10 @@ window.renderAudit = function() {
   ).join('');
 };
 
-// ══════════════════════════════════════════
-// VÝKAZ PRÁCE
-// ══════════════════════════════════════════
+// ─── VÝKAZ PRÁCE ─────────────────────────────────────────────────────────────
 
 async function initVykaz() {
   await ensureDataLoaded();
-  // populate user select
   const sel = document.getElementById('vykazUser');
   const existingOptions = sel.querySelectorAll('option[value]:not([value=""])');
   existingOptions.forEach(o => o.remove());
@@ -2002,7 +2443,6 @@ async function initVykaz() {
     opt.textContent = u.name || uid;
     sel.appendChild(opt);
   });
-  // default range: current month
   const now = new Date();
   const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0');
   const firstDay = y + '-' + m + '-01';
@@ -2016,7 +2456,7 @@ window.loadVykaz = async function() {
   const od = document.getElementById('vykazOd').value;
   const doDo = document.getElementById('vykazDo').value;
   const filterUid = document.getElementById('vykazUser').value;
-
+  const filterRole = document.getElementById('vykazRole').value;
   if (!od || !doDo) return alert('Vyber dátumový rozsah.');
   if (od > doDo) return alert('Dátum "od" musí byť pred "do".');
 
@@ -2025,7 +2465,13 @@ window.loadVykaz = async function() {
 
   const usersToProcess = Object.entries(allUsersCache)
     .filter(([k]) => k !== 'admin')
-    .filter(([uid]) => !filterUid || uid === filterUid);
+    .filter(([uid]) => !filterUid || uid === filterUid)
+    .filter(([uid, u]) => {
+      if (!filterRole) return true;
+      const userRole = u.rola || '';
+      if (filterRole === '__none__') return !userRole;
+      return userRole === filterRole;
+    });
 
   let grandTotalMs = 0, grandTotalIn = 0, grandTotalOut = 0, grandTotalBreaks = 0, grandTotalDays = 0;
 
@@ -2035,7 +2481,6 @@ window.loadVykaz = async function() {
       r.userId === uid && r.date >= od && r.date <= doDo
     ).sort((a,b) => a.cas.localeCompare(b.cas));
 
-    // group by date
     const byDate = {};
     userRecords.forEach(r => {
       if (!byDate[r.date]) byDate[r.date] = [];
@@ -2054,36 +2499,28 @@ window.loadVykaz = async function() {
         if (l.stav === 'prichod') lastPrichod = new Date(l.cas);
         else if (l.stav === 'odchod' && lastPrichod) { dayMs += new Date(l.cas) - lastPrichod; lastPrichod = null; }
       });
-
-      userIn += prichody.length;
-      userOut += odchody.length;
-      userBreaks += prestavky.length;
+      userIn += prichody.length; userOut += odchody.length; userBreaks += prestavky.length;
       if (recs.length > 0) userDays++;
       userTotalMs += dayMs;
-
       const dow = new Date(date).getDay();
       const dayNames = ['Ne','Po','Ut','St','Št','Pi','So'];
       const dayLabel = dayNames[dow];
       const isWeekend = dow === 0 || dow === 6;
-
-      const events = recs.map(r => {
-        // compute duration for prichod-odchod pairs
-        let durHtml = '';
-        return `<div class="vykaz-event">
+      const events = recs.map(r =>
+        `<div class="vykaz-event">
           <span class="vykaz-event-time">${r.time}</span>
           <span class="vykaz-event-type"><span class="badge ${badgeFor(r.stav)}" style="font-size:11px; padding:2px 7px;">${r.rawType}</span></span>
           ${r.komentar ? `<span class="vykaz-event-comment">„${r.komentar}"</span>` : ''}
-        </div>`;
-      }).join('');
-
+        </div>`
+      ).join('');
       const hoursToday = (dayMs / 3600000).toFixed(2);
       const bgColor = isWeekend ? 'background:var(--surface-2);' : '';
       return `<div class="vykaz-day-block" style="${bgColor}">
         <div class="vykaz-day-header">
           <div style="display:flex; align-items:center; gap:10px;">
-            <span style="font-size:11px; font-weight:700; color:var(--text-muted); background:var(--surface-2); border:1px solid var(--border); border-radius:4px; padding:2px 7px; min-width:28px; text-align:center;">${dayLabel}</span>
+            <span style="font-size:11px; font-weight:700; color:var(--text-muted); background:var(--surface-2); border:1px solid var(--border); border-radius:4px; padding:2px 7px;">${dayLabel}</span>
             <span class="vykaz-day-date">${date}</span>
-            ${isWeekend ? '<span class="badge badge-neutral" style="font-size:10px; padding:2px 7px;">Víkend</span>' : ''}
+            ${isWeekend ? '<span class="badge badge-neutral" style="font-size:10px;">Víkend</span>' : ''}
           </div>
           <div class="vykaz-day-summary">
             ${prichody.length ? `<span class="badge badge-success" style="font-size:11px;">↓ ${prichody.length}×</span>` : ''}
@@ -2096,12 +2533,8 @@ window.loadVykaz = async function() {
       </div>`;
     }).join('');
 
-    grandTotalMs += userTotalMs;
-    grandTotalIn += userIn;
-    grandTotalOut += userOut;
-    grandTotalBreaks += userBreaks;
-    grandTotalDays += userDays;
-
+    grandTotalMs += userTotalMs; grandTotalIn += userIn; grandTotalOut += userOut;
+    grandTotalBreaks += userBreaks; grandTotalDays += userDays;
     const totalH = (userTotalMs / 3600000).toFixed(1);
     const smena = userData.smena && smenyCache[userData.smena] ? smenyCache[userData.smena] : null;
     const smenaTag = smena ? `<span class="badge badge-accent" style="font-size:11px;">${smena.name}</span>` : '';
@@ -2112,26 +2545,18 @@ window.loadVykaz = async function() {
           <div class="user-avatar" style="width:36px;height:36px;font-size:13px;">${initials(userName)}</div>
           <div>
             <div style="font-weight:700; font-size:14px; color:var(--text-primary);">${userName}</div>
-            <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">${smenaTag} ${userDays} aktívnych dní</div>
+            <div style="display:flex; align-items:center; gap:6px; margin-top:3px; flex-wrap:wrap;">
+              ${getRoleBadgeHtml(uid)}
+              ${smenaTag}
+              <span style="font-size:12px; color:var(--text-muted);">${userDays} aktívnych dní</span>
+            </div>
           </div>
         </div>
         <div class="vykaz-user-stats">
-          <div class="vykaz-stat">
-            <span class="vykaz-stat-label">Celkové hodiny</span>
-            <span class="vykaz-stat-value" style="color:var(--accent);">${totalH}h</span>
-          </div>
-          <div class="vykaz-stat">
-            <span class="vykaz-stat-label">Príchody</span>
-            <span class="vykaz-stat-value" style="color:var(--success);">${userIn}</span>
-          </div>
-          <div class="vykaz-stat">
-            <span class="vykaz-stat-label">Odchody</span>
-            <span class="vykaz-stat-value" style="color:var(--danger);">${userOut}</span>
-          </div>
-          <div class="vykaz-stat">
-            <span class="vykaz-stat-label">Prestávky</span>
-            <span class="vykaz-stat-value" style="color:var(--warning);">${userBreaks}</span>
-          </div>
+          <div class="vykaz-stat"><span class="vykaz-stat-label">Celkové hodiny</span><span class="vykaz-stat-value" style="color:var(--accent);">${totalH}h</span></div>
+          <div class="vykaz-stat"><span class="vykaz-stat-label">Príchody</span><span class="vykaz-stat-value" style="color:var(--success);">${userIn}</span></div>
+          <div class="vykaz-stat"><span class="vykaz-stat-label">Odchody</span><span class="vykaz-stat-value" style="color:var(--danger);">${userOut}</span></div>
+          <div class="vykaz-stat"><span class="vykaz-stat-label">Prestávky</span><span class="vykaz-stat-value" style="color:var(--warning);">${userBreaks}</span></div>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="color:var(--text-muted); flex-shrink:0;"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
       </div>
@@ -2140,14 +2565,11 @@ window.loadVykaz = async function() {
   });
 
   if (!cards.length) {
-    container.innerHTML = '<div class="card"><div class="card-body" style="text-align:center; padding:40px; color:var(--text-muted);">Žiadni zamestnanci.</div></div>';
+    container.innerHTML = '<div class="card"><div class="card-body" style="text-align:center; padding:40px; color:var(--text-muted);">Žiadni zamestnanci pre zvolený filter.</div></div>';
     document.getElementById('vykazSummaryBar').style.display = 'none';
     return;
   }
-
   container.innerHTML = cards.join('');
-
-  // update summary bar
   const summaryBar = document.getElementById('vykazSummaryBar');
   summaryBar.style.display = 'flex';
   document.getElementById('vykazTotalH').textContent = (grandTotalMs/3600000).toFixed(1) + ' h';
@@ -2155,8 +2577,6 @@ window.loadVykaz = async function() {
   document.getElementById('vykazTotalIn').textContent = grandTotalIn;
   document.getElementById('vykazTotalOut').textContent = grandTotalOut;
   document.getElementById('vykazTotalBreaks').textContent = grandTotalBreaks;
-
-  // progress vs planned (8h per working day per employee)
   const workingDays = Math.round((new Date(doDo) - new Date(od)) / 86400000 / 7 * 5) + 1;
   const planned = workingDays * 8 * usersToProcess.length;
   const actual = grandTotalMs / 3600000;
@@ -2171,39 +2591,42 @@ window.exportVykaz = async function() {
   const od = document.getElementById('vykazOd').value;
   const doDo = document.getElementById('vykazDo').value;
   const filterUid = document.getElementById('vykazUser').value;
+  const filterRole = document.getElementById('vykazRole').value;
   if (!od || !doDo) return alert('Najprv zobraz výkaz.');
-
-  const rows = [['Zamestnanec','Dátum','Čas','Typ','Komentár']];
-  const usersToProcess = Object.entries(allUsersCache)
-    .filter(([k]) => k !== 'admin')
-    .filter(([uid]) => !filterUid || uid === filterUid);
-
-  usersToProcess.forEach(([uid, u]) => {
-    const userRecords = allAdminRecordsCache.filter(r =>
-      r.userId === uid && r.date >= od && r.date <= doDo
-    ).sort((a,b) => a.cas.localeCompare(b.cas));
-    userRecords.forEach(r => rows.push([u.name||uid, r.date, r.time, r.rawType, r.komentar||'']));
-    if (userRecords.length) rows.push(['','','','','']); // spacer
-  });
-
+  const rows = [['Zamestnanec','Pozícia','Dátum','Čas','Typ','Komentár']];
+  Object.entries(allUsersCache).filter(([k]) => k !== 'admin')
+    .filter(([uid]) => !filterUid || uid === filterUid)
+    .filter(([uid, u]) => {
+      if (!filterRole) return true;
+      if (filterRole === '__none__') return !u.rola;
+      return u.rola === filterRole;
+    })
+    .forEach(([uid, u]) => {
+      const roleName = getUserRoleName(uid);
+      const recs = allAdminRecordsCache.filter(r =>
+        r.userId === uid && r.date >= od && r.date <= doDo
+      ).sort((a,b) => a.cas.localeCompare(b.cas));
+      recs.forEach(r => rows.push([u.name||uid, roleName, r.date, r.time, r.rawType, r.komentar||'']));
+      if (recs.length) rows.push(['','','','','','']);
+    });
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols'] = [{wpx:150},{wpx:100},{wpx:80},{wpx:100},{wpx:200}];
+  ws['!cols'] = [{wpx:150},{wpx:120},{wpx:100},{wpx:80},{wpx:100},{wpx:200}];
   XLSX.utils.book_append_sheet(wb, ws, 'Výkaz práce');
   XLSX.writeFile(wb, `vykaz_prace_${od}_${doDo}.xlsx`);
 };
+
+// ─── EXPORT / PDF ─────────────────────────────────────────────────────────────
 
 window.exportPDF = function(section) {
   const title = {
     dochadzka: 'Dochádzka', prestavky: 'Prestávky', pn: 'PN – Pracovná neschopnosť',
     dovolenka: 'Neprítomnosti', mzdy: 'Mzdový výkaz', audit: 'Audit log', vykaz: 'Výkaz práce'
   }[section] || section;
-
   const tableId = {
     dochadzka: 'dochadzkaTable', prestavky: 'prestavkyTable', pn: 'pnTable',
     dovolenka: 'dovolTable', mzdy: 'mzdyTable', audit: null, vykaz: null
   }[section];
-
   let bodyHTML = '';
   if (section === 'audit') {
     bodyHTML = auditLog.slice(0, 100).map(e =>
@@ -2218,12 +2641,13 @@ window.exportPDF = function(section) {
     Object.entries(allUsersCache).filter(([k]) => k !== 'admin')
       .filter(([uid]) => !filterUid || uid === filterUid)
       .forEach(([uid, u]) => {
+        const roleName = getUserRoleName(uid);
         const recs = allAdminRecordsCache.filter(r =>
           r.userId === uid && r.date >= od && r.date <= doDo
         ).sort((a,b) => a.cas.localeCompare(b.cas));
-        recs.forEach(r => rows.push(`<tr><td>${u.name||uid}</td><td>${r.date}</td><td>${r.time}</td><td>${r.rawType}</td><td>${r.komentar||''}</td></tr>`));
+        recs.forEach(r => rows.push(`<tr><td>${u.name||uid}</td><td>${roleName}</td><td>${r.date}</td><td>${r.time}</td><td>${r.rawType}</td><td>${r.komentar||''}</td></tr>`));
       });
-    bodyHTML = `<table><thead><tr><th>Zamestnanec</th><th>Dátum</th><th>Čas</th><th>Typ</th><th>Komentár</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
+    bodyHTML = `<table><thead><tr><th>Zamestnanec</th><th>Pozícia</th><th>Dátum</th><th>Čas</th><th>Typ</th><th>Komentár</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
   } else if (tableId) {
     const tbl = document.getElementById(tableId);
     if (tbl) {
@@ -2231,7 +2655,6 @@ window.exportPDF = function(section) {
       bodyHTML = `<table>${thead ? thead.outerHTML : ''}<tbody>${tbl.innerHTML}</tbody></table>`;
     }
   }
-
   const win = window.open('', '_blank');
   win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title>
   <style>body{font-family:Arial,sans-serif;font-size:12px;margin:20px;color:#111;}h1{font-size:18px;margin-bottom:4px;}p{color:#666;font-size:11px;margin-bottom:16px;}table{width:100%;border-collapse:collapse;}th{background:#f3f4f6;padding:8px 10px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #e2e5ea;}td{padding:8px 10px;border-bottom:1px solid #e2e5ea;vertical-align:middle;}tr:last-child td{border-bottom:none;}@media print{body{margin:10px;}}</style>
@@ -2243,43 +2666,39 @@ window.exportAll = async function() {
   await ensureDataLoaded();
   const dovs = await getDovolenky();
   const wb = XLSX.utils.book_new();
-  const docRows = [['Zamestnanec','Dátum','Čas','Typ','Komentár']];
-  allAdminRecordsCache.filter(r => r.stav === 'prichod' || r.stav === 'odchod').sort((a,b) => a.cas.localeCompare(b.cas)).forEach(r => docRows.push([r.userName, r.date, r.time, r.rawType, r.komentar||'']));
+  const docRows = [['Zamestnanec','Pozícia','Dátum','Čas','Typ','Komentár']];
+  allAdminRecordsCache.filter(r => r.stav === 'prichod' || r.stav === 'odchod').sort((a,b) => a.cas.localeCompare(b.cas))
+    .forEach(r => docRows.push([r.userName, getUserRoleName(r.userId), r.date, r.time, r.rawType, r.komentar||'']));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(docRows), 'Dochádzka');
-  const prestRows = [['Zamestnanec','Dátum','Čas','Typ']];
-  allAdminRecordsCache.filter(r => r.stav === 'prestavka').forEach(r => prestRows.push([r.userName, r.date, r.time, r.rawType]));
+  const prestRows = [['Zamestnanec','Pozícia','Dátum','Čas','Typ']];
+  allAdminRecordsCache.filter(r => r.stav === 'prestavka').forEach(r => prestRows.push([r.userName, getUserRoleName(r.userId), r.date, r.time, r.rawType]));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(prestRows), 'Prestávky');
-  const pnRows = [['Zamestnanec','Dátum','Čas','Typ']];
-  allAdminRecordsCache.filter(r => r.stav === 'pn').forEach(r => pnRows.push([r.userName, r.date, r.time, r.rawType]));
+  const pnRows = [['Zamestnanec','Pozícia','Dátum','Čas','Typ']];
+  allAdminRecordsCache.filter(r => r.stav === 'pn').forEach(r => pnRows.push([r.userName, getUserRoleName(r.userId), r.date, r.time, r.rawType]));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(pnRows), 'PN');
   const dovRows = [['Zamestnanec','Od','Do','Typ','Poznámka']];
   dovs.forEach(d => dovRows.push([d.meno, d.od, d.do, d.typ, d.poznamka||'']));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dovRows), 'Neprítomnosti');
-  const usrRows = [['Meno','Čip UID','Zmena']];
-  Object.entries(allUsersCache).filter(([k]) => k !== 'admin').forEach(([, u]) => usrRows.push([u.name||'', u.chipUid||'', u.smena ? smenyCache[u.smena]?.name||'' : '']));
+  const usrRows = [['Meno','Pozícia','Čip UID','Zmena']];
+  Object.entries(allUsersCache).filter(([k]) => k !== 'admin').forEach(([uid, u]) => usrRows.push([u.name||'', getUserRoleName(uid), u.chipUid||'', u.smena ? smenyCache[u.smena]?.name||'' : '']));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(usrRows), 'Používatelia');
   XLSX.writeFile(wb, 'dochadzka_export_' + todayStr() + '.xlsx');
   pushAudit('Hromadný export', 'Všetky sekcie exportované', 'info');
 };
 
-async function exportUsersToXLSX() {
-  await ensureDataLoaded();
-  const exportData = [['Export používateľov'],[],['UID','Meno','Čip UID','Zmena']];
-  for (const userId in allUsersCache) {
-    if (userId === 'admin') continue;
-    const u = allUsersCache[userId];
-    const smena = u.smena && smenyCache[u.smena] ? smenyCache[u.smena].name : '';
-    exportData.push([userId, u.name||'', u.chipUid||'', smena]);
-  }
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet(exportData);
-  ws['!cols'] = [{wpx:150},{wpx:150},{wpx:150},{wpx:120}];
-  XLSX.utils.book_append_sheet(wb, ws, 'Používatelia');
-  XLSX.writeFile(wb, 'pouzivatelia_export.xlsx');
-}
-
 window.exportTable = async function(sectionType) {
-  if (sectionType === 'users') return exportUsersToXLSX();
+  if (sectionType === 'users') {
+    await ensureDataLoaded();
+    const exportData = [['UID','Meno','Pozícia','Čip UID','Zmena']];
+    for (const userId in allUsersCache) {
+      if (userId === 'admin') continue;
+      const u = allUsersCache[userId];
+      exportData.push([userId, u.name||'', getUserRoleName(userId), u.chipUid||'', u.smena && smenyCache[u.smena] ? smenyCache[u.smena].name : '']);
+    }
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(exportData), 'Používatelia');
+    return XLSX.writeFile(wb, 'pouzivatelia_export.xlsx');
+  }
   await ensureDataLoaded();
   const btn = document.querySelector(`[data-export-table="${sectionType}"]`);
   if(btn) btn.textContent = 'Generujem...';
@@ -2293,8 +2712,9 @@ window.exportTable = async function(sectionType) {
            expectedStav.includes(r.stav);
   }).sort((a,b) => new Date(a.cas)-new Date(b.cas));
   const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet([['Zamestnanec','Dátum a Čas','Typ','Komentár'], ...records.map(r => [r.userName, r.casDisplay, r.rawType, r.komentar||''])]);
-  ws['!cols'] = [{wpx:150},{wpx:150},{wpx:100},{wpx:200}];
+  const ws = XLSX.utils.aoa_to_sheet([['Zamestnanec','Pozícia','Dátum a Čas','Typ','Komentár'],
+    ...records.map(r => [r.userName, getUserRoleName(r.userId), r.casDisplay, r.rawType, r.komentar||''])]);
+  ws['!cols'] = [{wpx:150},{wpx:120},{wpx:150},{wpx:100},{wpx:200}];
   XLSX.utils.book_append_sheet(wb, ws, 'Záznamy');
   XLSX.writeFile(wb, `${sectionType}_export.xlsx`);
   if(btn) { btn.textContent = 'Stiahnuté'; setTimeout(() => { btn.textContent = 'Export XLSX'; }, 2000); }
@@ -2322,6 +2742,8 @@ window.addLog = async function(type, typ) {
 window.closeModal = function(id) { document.getElementById(id).classList.remove('open'); };
 window.logout = function() { localStorage.removeItem('uid'); window.location.href='index.html'; };
 
+// ─── TABS & NAV ───────────────────────────────────────────────────────────────
+
 document.querySelectorAll('.tab-btn[data-tab]').forEach(btn => {
   btn.addEventListener('click', () => {
     const parent = btn.closest('.card');
@@ -2333,17 +2755,18 @@ document.querySelectorAll('.tab-btn[data-tab]').forEach(btn => {
 });
 
 const sectionMeta = {
-  dashboard:    { title: 'Dashboard',       sub: 'Prehľad dochádzky' },
-  dochadzka:    { title: 'Dochádzka',       sub: 'Príchody a odchody zamestnancov' },
-  prestavky:    { title: 'Prestávky',       sub: 'Záznamy prestávok' },
-  pn:           { title: 'PN',              sub: 'Pracovná neschopnosť' },
-  smeny:        { title: 'Zmeny',           sub: 'Pracovné zmeny a priradenia' },
-  rozpis:       { title: 'Rozpis zmien',    sub: 'Týždenný prehľad zmien' },
-  dovolenka:    { title: 'Dovolenka',       sub: 'Evidencia neprítomností a kalendár' },
-  mzdy:         { title: 'Mzdový výkaz',    sub: 'Výpočet miezd podľa odpracovaných hodín' },
-  pouzivatelia: { title: 'Používatelia',    sub: 'Správa účtov a čipov' },
-  audit:        { title: 'Audit log',       sub: 'História zmien v systéme' },
-  vykaz:        { title: 'Výkaz práce',     sub: 'Detailný prehľad aktivít každého zamestnanca' },
+  dashboard:    { title: 'Dashboard',         sub: 'Prehľad dochádzky' },
+  dochadzka:    { title: 'Dochádzka',         sub: 'Príchody a odchody zamestnancov' },
+  prestavky:    { title: 'Prestávky',         sub: 'Záznamy prestávok' },
+  pn:           { title: 'PN',                sub: 'Pracovná neschopnosť' },
+  smeny:        { title: 'Zmeny',             sub: 'Pracovné zmeny a priradenia' },
+  rozpis:       { title: 'Rozpis zmien',      sub: 'Týždenný prehľad zmien' },
+  dovolenka:    { title: 'Dovolenka',         sub: 'Evidencia neprítomností a kalendár' },
+  mzdy:         { title: 'Mzdový výkaz',      sub: 'Výpočet miezd podľa odpracovaných hodín' },
+  pouzivatelia: { title: 'Používatelia',      sub: 'Správa účtov a čipov' },
+  roly:         { title: 'Roly / Pozície',    sub: 'Správa pracovných pozícií a ich priradenie' },
+  audit:        { title: 'Audit log',         sub: 'História zmien v systéme' },
+  vykaz:        { title: 'Výkaz práce',       sub: 'Detailný prehľad aktivít každého zamestnanca' },
 };
 
 document.addEventListener('DOMContentLoaded', async function() {
@@ -2356,6 +2779,8 @@ document.addEventListener('DOMContentLoaded', async function() {
   if (notifications.length) document.getElementById('notifDot').classList.add('active');
   renderNotifPanel();
   await loadSmenyFromDB();
+  await loadRolesFromDB();
+  populateRoleFilters();
 
   document.querySelectorAll('.nav-btn[data-target]').forEach(btn => {
     btn.addEventListener('click', () => {
