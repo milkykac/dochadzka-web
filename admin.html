@@ -435,6 +435,14 @@
   .absent-count.mid { color: var(--warning); }
   .absent-count.low { color: var(--text-muted); }
 
+  /* ── ŽIADOSTI ── */
+  .ziadost-row-pending  { background: var(--warning-light) !important; }
+  .ziadost-row-approved { background: var(--success-light) !important; }
+  .ziadost-row-rejected { background: var(--danger-light)  !important; opacity: 0.75; }
+
+  .modal-textarea { width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif; font-size:14px; color:var(--text-primary); background:var(--surface); margin-bottom:12px; outline:none; transition:border-color 0.15s; resize:vertical; }
+  .modal-textarea:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(29,78,216,0.08); }
+
   /* ── VÝKAZ PRÁCE ── */
   .vykaz-user-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 16px; box-shadow: var(--shadow-sm); transition: background 0.3s; }
   .vykaz-user-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; background: var(--surface-2); border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; gap: 12px; flex-wrap: wrap; }
@@ -531,6 +539,11 @@
       </button>
       <button class="nav-btn" data-target="dovolenka">
         <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg></span>Dovolenka
+      </button>
+      <button class="nav-btn" data-target="ziadosti">
+        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg></span>
+        Žiadosti
+        <span class="nav-badge" id="ziadostiBadge" style="display:none;"></span>
       </button>
       <div class="nav-label" style="margin-top:8px;">Financie</div>
       <button class="nav-btn" data-target="mzdy">
@@ -890,6 +903,32 @@
         </div>
       </section>
 
+      <!-- ── ŽIADOSTI ── -->
+      <section id="ziadosti">
+        <div class="card" style="margin-bottom:20px;">
+          <div class="card-header">
+            <span class="card-title">Žiadosti zamestnancov o neprítomnosť</span>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <span id="ziadostiPendingInfo" style="font-size:13px; color:var(--text-muted);"></span>
+              <button class="btn btn-ghost btn-sm" onclick="loadZiadosti()">↻ Obnoviť</button>
+            </div>
+          </div>
+          <!-- Filter tabs -->
+          <div class="tab-bar">
+            <button class="tab-btn active" data-ztab="all" onclick="filterZiadosti('all', this)">Všetky</button>
+            <button class="tab-btn" data-ztab="pending" onclick="filterZiadosti('pending', this)">⏳ Čakajúce</button>
+            <button class="tab-btn" data-ztab="approved" onclick="filterZiadosti('approved', this)">✅ Schválené</button>
+            <button class="tab-btn" data-ztab="rejected" onclick="filterZiadosti('rejected', this)">❌ Zamietnuté</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Zamestnanec</th><th>Pozícia</th><th>Od</th><th>Do</th><th>Typ</th><th>Poznámka</th><th>Podané</th><th>Stav</th><th>Akcie</th></tr></thead>
+              <tbody id="ziadostiTable"><tr class="loader-row"><td>Načítavam…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       <!-- ── MZDY ── -->
       <section id="mzdy">
         <div class="card" style="margin-bottom:20px;">
@@ -922,7 +961,7 @@
           <div class="card-header"><span class="card-title" id="mzdyTitle">Mzdový výkaz</span></div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Zamestnanec</th><th>Pozícia</th><th>Hrubý čas / Prestávky</th><th>Čistý čas</th><th>Sadzba</th><th>Hrubá mzda</th><th>Poznámka</th></tr></thead>
+              <thead><tr><th>Zamestnanec</th><th>Pozícia</th><th>Odprac. hodín</th><th>Hodinová sadzba</th><th>Hrubá mzda</th><th>Poznámka</th></tr></thead>
               <tbody id="mzdyTable"><tr class="empty-row"><td colspan="6">Zadaj mesiac a klikni Vypočítať.</td></tr></tbody>
             </table>
           </div>
@@ -1196,6 +1235,26 @@
   </div>
 </div>
 
+<div id="rejectModal" class="modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Zamietnuť žiadosť</h3>
+      <button class="modal-close" onclick="closeModal('rejectModal')">&#x2715;</button>
+    </div>
+    <input type="hidden" id="rejectZiadostUid">
+    <input type="hidden" id="rejectZiadostKey">
+    <div style="padding:12px 16px; background:var(--warning-light); border:1px solid #FDE68A; border-radius:var(--radius-sm); margin-bottom:16px; font-size:13px; color:var(--warning);">
+      <strong>⚠ Zamietnutie žiadosti</strong> — zamestnanec dostane notifikáciu o zamietnutí.
+    </div>
+    <label class="modal-label">Dôvod zamietnutia (nepovinné)</label>
+    <textarea id="rejectNote" class="modal-textarea" rows="3" placeholder="Napr. kapacitné dôvody, termín kolízia…"></textarea>
+    <div class="modal-footer">
+      <button class="btn btn-danger" onclick="confirmReject()">Zamietnuť žiadosť</button>
+      <button class="btn btn-ghost" onclick="closeModal('rejectModal')">Zrušiť</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
 import { getDatabase, ref, get, set, push, onValue } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
@@ -1381,7 +1440,6 @@ function startRealtimeListener() {
     allAdminRecordsCache = allRecords;
     allUsersCache = newUsersCache;
     dataLoaded = true;
-    checkMesko();
     const activeSection = document.querySelector('section.active');
     if (activeSection) {
       const id = activeSection.id;
@@ -1389,40 +1447,6 @@ function startRealtimeListener() {
       else if (['dochadzka','prestavky','pn'].includes(id)) loadSection(id);
     }
   });
-}
-
-// Skontroluje meskania dnes a pridá notifikácie
-function checkMesko() {
-  const today = todayStr();
-  const alreadyNotified = JSON.parse(localStorage.getItem('meskoNotified_' + today) || '[]');
-  const newNotified = [...alreadyNotified];
-
-  for (const uid in allUsersCache) {
-    if (uid === 'admin') continue;
-    const user = allUsersCache[uid];
-    if (!user.smena) continue;
-    const smena = smenyCache[user.smena];
-    if (!smena) continue;
-
-    const prichody = allAdminRecordsCache.filter(r =>
-      r.userId === uid && r.date === today && r.stav === 'prichod'
-    ).sort((a,b) => a.cas.localeCompare(b.cas));
-    if (!prichody.length) continue;
-
-    const firstPrichod = prichody[0];
-    const notifKey = uid + '_' + firstPrichod.time;
-    if (alreadyNotified.includes(notifKey)) continue; // už sme notifikovali
-
-    const [sh, sm2] = smena.start.split(':').map(Number);
-    const [ph, pm] = firstPrichod.time.split(':').map(Number);
-    const diffMin = (ph * 60 + pm) - (sh * 60 + sm2);
-
-    if (diffMin > 5) {
-      pushNotif(`⏰ ${user.name} prišiel o ${diffMin} min neskôr ako zmena "${smena.name}" (${smena.start})`, 'warn');
-      newNotified.push(notifKey);
-    }
-  }
-  localStorage.setItem('meskoNotified_' + today, JSON.stringify(newNotified));
 }
 
 function parseRecord(userId, userName, log, logKey, logType) {
@@ -1979,6 +2003,7 @@ window.loadSection = function(id) {
   else if (id === 'rozpis') renderRozpis();
   else if (id === 'vykaz') initVykaz();
   else if (id === 'roly') loadRolySection();
+  else if (id === 'ziadosti') loadZiadosti();
 };
 
 async function loadRolySection() {
@@ -2294,17 +2319,12 @@ window.calcMzdy = async function() {
     const logs = allAdminRecordsCache.filter(r =>
       r.userId === uid && r.date.startsWith(mesiac) && (r.stav === 'prichod' || r.stav === 'odchod')
     ).sort((a,b) => a.cas.localeCompare(b.cas));
-    const breaks = allAdminRecordsCache.filter(r =>
-      r.userId === uid && r.date.startsWith(mesiac) && r.stav === 'prestavka'
-    );
-    let grossMs = 0, lastPrichod = null;
+    let totalMs = 0, lastPrichod = null;
     logs.forEach(l => {
       if (l.stav === 'prichod') lastPrichod = new Date(l.cas);
-      else if (l.stav === 'odchod' && lastPrichod) { grossMs += new Date(l.cas) - lastPrichod; lastPrichod = null; }
+      else if (l.stav === 'odchod' && lastPrichod) { totalMs += new Date(l.cas) - lastPrichod; lastPrichod = null; }
     });
-    const breakMs = breaks.length * 15 * 60 * 1000;
-    const totalMs = Math.max(0, grossMs - breakMs);
-    result[uid] = { name, totalMs, grossMs, breakMs, breakCount: breaks.length, hours: totalMs/3600000 };
+    result[uid] = { name, totalMs, hours: totalMs/3600000 };
   }
   const entries = Object.values(result);
   const tbody = document.getElementById('mzdyTable');
@@ -2318,14 +2338,13 @@ window.calcMzdy = async function() {
     return `<tr>
       <td><div class="user-cell"><div class="user-avatar">${initials(e.name)}</div>${e.name}</div></td>
       <td>${getRoleBadgeHtml(uid)}</td>
-      <td><span class="time-cell">${msToHhMm(e.grossMs||e.totalMs)}</span>${e.breakCount>0?`<span style="font-size:11px;color:var(--warning);margin-left:6px;">−${msToHhMm(e.breakMs)} (${e.breakCount}× prestávka)</span>`:''}</td>
-      <td><strong style="color:var(--success);">${msToHhMm(e.totalMs)}</strong></td>
+      <td><span class="time-cell">${msToHhMm(e.totalMs)}</span></td>
       <td>${sadzba.toFixed(2)} €/h</td>
       <td><strong>${mzda.toFixed(2)} €</strong></td>
       <td style="font-size:12px; color:var(--text-muted);">${e.hours < 10 ? '⚠ Nízky počet hodín' : ''}</td>
     </tr>`;
   }).join('') +
-  `<tr style="background:var(--surface-2);"><td colspan="5" style="font-weight:700; text-align:right; color:var(--text-secondary);">CELKOM</td>
+  `<tr style="background:var(--surface-2);"><td colspan="4" style="font-weight:700; text-align:right; color:var(--text-secondary);">CELKOM</td>
   <td><strong style="color:var(--accent); font-size:16px;">${totalMzda.toFixed(2)} €</strong></td><td></td></tr>`;
 };
 window.exportMzdy = function() {
@@ -2795,6 +2814,201 @@ document.querySelectorAll('.tab-btn[data-tab]').forEach(btn => {
   });
 });
 
+// ─── ŽIADOSTI ────────────────────────────────────────────────────────────────
+
+let ziadostiCache = []; // { uid, key, ...data }
+let ziadostiFilter = 'all';
+
+window.filterZiadosti = function(filter, btn) {
+  ziadostiFilter = filter;
+  document.querySelectorAll('[data-ztab]').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderZiadostiTable();
+};
+
+window.loadZiadosti = async function() {
+  const tbody = document.getElementById('ziadostiTable');
+  tbody.innerHTML = '<tr class="loader-row"><td>Načítavam…</td></tr>';
+  await ensureDataLoaded();
+  try {
+    const snap = await get(ref(db, 'ziadosti'));
+    ziadostiCache = [];
+    if (snap.exists()) {
+      snap.forEach(userSnap => {
+        const uid = userSnap.key;
+        userSnap.forEach(zSnap => {
+          ziadostiCache.push({ uid, key: zSnap.key, ...zSnap.val() });
+        });
+      });
+    }
+    ziadostiCache.sort((a, b) => {
+      // Pending first, then by date desc
+      if (a.stav === 'pending' && b.stav !== 'pending') return -1;
+      if (b.stav === 'pending' && a.stav !== 'pending') return 1;
+      return (b.podane || '').localeCompare(a.podane || '');
+    });
+
+    // Badge update
+    const pendingCount = ziadostiCache.filter(z => z.stav === 'pending').length;
+    const badge = document.getElementById('ziadostiBadge');
+    if (pendingCount > 0) {
+      badge.textContent = pendingCount;
+      badge.style.display = 'inline-flex';
+      pushNotif(`${pendingCount} nová/nové žiadosť/žiadosti čakajú na schválenie`, 'warn');
+    } else {
+      badge.style.display = 'none';
+    }
+    document.getElementById('ziadostiPendingInfo').textContent =
+      pendingCount > 0 ? `${pendingCount} čakajú na spracovanie` : 'Všetky spracované';
+
+    renderZiadostiTable();
+  } catch(e) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="9">Chyba pri načítaní žiadostí.</td></tr>';
+    console.error(e);
+  }
+};
+
+function renderZiadostiTable() {
+  const tbody = document.getElementById('ziadostiTable');
+  let rows = ziadostiCache;
+  if (ziadostiFilter !== 'all') rows = rows.filter(z => z.stav === ziadostiFilter);
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="9">Žiadne ${ziadostiFilter === 'pending' ? 'čakajúce ' : ''}žiadosti.</td></tr>`;
+    return;
+  }
+
+  const tLabel = { dovolenka:'Dovolenka', navsteva_lekara:'Lekár', ospravedlnena:'Ospravedlnená', ine:'Iné' };
+  const stavBadge = {
+    pending:  '<span class="badge badge-warning">⏳ Čaká</span>',
+    approved: '<span class="badge badge-success">✅ Schválená</span>',
+    rejected: '<span class="badge badge-danger">❌ Zamietnutá</span>',
+  };
+
+  tbody.innerHTML = rows.map(z => {
+    const rowCls = z.stav === 'pending' ? 'ziadost-row-pending' : z.stav === 'approved' ? 'ziadost-row-approved' : 'ziadost-row-rejected';
+    const actionBtns = z.stav === 'pending'
+      ? `<div style="display:flex;gap:5px;">
+           <button class="btn btn-success btn-sm" onclick="approveZiadost('${z.uid}','${z.key}')">✓ Schváliť</button>
+           <button class="btn btn-outline-danger btn-sm" onclick="openRejectModal('${z.uid}','${z.key}')">✕ Zamietnuť</button>
+         </div>`
+      : z.stav === 'approved'
+        ? `<button class="btn btn-ghost btn-sm" onclick="revokeZiadost('${z.uid}','${z.key}')">Zrušiť schválenie</button>`
+        : `<span style="font-size:12px;color:var(--text-muted);">—</span>`;
+
+    const adminNote = z.adminNote
+      ? `<div style="font-size:11px;color:var(--danger);margin-top:2px;">💬 ${z.adminNote}</div>` : '';
+
+    return `<tr class="${rowCls}">
+      <td><div class="user-cell"><div class="user-avatar">${initials(z.meno||'?')}</div>${z.meno||'—'}</div></td>
+      <td>${getRoleBadgeHtml(z.uid)}</td>
+      <td><span class="time-cell">${z.od||'—'}</span></td>
+      <td><span class="time-cell">${z.do||'—'}</span></td>
+      <td><span class="badge badge-neutral" style="font-size:11px;">${tLabel[z.typ]||z.typ||'—'}</span></td>
+      <td style="font-size:12px;color:var(--text-muted);max-width:140px;">${z.poznamka||'—'}${adminNote}</td>
+      <td><span style="font-size:12px;color:var(--text-muted);">${z.podane||'—'}</span></td>
+      <td>${stavBadge[z.stav]||stavBadge.pending}</td>
+      <td>${actionBtns}</td>
+    </tr>`;
+  }).join('');
+}
+
+window.approveZiadost = async function(uid, key) {
+  const z = ziadostiCache.find(z => z.uid === uid && z.key === key);
+  if (!z) return;
+  if (!confirm(`Schváliť žiadosť pre ${z.meno} (${z.od} – ${z.do})?`)) return;
+  try {
+    await set(ref(db, `ziadosti/${uid}/${key}/stav`), 'approved');
+    // Automaticky pridaj do dovolenky
+    const newRef = push(ref(db, 'dovolenky'));
+    await set(newRef, { meno: z.meno, od: z.od, do: z.do, typ: z.typ, poznamka: z.poznamka || '', ziadostKey: key });
+    // Uprav cache
+    const idx = ziadostiCache.findIndex(z => z.uid === uid && z.key === key);
+    if (idx !== -1) ziadostiCache[idx].stav = 'approved';
+    // Odstráň notifikáciu
+    await set(ref(db, `adminNotifications/${key}`), null);
+    pushAudit('Žiadosť schválená', `${z.meno}: ${z.od} – ${z.do}`, 'info');
+    // Aktualizuj badge
+    const pendingCount = ziadostiCache.filter(z => z.stav === 'pending').length;
+    const badge = document.getElementById('ziadostiBadge');
+    badge.textContent = pendingCount;
+    if (pendingCount === 0) badge.style.display = 'none';
+    document.getElementById('ziadostiPendingInfo').textContent =
+      pendingCount > 0 ? `${pendingCount} čakajú na spracovanie` : 'Všetky spracované';
+    renderZiadostiTable();
+  } catch(e) { alert('Chyba pri schvaľovaní.'); console.error(e); }
+};
+
+window.openRejectModal = function(uid, key) {
+  document.getElementById('rejectZiadostUid').value = uid;
+  document.getElementById('rejectZiadostKey').value = key;
+  document.getElementById('rejectNote').value = '';
+  document.getElementById('rejectModal').classList.add('open');
+};
+
+window.confirmReject = async function() {
+  const uid = document.getElementById('rejectZiadostUid').value;
+  const key = document.getElementById('rejectZiadostKey').value;
+  const note = document.getElementById('rejectNote').value.trim();
+  const z = ziadostiCache.find(z => z.uid === uid && z.key === key);
+  if (!z) return;
+  try {
+    await set(ref(db, `ziadosti/${uid}/${key}/stav`), 'rejected');
+    if (note) await set(ref(db, `ziadosti/${uid}/${key}/adminNote`), note);
+    await set(ref(db, `adminNotifications/${key}`), null);
+    const idx = ziadostiCache.findIndex(z => z.uid === uid && z.key === key);
+    if (idx !== -1) { ziadostiCache[idx].stav = 'rejected'; if (note) ziadostiCache[idx].adminNote = note; }
+    pushAudit('Žiadosť zamietnutá', `${z.meno}: ${z.od} – ${z.do}${note ? ' | ' + note : ''}`, 'danger');
+    const pendingCount = ziadostiCache.filter(z => z.stav === 'pending').length;
+    const badge = document.getElementById('ziadostiBadge');
+    badge.textContent = pendingCount;
+    if (pendingCount === 0) badge.style.display = 'none';
+    document.getElementById('ziadostiPendingInfo').textContent =
+      pendingCount > 0 ? `${pendingCount} čakajú na spracovanie` : 'Všetky spracované';
+    closeModal('rejectModal');
+    renderZiadostiTable();
+  } catch(e) { alert('Chyba pri zamietaní.'); console.error(e); }
+};
+
+window.revokeZiadost = async function(uid, key) {
+  const z = ziadostiCache.find(z => z.uid === uid && z.key === key);
+  if (!z || !confirm(`Zrušiť schválenie pre ${z.meno}?`)) return;
+  try {
+    await set(ref(db, `ziadosti/${uid}/${key}/stav`), 'pending');
+    // Odstráň z dovolenky ak tam je
+    const dovSnap = await get(ref(db, 'dovolenky'));
+    if (dovSnap.exists()) {
+      dovSnap.forEach(snap => {
+        if (snap.val().ziadostKey === key) set(ref(db, `dovolenky/${snap.key}`), null);
+      });
+    }
+    const idx = ziadostiCache.findIndex(z => z.uid === uid && z.key === key);
+    if (idx !== -1) ziadostiCache[idx].stav = 'pending';
+    pushAudit('Schválenie zrušené', `${z.meno}: ${z.od} – ${z.do}`, 'warn');
+    renderZiadostiTable();
+  } catch(e) { alert('Chyba.'); console.error(e); }
+};
+
+// Načítaj počet pending žiadostí pri štarte (pre badge)
+async function checkPendingZiadosti() {
+  try {
+    const snap = await get(ref(db, 'ziadosti'));
+    let pendingCount = 0;
+    if (snap.exists()) {
+      snap.forEach(userSnap => {
+        userSnap.forEach(zSnap => {
+          if (zSnap.val().stav === 'pending') pendingCount++;
+        });
+      });
+    }
+    if (pendingCount > 0) {
+      const badge = document.getElementById('ziadostiBadge');
+      badge.textContent = pendingCount;
+      badge.style.display = 'inline-flex';
+    }
+  } catch(e) { console.error(e); }
+}
+
 const sectionMeta = {
   dashboard:    { title: 'Dashboard',         sub: 'Prehľad dochádzky' },
   dochadzka:    { title: 'Dochádzka',         sub: 'Príchody a odchody zamestnancov' },
@@ -2806,6 +3020,7 @@ const sectionMeta = {
   mzdy:         { title: 'Mzdový výkaz',      sub: 'Výpočet miezd podľa odpracovaných hodín' },
   pouzivatelia: { title: 'Používatelia',      sub: 'Správa účtov a čipov' },
   roly:         { title: 'Roly / Pozície',    sub: 'Správa pracovných pozícií a ich priradenie' },
+  ziadosti:     { title: 'Žiadosti',          sub: 'Žiadosti zamestnancov o neprítomnosť' },
   audit:        { title: 'Audit log',         sub: 'História zmien v systéme' },
   vykaz:        { title: 'Výkaz práce',       sub: 'Detailný prehľad aktivít každého zamestnanca' },
 };
@@ -2822,6 +3037,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   await loadSmenyFromDB();
   await loadRolesFromDB();
   populateRoleFilters();
+  checkPendingZiadosti();
 
   document.querySelectorAll('.nav-btn[data-target]').forEach(btn => {
     btn.addEventListener('click', () => {
