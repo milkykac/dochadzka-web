@@ -8,50 +8,54 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
-    --bg: #F0F2F5;
-    --surface: #FFFFFF;
-    --surface-2: #F7F8FA;
-    --border: #E2E5EA;
-    --text-primary: #111827;
-    --text-secondary: #6B7280;
-    --text-muted: #9CA3AF;
-    --accent: #1D4ED8;
-    --accent-light: #EFF6FF;
-    --success: #059669;
-    --success-light: #ECFDF5;
-    --danger: #DC2626;
-    --danger-light: #FEF2F2;
-    --warning: #D97706;
-    --warning-light: #FFFBEB;
-    --purple: #7C3AED;
-    --purple-light: #F5F3FF;
-    --teal: #0D9488;
-    --teal-light: #F0FDFA;
+    --bg: #F0F2F5; --surface: #FFFFFF; --surface-2: #F7F8FA;
+    --border: #E2E5EA; --text-primary: #111827; --text-secondary: #6B7280;
+    --text-muted: #9CA3AF; --accent: #1D4ED8; --accent-light: #EFF6FF;
+    --success: #059669; --success-light: #ECFDF5;
+    --danger: #DC2626; --danger-light: #FEF2F2;
+    --warning: #D97706; --warning-light: #FFFBEB;
+    --purple: #7C3AED; --purple-light: #F5F3FF;
+    --teal: #0D9488; --teal-light: #F0FDFA;
     --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
-    --radius-sm: 6px;
-    --radius-lg: 14px;
+    --shadow-lg: 0 10px 30px rgba(0,0,0,0.10);
+    --radius-sm: 6px; --radius-lg: 14px; --sidebar-w: 240px;
+  }
+  body.dark {
+    --bg: #0F1117; --surface: #1A1D27; --surface-2: #22263A;
+    --border: #2D3148; --text-primary: #F1F5F9; --text-secondary: #94A3B8;
+    --text-muted: #64748B; --accent-light: #1e3a5f;
+    --success-light: #052e16; --danger-light: #3b0a0a;
+    --warning-light: #2d1a00; --purple-light: #1e1040; --teal-light: #042f2e;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3); --shadow-lg: 0 10px 30px rgba(0,0,0,0.5);
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'DM Sans', sans-serif; background: var(--bg); min-height: 100vh; color: var(--text-primary); font-size: 14px; line-height: 1.5; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); min-height: 100vh; color: var(--text-primary); font-size: 14px; line-height: 1.5; transition: background 0.3s, color 0.3s; }
   .layout { display: flex; min-height: 100vh; }
 
-  /* SIDEBAR */
-  .sidebar { width: 240px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 50; box-shadow: var(--shadow-sm); }
+  /* ── OFFLINE BANNER ── */
+  .offline-banner {
+    display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 999;
+    background: var(--danger); color: white; padding: 10px 20px;
+    font-size: 13px; font-weight: 600; text-align: center;
+    align-items: center; justify-content: center; gap: 12px;
+  }
+  .offline-banner.show { display: flex; }
+  .offline-retry { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+  .offline-retry:hover { background: rgba(255,255,255,0.35); }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: var(--sidebar-w); background: var(--surface); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0;
+    z-index: 50; box-shadow: var(--shadow-sm); transition: transform 0.25s ease, background 0.3s;
+  }
   .sidebar-logo { padding: 24px 20px 20px; border-bottom: 1px solid var(--border); }
   .logo-mark { width: 36px; height: 36px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
   .logo-mark svg { width: 18px; height: 18px; fill: white; }
   .sidebar-logo h1 { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
   .sidebar-logo p { font-size: 11px; color: var(--text-muted); margin-top: 2px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
-
-  /* ROLE BADGE V SIDEBARI */
   .sidebar-role { margin-top: 10px; }
-  .role-badge-sidebar {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 5px 11px; border-radius: 20px;
-    font-size: 12px; font-weight: 600;
-    border: 1px solid;
-  }
+  .role-badge-sidebar { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid; }
 
   .sidebar-nav { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 2px; overflow-y: auto; }
   .nav-label { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; padding: 12px 8px 6px; }
@@ -61,70 +65,53 @@
   .nav-icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; opacity: 0.7; }
   .nav-btn.active .nav-icon { opacity: 1; }
   .nav-badge { background: var(--danger); color: white; font-size: 10px; font-weight: 700; min-width: 17px; height: 17px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; padding: 0 4px; margin-left: auto; }
-  .sidebar-footer { padding: 16px 12px; border-top: 1px solid var(--border); }
+
+  .sidebar-footer { padding: 16px 12px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; }
   .logout-btn { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: var(--radius-sm); border: none; background: transparent; color: var(--danger); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s; width: 100%; text-align: left; }
   .logout-btn:hover { background: var(--danger-light); }
+  .dark-toggle { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: var(--radius-sm); border: none; background: transparent; color: var(--text-secondary); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s; width: 100%; text-align: left; }
+  .dark-toggle:hover { background: var(--surface-2); color: var(--text-primary); }
 
-  /* MAIN */
-  .main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
-  .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 40; box-shadow: var(--shadow-sm); }
+  /* ── MOBILE ── */
+  .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 49; backdrop-filter: blur(2px); }
+  .sidebar-overlay.open { display: block; }
+  .hamburger { display: none; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface-2); cursor: pointer; flex-direction: column; gap: 4px; padding: 8px; }
+  .hamburger span { display: block; width: 16px; height: 2px; background: var(--text-primary); border-radius: 2px; }
+
+  /* ── MAIN ── */
+  .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+  .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 40; box-shadow: var(--shadow-sm); transition: background 0.3s; }
   .topbar-left h2 { font-size: 18px; font-weight: 700; letter-spacing: -0.4px; }
   .topbar-left p { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
   .topbar-right { display: flex; align-items: center; gap: 10px; }
   .topbar-badge { background: var(--success-light); color: var(--success); font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; border: 1px solid #A7F3D0; }
-  /* Role badge v topbare */
-  .topbar-role {
-    display: inline-flex; align-items: center; gap: 5px;
-    padding: 3px 10px; border-radius: 20px; font-size: 12px;
-    font-weight: 600; border: 1px solid;
-  }
+  .topbar-role { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid; }
 
   .content { padding: 28px 32px; }
   section { display: none; animation: fadeIn 0.2s ease; }
   section.active { display: block; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; } }
 
-  /* STATUS BANNER */
+  /* ── STATUS BANNER ── */
   .status-banner { padding: 16px 22px; border-radius: var(--radius-lg); margin-bottom: 24px; font-weight: 600; display: flex; align-items: center; gap: 12px; border: 1px solid; }
   .status-banner svg { width: 20px; height: 20px; flex-shrink: 0; }
   .st-prichod   { background: var(--success-light); color: var(--success); border-color: #A7F3D0; }
   .st-odchod    { background: var(--danger-light);  color: var(--danger);  border-color: #FECACA; }
-  .st-prestavka { background: var(--warning-light); color: var(--warning); border-color: #FDE68A; }
   .st-pn        { background: var(--purple-light);  color: var(--purple);  border-color: #DDD6FE; }
   .st-neutral   { background: var(--accent-light);  color: var(--accent);  border-color: #BFDBFE; }
 
-  /* PROFILE CARD */
-  .profile-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius-lg); padding: 20px 24px;
-    margin-bottom: 24px; display: flex; align-items: center;
-    gap: 18px; box-shadow: var(--shadow-sm);
-  }
-  .profile-avatar {
-    width: 52px; height: 52px; border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent), #7C3AED);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px; font-weight: 700; color: white;
-    flex-shrink: 0; letter-spacing: -1px;
-  }
+  /* ── PROFILE CARD ── */
+  .profile-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px 24px; margin-bottom: 24px; display: flex; align-items: center; gap: 18px; box-shadow: var(--shadow-sm); }
+  .profile-avatar { width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #7C3AED); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: white; flex-shrink: 0; }
   .profile-info { flex: 1; min-width: 0; }
   .profile-name { font-size: 17px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.4px; }
   .profile-meta { display: flex; align-items: center; gap: 8px; margin-top: 5px; flex-wrap: wrap; }
-  .profile-role {
-    display: inline-flex; align-items: center; gap: 5px;
-    padding: 4px 11px; border-radius: 20px; font-size: 13px;
-    font-weight: 600; border: 1px solid;
-  }
-  .profile-smena {
-    display: inline-flex; align-items: center; gap: 5px;
-    padding: 4px 11px; border-radius: 20px; font-size: 13px;
-    font-weight: 600; background: var(--accent-light); color: var(--accent);
-    border: 1px solid #BFDBFE;
-  }
+  .profile-role { display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px; border-radius: 20px; font-size: 13px; font-weight: 600; border: 1px solid; }
+  .profile-smena { display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px; border-radius: 20px; font-size: 13px; font-weight: 600; background: var(--accent-light); color: var(--accent); border: 1px solid #BFDBFE; }
 
-  /* STAT GRID */
+  /* ── STAT GRID ── */
   .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 14px; margin-bottom: 24px; }
-  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 20px; box-shadow: var(--shadow-sm); }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 20px; box-shadow: var(--shadow-sm); transition: background 0.3s; }
   .stat-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
   .stat-value { font-size: 24px; font-weight: 700; letter-spacing: -1px; line-height: 1; font-family: 'DM Mono', monospace; }
   .stat-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
@@ -133,40 +120,40 @@
   .c-warning { border-left: 3px solid var(--warning); }
   .c-purple  { border-left: 3px solid var(--purple); }
   .c-danger  { border-left: 3px solid var(--danger); }
+  .c-teal    { border-left: 3px solid var(--teal); }
 
-  /* SHIFT CARD */
-  .shift-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 22px; box-shadow: var(--shadow-sm); margin-bottom: 24px; display: flex; align-items: center; gap: 16px; }
-  .shift-icon { width: 42px; height: 42px; border-radius: 10px; background: var(--accent-light); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
-  .shift-name { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
-  .shift-time { font-size: 22px; font-weight: 700; font-family: 'DM Mono', monospace; color: var(--accent); }
-  .shift-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-
-  /* BAR CHART */
+  /* ── BAR CHART ── */
   .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 80px; }
   .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
   .bar { width: 100%; border-radius: 4px 4px 0 0; min-height: 2px; transition: height 0.4s ease; }
   .bar-label { font-size: 10px; color: var(--text-muted); }
   .bar-val { font-size: 10px; color: var(--text-secondary); font-weight: 600; }
 
-  /* CARDS */
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; margin-bottom: 20px; }
+  /* ── CARDS ── */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; margin-bottom: 20px; transition: background 0.3s; }
   .card-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
   .card-title { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
   .card-body { padding: 20px 24px; }
 
-  /* BUTTONS */
+  /* ── BUTTONS ── */
   .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: var(--radius-sm); border: none; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #1E40AF; transform: translateY(-1px); box-shadow: 0 4px 10px rgba(29,78,216,0.25); }
+  .btn-success { background: var(--success); color: white; }
+  .btn-success:hover { background: #047857; }
+  .btn-danger  { background: var(--danger); color: white; }
+  .btn-danger:hover  { background: #B91C1C; }
   .btn-ghost { background: var(--surface-2); color: var(--text-secondary); border: 1px solid var(--border); }
   .btn-ghost:hover { background: var(--border); color: var(--text-primary); }
   .btn-sm { padding: 5px 10px; font-size: 12px; }
 
-  /* FILTERS */
+  /* ── FILTERS ── */
   .filters { display: flex; gap: 10px; flex-wrap: wrap; padding: 16px 24px; background: var(--surface-2); border-bottom: 1px solid var(--border); }
   .filter-input { padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text-primary); background: var(--surface); transition: border-color 0.15s; outline: none; }
   .filter-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(29,78,216,0.08); }
   .filter-input[type="date"] { flex: 0 0 160px; }
 
-  /* TABLE */
+  /* ── TABLE ── */
   .table-wrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
   thead tr { background: var(--surface-2); border-bottom: 2px solid var(--border); }
@@ -179,7 +166,7 @@
   .loader-row td::before { content:''; display:inline-block; width:16px; height:16px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; margin-right:8px; vertical-align:-3px; }
   @keyframes spin { to { transform:rotate(360deg); } }
 
-  /* BADGES */
+  /* ── BADGES ── */
   .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; white-space: nowrap; }
   .badge::before { content:''; width:6px; height:6px; border-radius:50%; flex-shrink:0; }
   .badge-success { background:var(--success-light); color:var(--success); border:1px solid #A7F3D0; }
@@ -192,14 +179,16 @@
   .badge-purple::before  { background:var(--purple); }
   .badge-neutral { background:var(--surface-2); color:var(--text-secondary); border:1px solid var(--border); }
   .badge-neutral::before { background:var(--text-muted); }
+  .badge-accent  { background:var(--accent-light); color:var(--accent); border:1px solid #BFDBFE; }
+  .badge-accent::before  { background:var(--accent); }
   .time-cell { font-family:'DM Mono',monospace; font-size:13px; color:var(--text-secondary); }
 
-  /* KOMENTAR BUBBLE */
+  /* ── KOMENTAR BUBBLE ── */
   .komentar-bubble { display: inline-flex; align-items: flex-start; gap: 8px; background: #FFF7ED; border: 1px solid #FDE68A; color: #92400E; border-radius: 8px; padding: 7px 11px; font-size: 12px; line-height: 1.45; max-width: 300px; }
   .komentar-bubble .kb-head { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; opacity: 0.65; margin-bottom: 2px; }
   .komentar-bubble .kb-text { word-break: break-word; font-weight: 500; }
 
-  /* KOMENTARE */
+  /* ── KOMENTARE ── */
   .comment-list { display: flex; flex-direction: column; gap: 10px; }
   .comment-item { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: 10px; background: #FFF7ED; border: 1px solid #FDE68A; }
   .comment-item.is-new { border-color: var(--warning); box-shadow: 0 0 0 2px #FDE68A44; }
@@ -212,32 +201,83 @@
   .comment-text { font-size: 14px; color: #78350F; font-weight: 500; line-height: 1.5; }
   .new-pill { background: var(--danger); color: white; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 10px; margin-left: 6px; vertical-align: middle; }
 
-  /* DOVOLENKA */
+  /* ── DOVOLENKA / ŽIADOSTI ── */
   .dov-list { display: flex; flex-direction: column; gap: 8px; }
   .dov-item { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); gap: 12px; flex-wrap: wrap; }
   .dov-dates { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; }
   .dov-note { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 
-  @media (max-width: 768px) {
-    .sidebar { display: none; }
+  /* ── ŽIADOSŤ FORM ── */
+  .ziadost-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.4px; }
+  .form-input { padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text-primary); background: var(--surface); outline: none; transition: border-color 0.15s; }
+  .form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(29,78,216,0.08); }
+
+  /* ── ŽIADOSŤ STATUS CARD ── */
+  .ziadost-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); background: var(--surface-2);
+    gap: 12px; flex-wrap: wrap;
+    transition: box-shadow 0.15s;
+  }
+  .ziadost-item.pending  { border-left: 3px solid var(--warning); }
+  .ziadost-item.approved { border-left: 3px solid var(--success); }
+  .ziadost-item.rejected { border-left: 3px solid var(--danger); }
+  .ziadost-left { display: flex; flex-direction: column; gap: 3px; }
+  .ziadost-dates { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  .ziadost-type  { font-size: 12px; color: var(--text-muted); }
+  .ziadost-note  { font-size: 12px; color: var(--text-secondary); font-style: italic; }
+  .ziadost-admin-note { font-size: 12px; color: var(--danger); font-weight: 500; margin-top: 2px; }
+
+  /* ── PRESTÁVKY LEGENDA ── */
+  .break-legend {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--text-muted);
+    padding: 8px 12px; background: var(--surface-2);
+    border-radius: var(--radius-sm); border: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .sidebar { transform: translateX(-100%); z-index: 60; }
+    .sidebar.mobile-open { transform: translateX(0); box-shadow: var(--shadow-lg); }
     .main { margin-left: 0; }
     .content { padding: 16px; }
     .topbar { padding: 14px 16px; }
+    .hamburger { display: flex; }
+    .ziadost-form { grid-template-columns: 1fr; }
+    .dash-two-col { grid-template-columns: 1fr !important; }
+  }
+  @media (max-width: 600px) {
+    .stat-grid { grid-template-columns: 1fr 1fr; }
+    .card-header { flex-direction: column; align-items: flex-start; }
   }
 </style>
 </head>
 <body>
+
+<!-- OFFLINE BANNER -->
+<div class="offline-banner" id="offlineBanner">
+  <span>⚠ Spojenie so serverom zlyhalo — dáta môžu byť neaktuálne</span>
+  <button class="offline-retry" onclick="retryLoad()">↻ Skúsiť znova</button>
+</div>
+
 <div class="layout">
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
   <!-- SIDEBAR -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
       <div class="logo-mark">
         <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
       </div>
       <h1>Dochádzka</h1>
       <p>Zamestnanec</p>
-      <!-- ROLA V SIDEBARI -->
       <div class="sidebar-role">
         <span id="sidebarRoleBadge" class="role-badge-sidebar" style="display:none;"></span>
       </div>
@@ -249,10 +289,9 @@
         <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span>
         Dashboard
       </button>
-
       <div class="nav-label">Moje záznamy</div>
       <button class="nav-btn" data-target="dochadzka">
-        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span>
         Dochádzka
       </button>
       <button class="nav-btn" data-target="prestavky">
@@ -263,7 +302,6 @@
         <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>
         PN
       </button>
-
       <div class="nav-label">Komunikácia</div>
       <button class="nav-btn" data-target="komentare" id="navKomentare">
         <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
@@ -273,10 +311,15 @@
       <button class="nav-btn" data-target="dovolenka">
         <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
         Dovolenka
+        <span class="nav-badge" id="navZiadostBadge" style="display:none;">!</span>
       </button>
     </nav>
 
     <div class="sidebar-footer">
+      <button class="dark-toggle" onclick="toggleDark()" id="darkToggleBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        Tmavý režim
+      </button>
       <button class="logout-btn" id="logoutBtn">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         Odhlásiť sa
@@ -287,12 +330,16 @@
   <!-- MAIN -->
   <div class="main">
     <header class="topbar">
-      <div class="topbar-left">
-        <h2>Vitaj, <span id="userName">Načítavam...</span></h2>
-        <p id="topbarSub">Tvoj osobný prehľad dochádzky</p>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <button class="hamburger" onclick="openSidebar()">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="topbar-left">
+          <h2>Vitaj, <span id="userName">Načítavam...</span></h2>
+          <p id="topbarSub">Tvoj osobný prehľad dochádzky</p>
+        </div>
       </div>
       <div class="topbar-right">
-        <!-- ROLA V TOPBARE -->
         <span id="topbarRoleBadge" class="topbar-role" style="display:none;"></span>
         <span class="topbar-badge">Zamestnanec</span>
       </div>
@@ -307,7 +354,6 @@
           <span id="statusText">Načítavam posledný stav...</span>
         </div>
 
-        <!-- PROFILE CARD S ROLOU -->
         <div class="profile-card" id="profileCard" style="display:none;">
           <div class="profile-avatar" id="profileAvatar">??</div>
           <div class="profile-info">
@@ -323,22 +369,22 @@
           <div class="stat-card c-accent">
             <div class="stat-label">Dnes odpracované</div>
             <div class="stat-value" id="statDnes">00:00</div>
-            <div class="stat-sub">h:mm</div>
+            <div class="stat-sub" id="statDnesSub">h:mm</div>
           </div>
           <div class="stat-card c-success">
             <div class="stat-label">Tento týždeň</div>
             <div class="stat-value" id="statTyzden">00:00</div>
-            <div class="stat-sub">h:mm</div>
+            <div class="stat-sub">h:mm (čistý čas)</div>
           </div>
           <div class="stat-card c-warning">
             <div class="stat-label">Tento mesiac</div>
             <div class="stat-value" id="statMesiac">00:00</div>
-            <div class="stat-sub">h:mm</div>
+            <div class="stat-sub">h:mm (čistý čas)</div>
           </div>
-          <div class="stat-card c-purple">
+          <div class="stat-card c-teal">
             <div class="stat-label">Prestávky dnes</div>
             <div class="stat-value" id="statPrest">0</div>
-            <div class="stat-sub">záznamy</div>
+            <div class="stat-sub" id="statPrestSub">záznamy</div>
           </div>
           <div class="stat-card c-danger">
             <div class="stat-label">Nové správy</div>
@@ -347,7 +393,7 @@
           </div>
         </div>
 
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;" class="dash-two-col">
           <div class="card">
             <div class="card-header"><span class="card-title">Hodiny tento týždeň</span></div>
             <div class="card-body"><div class="bar-chart" id="weekChart"><p style="color:var(--text-muted);font-size:13px;">Načítavam…</p></div></div>
@@ -369,16 +415,13 @@
         <div class="card">
           <div class="card-header">
             <span class="card-title">Záznamy dochádzky</span>
-            <button class="btn btn-ghost btn-sm" onclick="exportTable('dochadzka')" data-export-table="dochadzka">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Export XLSX
-            </button>
+            <button class="btn btn-ghost btn-sm" onclick="exportTable('dochadzka')" data-export-table="dochadzka">Export XLSX</button>
           </div>
           <div class="filters"><input type="date" id="dateDochadzka" class="filter-input" onchange="renderTables()"></div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Čas</th><th>Typ</th><th>Poznámka od admina</th></tr></thead>
-              <tbody id="dochadzkaTable"><tr class="loader-row"><td colspan="3">Načítavam…</td></tr></tbody>
+              <thead><tr><th>Čas</th><th>Typ</th><th>Odprac. čas</th><th>Poznámka od admina</th></tr></thead>
+              <tbody id="dochadzkaTable"><tr class="loader-row"><td colspan="4">Načítavam…</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -389,12 +432,14 @@
         <div class="card">
           <div class="card-header">
             <span class="card-title">Prestávky</span>
-            <button class="btn btn-ghost btn-sm" onclick="exportTable('prestavky')" data-export-table="prestavky">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Export XLSX
-            </button>
+            <button class="btn btn-ghost btn-sm" onclick="exportTable('prestavky')" data-export-table="prestavky">Export XLSX</button>
           </div>
           <div class="filters"><input type="date" id="datePrestavky" class="filter-input" onchange="renderTables()"></div>
+          <div class="card-body" style="padding:12px 24px 0;">
+            <div class="break-legend">
+              ⏸ Prestávky sú automaticky odpočítané od odpracovaného času v štatistikách.
+            </div>
+          </div>
           <div class="table-wrap">
             <table>
               <thead><tr><th>Čas</th><th>Typ</th><th>Poznámka od admina</th></tr></thead>
@@ -409,10 +454,7 @@
         <div class="card">
           <div class="card-header">
             <span class="card-title">PN — Pracovná neschopnosť</span>
-            <button class="btn btn-ghost btn-sm" onclick="exportTable('pn')" data-export-table="pn">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Export XLSX
-            </button>
+            <button class="btn btn-ghost btn-sm" onclick="exportTable('pn')" data-export-table="pn">Export XLSX</button>
           </div>
           <div class="filters"><input type="date" id="datePN" class="filter-input" onchange="renderTables()"></div>
           <div class="table-wrap">
@@ -424,7 +466,7 @@
         </div>
       </section>
 
-      <!-- SPRAVY OD ADMINA -->
+      <!-- KOMENTARE -->
       <section id="komentare">
         <div class="card">
           <div class="card-header">
@@ -439,10 +481,59 @@
         </div>
       </section>
 
-      <!-- DOVOLENKA -->
+      <!-- DOVOLENKA + ŽIADOSTI -->
       <section id="dovolenka">
+
+        <!-- NOVÁ ŽIADOSŤ -->
+        <div class="card" style="margin-bottom:20px;">
+          <div class="card-header"><span class="card-title">Požiadať o neprítomnosť</span></div>
+          <div class="card-body">
+            <div class="ziadost-form">
+              <div class="form-group">
+                <label class="form-label">Od</label>
+                <input type="date" id="ziadOd" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Do</label>
+                <input type="date" id="ziadDo" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Typ</label>
+                <select id="ziadTyp" class="form-input">
+                  <option value="dovolenka">Dovolenka</option>
+                  <option value="navsteva_lekara">Návšteva lekára</option>
+                  <option value="ospravedlnena">Ospravedlnená absencia</option>
+                  <option value="ine">Iné</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Poznámka (nepovinné)</label>
+                <input type="text" id="ziadPoznamka" class="form-input" placeholder="Dôvod, upresnienie…">
+              </div>
+              <div class="form-group" style="grid-column:1/-1; display:flex; justify-content:flex-end;">
+                <button class="btn btn-primary" onclick="submitZiadost()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                  Odoslať žiadosť
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MOJE ŽIADOSTI -->
+        <div class="card" style="margin-bottom:20px;">
+          <div class="card-header">
+            <span class="card-title">Moje žiadosti</span>
+            <span id="ziadostCount" style="font-size:13px; color:var(--text-muted);"></span>
+          </div>
+          <div class="card-body">
+            <div id="ziadostList"><p style="color:var(--text-muted);font-size:13px;">Žiadne žiadosti.</p></div>
+          </div>
+        </div>
+
+        <!-- SCHVÁLENÉ NEPRÍTOMNOSTI (pridané adminom) -->
         <div class="card">
-          <div class="card-header"><span class="card-title">Moje plánované neprítomnosti</span></div>
+          <div class="card-header"><span class="card-title">Evidencia neprítomností</span></div>
           <div class="card-body">
             <div class="dov-list" id="dovolList">
               <p style="color:var(--text-muted);font-size:13px;">Žiadne záznamy.</p>
@@ -457,7 +548,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+import { getDatabase, ref, get, push, set } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBsYrbYtP4E5blWbKlrJ6iI9v6YPAYYp0g",
@@ -475,53 +566,54 @@ const db  = getDatabase(app);
 
 const userId = localStorage.getItem('uid');
 if (!userId)             { alert('Nie si prihlásený!'); window.location.href = 'index.html'; }
-else if (userId === 'admin') { window.location.href = 'admin.html'; }
+else if (userId==='admin') { window.location.href = 'admin.html'; }
 
-// STATE
-let allRecords = [];
-let allKom     = [];
-let myName     = '';
-const seenKey  = `seenKom_${userId}`;
+// ── STATE ────────────────────────────────────────────────────────────────────
+let allRecords  = [];
+let allKom      = [];
+let myName      = '';
+let myZiadosti  = [];
+const seenKey   = `seenKom_${userId}`;
 
-// ── COLOR MAP pre roly ────────────────────────────────────────────────────────
+// ── COLOR MAP ────────────────────────────────────────────────────────────────
 const colorVarMap = {
-  accent:  { bg: '#EFF6FF', text: '#1D4ED8', border: '#BFDBFE' },
-  success: { bg: '#ECFDF5', text: '#059669', border: '#A7F3D0' },
-  danger:  { bg: '#FEF2F2', text: '#DC2626', border: '#FECACA' },
-  warning: { bg: '#FFFBEB', text: '#D97706', border: '#FDE68A' },
-  purple:  { bg: '#F5F3FF', text: '#7C3AED', border: '#DDD6FE' },
-  teal:    { bg: '#F0FDFA', text: '#0D9488', border: '#99F6E4' },
+  accent:  { bg:'#EFF6FF', text:'#1D4ED8', border:'#BFDBFE' },
+  success: { bg:'#ECFDF5', text:'#059669', border:'#A7F3D0' },
+  danger:  { bg:'#FEF2F2', text:'#DC2626', border:'#FECACA' },
+  warning: { bg:'#FFFBEB', text:'#D97706', border:'#FDE68A' },
+  purple:  { bg:'#F5F3FF', text:'#7C3AED', border:'#DDD6FE' },
+  teal:    { bg:'#F0FDFA', text:'#0D9488', border:'#99F6E4' },
 };
 
-function getRoleStyle(color) {
-  return colorVarMap[color] || colorVarMap.accent;
-}
+// ── DARK MODE ─────────────────────────────────────────────────────────────────
+window.toggleDark = function() {
+  document.body.classList.toggle('dark');
+  const isDark = document.body.classList.contains('dark');
+  localStorage.setItem('darkMode', isDark ? '1' : '0');
+  const btn = document.getElementById('darkToggleBtn');
+  btn.innerHTML = isDark
+    ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg> Svetlý režim'
+    : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg> Tmavý režim';
+};
 
-// Nastav rola badge na konkrétny element
-function applyRoleBadge(el, role) {
-  if (!role || !el) return;
-  const c = getRoleStyle(role.color);
-  const label = role.label || role.name;
-  el.style.display = 'inline-flex';
-  el.style.background = c.bg;
-  el.style.color = c.text;
-  el.style.borderColor = c.border;
-  el.innerHTML = `${role.emoji || ''} ${label}`;
-}
+// ── MOBILE MENU ───────────────────────────────────────────────────────────────
+window.openSidebar  = () => { document.getElementById('sidebar').classList.add('mobile-open'); document.getElementById('sidebarOverlay').classList.add('open'); };
+window.closeSidebar = () => { document.getElementById('sidebar').classList.remove('mobile-open'); document.getElementById('sidebarOverlay').classList.remove('open'); };
 
-// HELPERS
-function initials(name) {
-  return (name || '?').split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 2);
-}
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function initials(n) { return (n||'?').split(' ').map(w=>w[0]).join('').toUpperCase().substring(0,2); }
+
 function msToHhMm(ms) {
   if (!ms || ms < 0) return '00:00';
-  const m = Math.floor(ms / 60000), h = Math.floor(m / 60);
+  const m = Math.floor(ms/60000), h = Math.floor(m/60);
   return `${String(h).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;
 }
+
 function badgeFor(stav, raw) {
   const map = { prichod:'badge-success', odchod:'badge-danger', prestavka:'badge-warning', pn:'badge-purple' };
   return `<span class="badge ${map[stav]||'badge-neutral'}">${raw}</span>`;
 }
+
 function todayStr() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -531,29 +623,64 @@ function mondayStr() {
   d.setDate(d.getDate()-dow);
   return d.toISOString().substring(0,10);
 }
-function calcWork(records, prefix) {
+function nowStr() {
+  const n = new Date();
+  return `${String(n.getDate()).padStart(2,'0')}.${String(n.getMonth()+1).padStart(2,'0')}.${n.getFullYear()} ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`;
+}
+
+// ── VÝPOČET ODPRACOVANÉHO ČASU (s odpočtom prestávok) ─────────────────────
+// Prestávky sú zaznamenané ako jednotlivé "prestavka" záznamy.
+// Predpokladáme pevnú dĺžku prestávky 30 min za každý záznam — alebo vypočítame
+// ak sú párové (začiatok/koniec). V tomto systéme je každý záznam jeden bod,
+// preto odčítame 30 min za každú prestávku v danom dni.
+const BREAK_MINUTES = 30;
+
+function calcWorkNet(records, prefix) {
+  // Hrubý odpracovaný čas
   const logs = records
     .filter(r => (r.stav==='prichod'||r.stav==='odchod') && r.cas.startsWith(prefix))
     .sort((a,b) => a.cas.localeCompare(b.cas));
-  let total=0, last=null;
+  let totalMs=0, last=null;
   logs.forEach(l => {
     if (l.stav==='prichod') last=new Date(l.cas);
-    else if (l.stav==='odchod' && last) { total+=new Date(l.cas)-last; last=null; }
+    else if (l.stav==='odchod' && last) { totalMs+=new Date(l.cas)-last; last=null; }
   });
-  return total;
+  // Odpočet prestávok
+  const breaks = records.filter(r => r.stav==='prestavka' && r.cas.startsWith(prefix)).length;
+  const breakMs = breaks * BREAK_MINUTES * 60000;
+  return Math.max(0, totalMs - breakMs);
 }
 
-// ── LOAD DATA ────────────────────────────────────────────────────────────────
+// Pre tabuľku — odpracovaný čas medzi príchodom a odchodom (bez prestávok)
+function calcDayPairs(dayRecords) {
+  const io = dayRecords.filter(r => r.stav==='prichod'||r.stav==='odchod').sort((a,b)=>a.cas.localeCompare(b.cas));
+  const breaks = dayRecords.filter(r => r.stav==='prestavka').length;
+  let totalMs=0, last=null;
+  io.forEach(l => {
+    if (l.stav==='prichod') last=new Date(l.cas);
+    else if (l.stav==='odchod' && last) { totalMs+=new Date(l.cas)-last; last=null; }
+  });
+  const breakMs = breaks * BREAK_MINUTES * 60000;
+  return { gross: totalMs, net: Math.max(0, totalMs - breakMs), breaks };
+}
+
+// ── FIREBASE RETRY ────────────────────────────────────────────────────────────
+window.retryLoad = function() {
+  document.getElementById('offlineBanner').classList.remove('show');
+  loadUserData();
+};
+
+// ── LOAD DATA ─────────────────────────────────────────────────────────────────
 async function loadUserData() {
   try {
-    const [userSnap, smenySnap, rolesSnap] = await Promise.all([
+    const [userSnap, smenySnap, rolesSnap, ziadostiSnap] = await Promise.all([
       get(ref(db, `users/${userId}`)),
       get(ref(db, 'smeny')),
-      get(ref(db, 'roles'))
+      get(ref(db, 'roles')),
+      get(ref(db, `ziadosti/${userId}`))
     ]);
 
     if (!userSnap.exists()) {
-      document.getElementById('userName').textContent = '(Neznámy)';
       setStatus('st-neutral', 'Chyba: dáta nenájdené.');
       return;
     }
@@ -565,368 +692,381 @@ async function loadUserData() {
     myName = u.name || '(bez mena)';
     document.getElementById('userName').textContent = myName;
 
-    // ── ROLA ──────────────────────────────────────────────────────────────────
+    // ── Žiadosti ──
+    myZiadosti = ziadostiSnap.exists()
+      ? Object.entries(ziadostiSnap.val()).map(([k,v])=>({...v, _key:k})).sort((a,b)=>b.podane.localeCompare(a.podane))
+      : [];
+    renderZiadosti();
+
+    // Badge pre nevybavené žiadosti
+    const pendingCount = myZiadosti.filter(z => z.stav==='pending').length;
+    const zBadge = document.getElementById('navZiadostBadge');
+    if (pendingCount > 0) { zBadge.textContent = pendingCount; zBadge.style.display='inline-flex'; }
+    else zBadge.style.display='none';
+
+    // ── Rola ──
     const myRole = u.rola && roles[u.rola] ? roles[u.rola] : null;
-
     if (myRole) {
-      const c = getRoleStyle(myRole.color);
+      const c = colorVarMap[myRole.color] || colorVarMap.accent;
       const label = myRole.label || myRole.name;
+      const setRoleBadge = (el) => {
+        el.style.display='inline-flex'; el.style.background=c.bg;
+        el.style.color=c.text; el.style.borderColor=c.border;
+        el.innerHTML=`${myRole.emoji||''} ${label}`;
+      };
+      setRoleBadge(document.getElementById('topbarRoleBadge'));
+      setRoleBadge(document.getElementById('sidebarRoleBadge'));
+      document.getElementById('topbarSub').textContent = `${myRole.emoji||'💼'} ${myRole.name} · Tvoj osobný prehľad`;
 
-      // Topbar
-      const tbRole = document.getElementById('topbarRoleBadge');
-      tbRole.style.display = 'inline-flex';
-      tbRole.style.background = c.bg;
-      tbRole.style.color = c.text;
-      tbRole.style.borderColor = c.border;
-      tbRole.innerHTML = `${myRole.emoji || ''} ${label}`;
-
-      // Sidebar
-      const sbRole = document.getElementById('sidebarRoleBadge');
-      sbRole.style.display = 'inline-flex';
-      sbRole.style.background = c.bg;
-      sbRole.style.color = c.text;
-      sbRole.style.borderColor = c.border;
-      sbRole.innerHTML = `${myRole.emoji || ''} ${label}`;
-
-      // Topbar sub
-      document.getElementById('topbarSub').textContent = `${myRole.emoji || '💼'} ${myRole.name} · Tvoj osobný prehľad`;
-    }
-
-    // ── PROFILE CARD ──────────────────────────────────────────────────────────
-    document.getElementById('profileCard').style.display = 'flex';
-    document.getElementById('profileAvatar').textContent = initials(myName);
-    document.getElementById('profileName').textContent = myName;
-
-    if (myRole) {
       const prEl = document.getElementById('profileRoleBadge');
-      prEl.className = 'profile-role';
-      const c = getRoleStyle(myRole.color);
-      prEl.style.display = 'inline-flex';
-      prEl.style.background = c.bg;
-      prEl.style.color = c.text;
-      prEl.style.borderColor = c.border;
-      prEl.innerHTML = `${myRole.emoji || ''} ${myRole.label || myRole.name}`;
+      prEl.className='profile-role';
+      prEl.style.display='inline-flex'; prEl.style.background=c.bg;
+      prEl.style.color=c.text; prEl.style.borderColor=c.border;
+      prEl.innerHTML=`${myRole.emoji||''} ${myRole.label||myRole.name}`;
     }
 
+    // ── Profil karta ──
+    document.getElementById('profileCard').style.display='flex';
+    document.getElementById('profileAvatar').textContent=initials(myName);
+    document.getElementById('profileName').textContent=myName;
     if (u.smena && smeny[u.smena]) {
       const s = smeny[u.smena];
-      const smenaEl = document.getElementById('profileSmenaBadge');
-      smenaEl.style.display = 'inline-flex';
-      smenaEl.innerHTML = `🗓️ ${s.name} · ${s.start}–${s.end}`;
+      const el = document.getElementById('profileSmenaBadge');
+      el.style.display='inline-flex';
+      el.innerHTML=`🗓️ ${s.name} · ${s.start}–${s.end}`;
     }
 
-    // ── PARSE RECORDS ─────────────────────────────────────────────────────────
-    const records = [], kom = [];
-
+    // ── Parse záznamy ──
+    const records=[], kom=[];
     ['dochadzka','prestavky','pn'].forEach(logType => {
-      Object.values(u[logType] || {}).forEach(log => {
+      Object.values(u[logType]||{}).forEach(log => {
         if (!log?.cas || !log?.typ) return;
-
-        let clean = String(log.cas), iso = clean, display = clean;
-        const m = clean.match(/(\d{1,2})\.(\d{1,2})\.(\d{4}) (\d{1,2}:\d{2})/);
-
+        let clean=String(log.cas), iso=clean, display=clean;
+        const m=clean.match(/(\d{1,2})\.(\d{1,2})\.(\d{4}) (\d{1,2}:\d{2})/);
         if (m) {
-          const [,d,mo,y,t] = m;
-          iso = `${y}-${mo.padStart(2,'0')}-${d.padStart(2,'0')} ${t}`;
-          display = `${d.padStart(2,'0')}.${mo.padStart(2,'0')}.${y} ${t}`;
+          const [,d,mo,y,t]=m;
+          iso=`${y}-${mo.padStart(2,'0')}-${d.padStart(2,'0')} ${t}`;
+          display=`${d.padStart(2,'0')}.${mo.padStart(2,'0')}.${y} ${t}`;
         } else if (clean.includes('T')) {
-          iso = clean.replace('T',' ');
-          const [dt,ti] = iso.split(' ');
-          const [y,mo,d] = dt.split('-');
-          display = `${d}.${mo}.${y} ${(ti||'').substring(0,5)}`;
+          iso=clean.replace('T',' ');
+          const [dt,ti]=iso.split(' '), [y,mo,d]=dt.split('-');
+          display=`${d}.${mo}.${y} ${(ti||'').substring(0,5)}`;
         } else if (clean.includes('-') && clean.length>=16) {
-          iso = clean;
-          const [dt,ti] = iso.split(' ');
-          const [y,mo,d] = dt.split('-');
-          display = `${d}.${mo}.${y} ${(ti||'').substring(0,5)}`;
+          iso=clean;
+          const [dt,ti]=iso.split(' '), [y,mo,d]=dt.split('-');
+          display=`${d}.${mo}.${y} ${(ti||'').substring(0,5)}`;
         } else return;
 
-        const ct = String(log.typ).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-        let stav = null;
-        if (ct.includes('prichod'))        stav='prichod';
-        else if (ct.includes('odchod'))    stav='odchod';
+        const ct=String(log.typ).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+        let stav=null;
+        if (ct.includes('prichod')) stav='prichod';
+        else if (ct.includes('odchod')) stav='odchod';
         else if (ct.includes('prestavka')) stav='prestavka';
-        else if (ct.includes('pn'))        stav='pn';
+        else if (ct.includes('pn')) stav='pn';
         if (!stav) return;
 
-        if (!records.some(r => r.cas===iso && r.stav===stav)) {
-          const rec = { cas:iso, casDisplay:display, date:iso.substring(0,10), time:iso.substring(11,16), stav, rawType:log.typ.toUpperCase(), komentar:log.komentar||null, logType };
+        if (!records.some(r=>r.cas===iso&&r.stav===stav)) {
+          const rec={cas:iso,casDisplay:display,date:iso.substring(0,10),time:iso.substring(11,16),stav,rawType:log.typ.toUpperCase(),komentar:log.komentar||null,logType};
           records.push(rec);
           if (log.komentar) kom.push(rec);
         }
       });
     });
 
-    records.sort((a,b) => b.cas.localeCompare(a.cas));
-    allRecords = records;
-    allKom = [...kom].sort((a,b) => b.cas.localeCompare(a.cas));
+    records.sort((a,b)=>b.cas.localeCompare(a.cas));
+    allRecords=records; allKom=[...kom].sort((a,b)=>b.cas.localeCompare(a.cas));
 
-    // ── STATUS BANNER ─────────────────────────────────────────────────────────
-    const last = records.find(r => r.stav!=='prestavka');
-    const statusMap = {
-      prichod: ['st-prichod', '✅ Si prihlásený — posledný stav: PRÍCHOD'],
-      odchod:  ['st-odchod',  '🔴 Si odhlásený — posledný stav: ODCHOD'],
-      pn:      ['st-pn',      '🏥 Si na PN — posledný stav: PRACOVNÁ NESCHOPNOSŤ'],
-    };
-    const [cls, txt] = statusMap[last?.stav] || ['st-neutral','ℹ Žiadny záznam nenájdený'];
-    setStatus(cls, txt);
+    // ── Status ──
+    const last=records.find(r=>r.stav!=='prestavka');
+    const sm={ prichod:['st-prichod','✅ Si prihlásený — posledný stav: PRÍCHOD'], odchod:['st-odchod','🔴 Si odhlásený — posledný stav: ODCHOD'], pn:['st-pn','🏥 Si na PN'] };
+    const [cls,txt]=sm[last?.stav]||['st-neutral','ℹ Žiadny záznam nenájdený'];
+    setStatus(cls,txt);
 
-    // ── ŠTATISTIKY ────────────────────────────────────────────────────────────
-    const today = todayStr(), mon = mondayStr(), month = today.substring(0,7);
-    document.getElementById('statDnes').textContent   = msToHhMm(calcWork(records, today));
-    document.getElementById('statMesiac').textContent = msToHhMm(calcWork(records, month));
+    // ── Štatistiky (s odpočtom prestávok) ──
+    const today=todayStr(), mon=mondayStr(), month=today.substring(0,7);
+    const dnesNet = calcWorkNet(records, today);
+    const todayBreaks = records.filter(r=>r.stav==='prestavka'&&r.date===today).length;
 
-    let weekMs = 0;
-    for (let i=0; i<7; i++) {
-      const d = new Date(mon); d.setDate(d.getDate()+i);
-      weekMs += calcWork(records, d.toISOString().substring(0,10));
+    document.getElementById('statDnes').textContent = msToHhMm(dnesNet);
+    document.getElementById('statDnesSub').textContent = todayBreaks > 0
+      ? `čistý čas (−${todayBreaks}× prestávka)`
+      : 'h:mm (čistý čas)';
+
+    document.getElementById('statMesiac').textContent = msToHhMm(calcWorkNet(records, month));
+    document.getElementById('statPrest').textContent  = todayBreaks;
+    document.getElementById('statPrestSub').textContent = `× ${BREAK_MINUTES} min = ${msToHhMm(todayBreaks*BREAK_MINUTES*60000)} odpočtu`;
+
+    let weekMs=0;
+    for (let i=0;i<7;i++) {
+      const d=new Date(mon); d.setDate(d.getDate()+i);
+      weekMs+=calcWorkNet(records, d.toISOString().substring(0,10));
     }
-    document.getElementById('statTyzden').textContent = msToHhMm(weekMs);
-    document.getElementById('statPrest').textContent  = records.filter(r => r.stav==='prestavka' && r.date===today).length;
+    document.getElementById('statTyzden').textContent=msToHhMm(weekMs);
 
-    // ── NOVÉ KOMENTÁRE ────────────────────────────────────────────────────────
-    const seen = JSON.parse(localStorage.getItem(seenKey)||'[]');
-    const newKom = allKom.filter(k => !seen.includes(k.cas+'|'+k.komentar));
-    const nc = newKom.length;
-    document.getElementById('statNew').textContent = nc;
-    if (nc > 0) {
-      const badge = document.getElementById('navBadge');
-      badge.textContent = nc; badge.style.display = 'inline-flex';
-    }
+    // Nové komentáre
+    const seen=JSON.parse(localStorage.getItem(seenKey)||'[]');
+    const nc=allKom.filter(k=>!seen.includes(k.cas+'|'+k.komentar)).length;
+    document.getElementById('statNew').textContent=nc;
+    if (nc>0) { const b=document.getElementById('navBadge'); b.textContent=nc; b.style.display='inline-flex'; }
 
-    // ── RENDER ────────────────────────────────────────────────────────────────
     renderTables();
-    buildWeekChart(records, mon);
+    buildWeekChart(records,mon);
     renderKomSection(seen);
     renderDashKom(seen);
     renderDovolenka(myName);
 
   } catch(e) {
     console.error(e);
-    setStatus('st-neutral', 'Kritická chyba pri načítaní dát!');
+    document.getElementById('offlineBanner').classList.add('show');
+    setStatus('st-neutral','⚠ Chyba spojenia — skús znova neskôr.');
   }
 }
 
-function setStatus(cls, txt) {
-  const b = document.getElementById('statusBox');
-  b.className = 'status-banner ' + cls;
-  document.getElementById('statusText').textContent = txt;
+function setStatus(cls,txt) {
+  const b=document.getElementById('statusBox');
+  b.className='status-banner '+cls;
+  document.getElementById('statusText').textContent=txt;
 }
 
-// ── TABLES ───────────────────────────────────────────────────────────────────
+// ── TABLES ────────────────────────────────────────────────────────────────────
 window.renderTables = function() {
-  renderSec('dochadzkaTable', ['prichod','odchod'], document.getElementById('dateDochadzka').value);
-  renderSec('prestavkyTable', ['prestavka'],         document.getElementById('datePrestavky').value);
-  renderSec('pnTable',        ['pn'],                document.getElementById('datePN').value);
+  renderDocSection();
+  renderSec('prestavkyTable',['prestavka'],document.getElementById('datePrestavky').value);
+  renderSec('pnTable',['pn'],document.getElementById('datePN').value);
 };
 
-function renderSec(tbodyId, stavArr, filterDate) {
-  const tbody = document.getElementById(tbodyId);
-  let rows = allRecords.filter(r => stavArr.includes(r.stav));
-  if (filterDate) rows = rows.filter(r => r.cas.substring(0,10) === filterDate);
+// Dochádzka — s odpočtom prestávok po pároch
+function renderDocSection() {
+  const tbody=document.getElementById('dochadzkaTable');
+  const filterDate=document.getElementById('dateDochadzka').value;
+  let rows=allRecords.filter(r=>r.stav==='prichod'||r.stav==='odchod');
+  if (filterDate) rows=rows.filter(r=>r.date===filterDate);
+  if (!rows.length) { tbody.innerHTML='<tr class="empty-row"><td colspan="4">Žiadne záznamy</td></tr>'; return; }
 
-  if (!rows.length) { tbody.innerHTML='<tr class="empty-row"><td colspan="3">Žiadne záznamy</td></tr>'; return; }
+  // Zoskup podľa dňa pre výpočet
+  const byDate={};
+  allRecords.forEach(r=>{ if (!byDate[r.date]) byDate[r.date]=[]; byDate[r.date].push(r); });
 
-  tbody.innerHTML = rows.map(r => {
-    const kHtml = r.komentar
-      ? `<div class="komentar-bubble">
-           <div>
-             <div class="kb-head">💬 Admin napísal</div>
-             <div class="kb-text">${r.komentar}</div>
-           </div>
-         </div>`
+  // Zoraď chronologicky a pridaj info o odprac. čase pri odchode
+  const sorted=[...rows].sort((a,b)=>b.cas.localeCompare(a.cas));
+  tbody.innerHTML=sorted.map(r=>{
+    let timeHtml='<span style="color:var(--text-muted);font-size:12px;">—</span>';
+    if (r.stav==='odchod') {
+      const dayRecs=byDate[r.date]||[];
+      const {net,breaks}=calcDayPairs(dayRecs);
+      if (net>0) {
+        timeHtml=`<span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--success);font-weight:600;">${msToHhMm(net)}</span>`;
+        if (breaks>0) timeHtml+=`<span style="font-size:11px;color:var(--text-muted);margin-left:5px;">(−${breaks}× prest.)</span>`;
+      }
+    }
+    const kHtml=r.komentar
+      ? `<div class="komentar-bubble"><div><div class="kb-head">💬 Admin napísal</div><div class="kb-text">${r.komentar}</div></div></div>`
       : `<span style="color:var(--text-muted);font-size:12px;">—</span>`;
-    return `<tr>
-      <td><span class="time-cell">${r.casDisplay}</span></td>
-      <td>${badgeFor(r.stav, r.rawType)}</td>
-      <td>${kHtml}</td>
-    </tr>`;
+    return `<tr><td><span class="time-cell">${r.casDisplay}</span></td><td>${badgeFor(r.stav,r.rawType)}</td><td>${timeHtml}</td><td>${kHtml}</td></tr>`;
+  }).join('');
+}
+
+function renderSec(tbodyId,stavArr,filterDate) {
+  const tbody=document.getElementById(tbodyId);
+  let rows=allRecords.filter(r=>stavArr.includes(r.stav));
+  if (filterDate) rows=rows.filter(r=>r.date===filterDate);
+  if (!rows.length) { tbody.innerHTML='<tr class="empty-row"><td colspan="3">Žiadne záznamy</td></tr>'; return; }
+  tbody.innerHTML=rows.map(r=>{
+    const kHtml=r.komentar
+      ? `<div class="komentar-bubble"><div><div class="kb-head">💬 Admin napísal</div><div class="kb-text">${r.komentar}</div></div></div>`
+      : `<span style="color:var(--text-muted);font-size:12px;">—</span>`;
+    return `<tr><td><span class="time-cell">${r.casDisplay}</span></td><td>${badgeFor(r.stav,r.rawType)}</td><td>${kHtml}</td></tr>`;
   }).join('');
 }
 
 // ── BAR CHART ─────────────────────────────────────────────────────────────────
-function buildWeekChart(records, mon) {
-  const labels = ['Po','Ut','St','Št','Pi','So','Ne'];
-  const now = new Date(), todayIdx = (now.getDay()+6)%7;
-  const data = labels.map((label,i) => {
-    const d = new Date(mon); d.setDate(d.getDate()+i);
-    return { label, h: calcWork(records, d.toISOString().substring(0,10))/3600000 };
+function buildWeekChart(records,mon) {
+  const labels=['Po','Ut','St','Št','Pi','So','Ne'];
+  const todayIdx=(new Date().getDay()+6)%7;
+  const data=labels.map((_,i)=>{
+    const d=new Date(mon); d.setDate(d.getDate()+i);
+    return {label:labels[i], h:calcWorkNet(records,d.toISOString().substring(0,10))/3600000};
   });
-  const maxH = Math.max(...data.map(d=>d.h), 1);
-  document.getElementById('weekChart').innerHTML = data.map((d, i) => {
-    const px = Math.round((d.h/maxH)*65);
-    const isToday = i === todayIdx;
-    return `<div class="bar-col">
-      <div class="bar-val">${d.h>0 ? d.h.toFixed(1)+'h' : ''}</div>
-      <div class="bar" style="height:${px}px;background:${isToday?'var(--accent)':'#BFDBFE'};"></div>
-      <div class="bar-label">${d.label}</div>
-    </div>`;
+  const maxH=Math.max(...data.map(d=>d.h),1);
+  document.getElementById('weekChart').innerHTML=data.map((d,i)=>{
+    const px=Math.round((d.h/maxH)*65);
+    return `<div class="bar-col"><div class="bar-val">${d.h>0?d.h.toFixed(1)+'h':''}</div><div class="bar" style="height:${px}px;background:${i===todayIdx?'var(--accent)':'#BFDBFE'};"></div><div class="bar-label">${d.label}</div></div>`;
   }).join('');
 }
 
 // ── KOMENTÁRE ─────────────────────────────────────────────────────────────────
-function typLabel(stav) {
-  return { prichod:'Príchod', odchod:'Odchod', prestavka:'Prestávka', pn:'PN' }[stav] || stav;
-}
+function typLabel(s){ return {prichod:'Príchod',odchod:'Odchod',prestavka:'Prestávka',pn:'PN'}[s]||s; }
 
 function renderKomSection(seen) {
-  const list = document.getElementById('komList');
-  const cnt  = document.getElementById('komCount');
+  const list=document.getElementById('komList'), cnt=document.getElementById('komCount');
   if (!allKom.length) { list.innerHTML='<p style="color:var(--text-muted);font-size:13px;">Admin ti zatiaľ nenapísal žiadnu správu.</p>'; cnt.textContent=''; return; }
-
-  cnt.textContent = `${allKom.length} ${allKom.length===1?'správa':'správ'}`;
-  list.innerHTML = allKom.map(k => {
-    const isNew = !seen.includes(k.cas+'|'+k.komentar);
-    return `<div class="comment-item${isNew?' is-new':''}">
-      <div class="comment-avatar">💬</div>
-      <div class="comment-body">
-        <div class="comment-top">
-          <span class="comment-author">👨‍💼 Admin ${isNew ? '<span class="new-pill">NOVÉ</span>' : ''}</span>
-          <span class="comment-time">${k.casDisplay}</span>
-        </div>
-        <div class="comment-what">K záznamu: ${typLabel(k.stav)} (${k.rawType})</div>
-        <div class="comment-text">${k.komentar}</div>
-      </div>
-    </div>`;
+  cnt.textContent=`${allKom.length} správ`;
+  list.innerHTML=allKom.map(k=>{
+    const isNew=!seen.includes(k.cas+'|'+k.komentar);
+    return `<div class="comment-item${isNew?' is-new':''}"><div class="comment-avatar">💬</div><div class="comment-body"><div class="comment-top"><span class="comment-author">👨‍💼 Admin ${isNew?'<span class="new-pill">NOVÉ</span>':''}</span><span class="comment-time">${k.casDisplay}</span></div><div class="comment-what">K záznamu: ${typLabel(k.stav)} (${k.rawType})</div><div class="comment-text">${k.komentar}</div></div></div>`;
   }).join('');
 }
 
 function renderDashKom(seen) {
-  const el = document.getElementById('dashKom');
-  const top3 = allKom.slice(0,3);
+  const el=document.getElementById('dashKom');
+  const top3=allKom.slice(0,3);
   if (!top3.length) { el.innerHTML='<p style="color:var(--text-muted);font-size:13px;">Žiadne správy od admina.</p>'; return; }
-  el.innerHTML = top3.map(k => {
-    const isNew = !seen.includes(k.cas+'|'+k.komentar);
-    return `<div class="comment-item${isNew?' is-new':''}" style="margin-bottom:8px;">
-      <div class="comment-avatar" style="width:28px;height:28px;font-size:13px;">💬</div>
-      <div class="comment-body">
-        <div class="comment-top">
-          <span class="comment-author" style="font-size:12px;">Admin ${isNew?'<span class="new-pill">NOVÉ</span>':''}</span>
-          <span class="comment-time" style="font-size:10px;">${k.casDisplay}</span>
-        </div>
-        <div class="comment-what" style="font-size:10px;">K záznamu: ${typLabel(k.stav)}</div>
-        <div class="comment-text" style="font-size:13px;">${k.komentar}</div>
-      </div>
-    </div>`;
+  el.innerHTML=top3.map(k=>{
+    const isNew=!seen.includes(k.cas+'|'+k.komentar);
+    return `<div class="comment-item${isNew?' is-new':''}" style="margin-bottom:8px;"><div class="comment-avatar" style="width:28px;height:28px;font-size:13px;">💬</div><div class="comment-body"><div class="comment-top"><span class="comment-author" style="font-size:12px;">Admin ${isNew?'<span class="new-pill">NOVÉ</span>':''}</span><span class="comment-time" style="font-size:10px;">${k.casDisplay}</span></div><div class="comment-what" style="font-size:10px;">K záznamu: ${typLabel(k.stav)}</div><div class="comment-text" style="font-size:13px;">${k.komentar}</div></div></div>`;
   }).join('');
 }
 
 function markSeen() {
-  const ids = allKom.map(k => k.cas+'|'+k.komentar);
-  localStorage.setItem(seenKey, JSON.stringify(ids));
-  document.getElementById('navBadge').style.display = 'none';
-  document.getElementById('statNew').textContent = '0';
+  const ids=allKom.map(k=>k.cas+'|'+k.komentar);
+  localStorage.setItem(seenKey,JSON.stringify(ids));
+  document.getElementById('navBadge').style.display='none';
+  document.getElementById('statNew').textContent='0';
 }
 
-// ── DOVOLENKA ─────────────────────────────────────────────────────────────────
-async function renderDovolenka(myName) {
-  // Najprv skús Firebase, fallback na localStorage
-  let mine = [];
+// ── ŽIADOSTI O DOVOLENKU ──────────────────────────────────────────────────────
+window.submitZiadost = async function() {
+  const od=document.getElementById('ziadOd').value;
+  const doDo=document.getElementById('ziadDo').value;
+  const typ=document.getElementById('ziadTyp').value;
+  const poznamka=document.getElementById('ziadPoznamka').value.trim();
+  if (!od||!doDo) return alert('Vyplň dátumy od a do.');
+  if (od>doDo) return alert('Dátum "od" musí byť pred "do".');
+
+  const entry={
+    meno: myName, od, do: doDo, typ, poznamka,
+    stav: 'pending',
+    podane: nowStr(),
+    userId
+  };
   try {
-    const snap = await get(ref(db, 'dovolenky'));
-    if (snap.exists()) {
-      const all = Object.values(snap.val());
-      mine = all.filter(d => (d.meno||'').toLowerCase() === myName.toLowerCase());
-    }
-  } catch(e) {
-    const all = JSON.parse(localStorage.getItem('dovolenky')||'[]');
-    mine = all.filter(d => (d.meno||'').toLowerCase() === myName.toLowerCase());
-  }
+    const newRef=push(ref(db,`ziadosti/${userId}`));
+    await set(newRef,entry);
+    // Tiež notifikuj admina cez spoločný node
+    await set(ref(db,`adminNotifications/${newRef.key}`),{...entry, ziadostKey: newRef.key});
+    myZiadosti.unshift({...entry,_key:newRef.key});
+    renderZiadosti();
+    document.getElementById('ziadOd').value='';
+    document.getElementById('ziadDo').value='';
+    document.getElementById('ziadPoznamka').value='';
+    alert('✅ Žiadosť odoslaná! Admin ju čoskoro spracuje.');
+  } catch(e) { alert('Chyba pri odosielaní. Skús znova.'); console.error(e); }
+};
 
-  const list = document.getElementById('dovolList');
-  if (!mine.length) { list.innerHTML='<p style="color:var(--text-muted);font-size:13px;">Žiadne záznamy o neprítomnosti.</p>'; return; }
-
-  const tLabel = { dovolenka:'Dovolenka', navsteva_lekara:'Návšteva lekára', ospravedlnena:'Ospravedlnená absencia', ine:'Iné' };
-  const tBadge = { dovolenka:'badge-warning', navsteva_lekara:'badge-neutral', ospravedlnena:'badge-neutral', ine:'badge-neutral' };
-  const today = todayStr();
-
-  list.innerHTML = mine
-    .sort((a,b) => b.od.localeCompare(a.od))
-    .map(d => {
-      const isActive = d.od <= today && d.do >= today;
-      const isPast   = d.do < today;
-      return `<div class="dov-item" style="${isActive ? 'border-color:var(--warning); background:var(--warning-light);' : isPast ? 'opacity:0.65;' : ''}">
-        <div>
-          <div class="dov-dates">${d.od} → ${d.do}</div>
-          ${d.poznamka ? `<div class="dov-note">${d.poznamka}</div>` : ''}
-          ${isActive ? `<div style="font-size:11px; font-weight:700; color:var(--warning); margin-top:3px;">● Momentálne aktívne</div>` : ''}
+function renderZiadosti() {
+  const el=document.getElementById('ziadostList');
+  const cnt=document.getElementById('ziadostCount');
+  if (!myZiadosti.length) { el.innerHTML='<p style="color:var(--text-muted);font-size:13px;">Žiadne odoslané žiadosti.</p>'; cnt.textContent=''; return; }
+  cnt.textContent=`${myZiadosti.length} žiadost${myZiadosti.length===1?'':'í'}`;
+  const tLabel={dovolenka:'Dovolenka',navsteva_lekara:'Lekár',ospravedlnena:'Ospravedlnená',ine:'Iné'};
+  const stavMap={
+    pending: { badge:'badge-warning', label:'⏳ Čaká na schválenie' },
+    approved:{ badge:'badge-success', label:'✅ Schválená' },
+    rejected:{ badge:'badge-danger',  label:'❌ Zamietnutá' },
+  };
+  el.innerHTML='<div style="display:flex;flex-direction:column;gap:8px;">'+
+    myZiadosti.map(z=>{
+      const s=stavMap[z.stav]||stavMap.pending;
+      return `<div class="ziadost-item ${z.stav}">
+        <div class="ziadost-left">
+          <div class="ziadost-dates">📅 ${z.od} → ${z.do}</div>
+          <div class="ziadost-type">${tLabel[z.typ]||z.typ} · Podané: ${z.podane}</div>
+          ${z.poznamka?`<div class="ziadost-note">„${z.poznamka}"</div>`:''}
+          ${z.adminNote?`<div class="ziadost-admin-note">💬 Admin: ${z.adminNote}</div>`:''}
         </div>
+        <span class="badge ${s.badge}">${s.label}</span>
+      </div>`;
+    }).join('')+'</div>';
+}
+
+// ── DOVOLENKA (evidencia od admina) ──────────────────────────────────────────
+async function renderDovolenka(name) {
+  let mine=[];
+  try {
+    const snap=await get(ref(db,'dovolenky'));
+    if (snap.exists()) mine=Object.values(snap.val()).filter(d=>(d.meno||'').toLowerCase()===name.toLowerCase());
+  } catch(e) {
+    mine=JSON.parse(localStorage.getItem('dovolenky')||'[]').filter(d=>(d.meno||'').toLowerCase()===name.toLowerCase());
+  }
+  const list=document.getElementById('dovolList');
+  if (!mine.length) { list.innerHTML='<p style="color:var(--text-muted);font-size:13px;">Žiadne záznamy od admina.</p>'; return; }
+  const tLabel={dovolenka:'Dovolenka',navsteva_lekara:'Návšteva lekára',ospravedlnena:'Ospravedlnená absencia',ine:'Iné'};
+  const tBadge={dovolenka:'badge-warning',navsteva_lekara:'badge-neutral',ospravedlnena:'badge-neutral',ine:'badge-neutral'};
+  const today=todayStr();
+  list.innerHTML='<div style="display:flex;flex-direction:column;gap:8px;">'+
+    mine.sort((a,b)=>b.od.localeCompare(a.od)).map(d=>{
+      const isActive=d.od<=today&&d.do>=today;
+      const isPast=d.do<today;
+      return `<div class="dov-item" style="${isActive?'border-color:var(--warning);background:var(--warning-light);':isPast?'opacity:0.6;':''}">
+        <div><div class="dov-dates">${d.od} → ${d.do}</div>${d.poznamka?`<div class="dov-note">${d.poznamka}</div>`:''}${isActive?'<div style="font-size:11px;font-weight:700;color:var(--warning);margin-top:3px;">● Momentálne aktívne</div>':''}</div>
         <span class="badge ${tBadge[d.typ]||'badge-neutral'}">${tLabel[d.typ]||d.typ}</span>
       </div>`;
-    }).join('');
+    }).join('')+'</div>';
 }
 
 // ── EXPORT ────────────────────────────────────────────────────────────────────
 window.exportTable = function(type) {
-  const filterDate = document.getElementById(`date${type.charAt(0).toUpperCase()+type.slice(1)}`).value;
-  const stavMap = { dochadzka:['prichod','odchod'], prestavky:['prestavka'], pn:['pn'] };
-  let rows = allRecords.filter(r => stavMap[type].includes(r.stav));
-  if (filterDate) rows = rows.filter(r => r.cas.substring(0,10)===filterDate);
-  rows.sort((a,b) => a.cas.localeCompare(b.cas));
+  const filterDate=document.getElementById(`date${type.charAt(0).toUpperCase()+type.slice(1)}`).value;
+  const stavMap={dochadzka:['prichod','odchod'],prestavky:['prestavka'],pn:['pn']};
+  let rows=allRecords.filter(r=>stavMap[type].includes(r.stav));
+  if (filterDate) rows=rows.filter(r=>r.date===filterDate);
+  rows.sort((a,b)=>a.cas.localeCompare(b.cas));
 
-  const data = [['Typ:',type],['Používateľ:',myName],[],
-    type==='dochadzka' ? ['Dátum','Čas','Typ','Odprac. čas','Komentár admina'] : ['Dátum a Čas','Typ','Komentár admina']
+  const data=[['Typ:',type],['Používateľ:',myName],[],
+    type==='dochadzka'?['Dátum','Čas','Typ','Čistý odprac. čas','Komentár admina']:['Dátum a Čas','Typ','Komentár admina']
   ];
 
   if (type==='dochadzka') {
-    let totalMs=0, lastP=null, lastDate=null, dayMs=0;
-    rows.forEach(r => {
-      if (lastDate && lastDate!==r.date) {
-        if (dayMs>0) data.push(['','Sumarizácia dňa:',lastDate,msToHhMm(dayMs),'']);
-        dayMs=0;
-      }
-      if (r.stav==='prichod') {
-        lastP=new Date(r.cas);
-        data.push([r.date,r.time,r.rawType,'',r.komentar||'']);
-      } else if (r.stav==='odchod'&&lastP) {
-        const ms=new Date(r.cas)-lastP;
-        totalMs+=ms; dayMs+=ms;
-        data.push([r.date,r.time,r.rawType,msToHhMm(ms),r.komentar||'']);
-        lastP=null;
-      } else {
-        data.push([r.date,r.time,r.rawType,'Chyba PRICHOD',r.komentar||'']);
-      }
-      lastDate=r.date;
+    const byDate={};
+    allRecords.forEach(r=>{ if(!byDate[r.date]) byDate[r.date]=[]; byDate[r.date].push(r); });
+    let totalNet=0;
+    const dates=[...new Set(rows.map(r=>r.date))].sort();
+    dates.forEach(date=>{
+      const dayRecs=byDate[date]||[];
+      const {net,breaks}=calcDayPairs(dayRecs);
+      const dayRows=rows.filter(r=>r.date===date);
+      dayRows.forEach(r=>data.push([r.date,r.time,r.rawType,r.stav==='odchod'?msToHhMm(net):'',r.komentar||'']));
+      if (net>0) { data.push(['','Deň celkom (čistý):','',msToHhMm(net),breaks>0?`(−${breaks} prestávok)`:'']); totalNet+=net; }
+      data.push([]);
     });
-    if (dayMs>0) data.push(['','Sumarizácia dňa:',lastDate,msToHhMm(dayMs),'']);
-    data.push([],['Celková odpracovaná doba:','','',msToHhMm(totalMs),'']);
+    data.push(['Celkový čistý čas:','','',msToHhMm(totalNet),'']);
   } else {
-    rows.forEach(r => data.push([r.casDisplay, r.rawType, r.komentar||'']));
+    rows.forEach(r=>data.push([r.casDisplay,r.rawType,r.komentar||'']));
   }
 
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet(data);
-  ws['!cols'] = [{wpx:100},{wpx:150},{wpx:100},{wpx:120},{wpx:200}];
-  XLSX.utils.book_append_sheet(wb, ws, 'Export');
-  XLSX.writeFile(wb, `${type}_${myName.replace(/[^a-zA-Z0-9]/g,'_')}_export.xlsx`);
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet(data);
+  ws['!cols']=[{wpx:100},{wpx:150},{wpx:100},{wpx:130},{wpx:200}];
+  XLSX.utils.book_append_sheet(wb,ws,'Export');
+  XLSX.writeFile(wb,`${type}_${myName.replace(/[^a-zA-Z0-9]/g,'_')}_export.xlsx`);
 
-  const btn = document.querySelector(`[data-export-table="${type}"]`);
-  if (btn) {
-    btn.textContent='✓ Stiahnuté';
-    setTimeout(() => {
-      btn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export XLSX';
-    }, 2000);
-  }
+  const btn=document.querySelector(`[data-export-table="${type}"]`);
+  if (btn) { btn.textContent='✓ Stiahnuté'; setTimeout(()=>{btn.textContent='Export XLSX';},2000); }
 };
 
 // ── NAV ───────────────────────────────────────────────────────────────────────
 function goTo(target) {
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.querySelector(`[data-target="${target}"]`)?.classList.add('active');
-  document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
   document.getElementById(target).classList.add('active');
   if (target==='komentare') markSeen();
+  closeSidebar();
 }
-window.goTo = goTo;
+window.goTo=goTo;
 
-document.querySelectorAll('.nav-btn[data-target]').forEach(btn => {
-  btn.addEventListener('click', () => goTo(btn.dataset.target));
+document.querySelectorAll('.nav-btn[data-target]').forEach(btn=>{
+  btn.addEventListener('click',()=>goTo(btn.dataset.target));
+});
+document.getElementById('logoutBtn').addEventListener('click',()=>{
+  localStorage.removeItem('uid'); window.location.href='index.html';
 });
 
-document.getElementById('logoutBtn').addEventListener('click', () => {
-  localStorage.removeItem('uid');
-  window.location.href = 'index.html';
-});
+// ── INIT ─────────────────────────────────────────────────────────────────────
+if (localStorage.getItem('darkMode')==='1') {
+  document.body.classList.add('dark');
+  document.getElementById('darkToggleBtn').innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg> Svetlý režim';
+}
 
 loadUserData();
 </script>
