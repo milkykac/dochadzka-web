@@ -922,7 +922,7 @@
           <div class="card-header"><span class="card-title" id="mzdyTitle">Mzdový výkaz</span></div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Zamestnanec</th><th>Pozícia</th><th>Odprac. hodín</th><th>Hodinová sadzba</th><th>Hrubá mzda</th><th>Poznámka</th></tr></thead>
+              <thead><tr><th>Zamestnanec</th><th>Pozícia</th><th>Hrubý čas / Prestávky</th><th>Čistý čas</th><th>Sadzba</th><th>Hrubá mzda</th><th>Poznámka</th></tr></thead>
               <tbody id="mzdyTable"><tr class="empty-row"><td colspan="6">Zadaj mesiac a klikni Vypočítať.</td></tr></tbody>
             </table>
           </div>
@@ -1381,6 +1381,7 @@ function startRealtimeListener() {
     allAdminRecordsCache = allRecords;
     allUsersCache = newUsersCache;
     dataLoaded = true;
+    checkMesko();
     const activeSection = document.querySelector('section.active');
     if (activeSection) {
       const id = activeSection.id;
@@ -1388,6 +1389,40 @@ function startRealtimeListener() {
       else if (['dochadzka','prestavky','pn'].includes(id)) loadSection(id);
     }
   });
+}
+
+// Skontroluje meskania dnes a pridá notifikácie
+function checkMesko() {
+  const today = todayStr();
+  const alreadyNotified = JSON.parse(localStorage.getItem('meskoNotified_' + today) || '[]');
+  const newNotified = [...alreadyNotified];
+
+  for (const uid in allUsersCache) {
+    if (uid === 'admin') continue;
+    const user = allUsersCache[uid];
+    if (!user.smena) continue;
+    const smena = smenyCache[user.smena];
+    if (!smena) continue;
+
+    const prichody = allAdminRecordsCache.filter(r =>
+      r.userId === uid && r.date === today && r.stav === 'prichod'
+    ).sort((a,b) => a.cas.localeCompare(b.cas));
+    if (!prichody.length) continue;
+
+    const firstPrichod = prichody[0];
+    const notifKey = uid + '_' + firstPrichod.time;
+    if (alreadyNotified.includes(notifKey)) continue; // už sme notifikovali
+
+    const [sh, sm2] = smena.start.split(':').map(Number);
+    const [ph, pm] = firstPrichod.time.split(':').map(Number);
+    const diffMin = (ph * 60 + pm) - (sh * 60 + sm2);
+
+    if (diffMin > 5) {
+      pushNotif(`⏰ ${user.name} prišiel o ${diffMin} min neskôr ako zmena "${smena.name}" (${smena.start})`, 'warn');
+      newNotified.push(notifKey);
+    }
+  }
+  localStorage.setItem('meskoNotified_' + today, JSON.stringify(newNotified));
 }
 
 function parseRecord(userId, userName, log, logKey, logType) {
@@ -2259,12 +2294,17 @@ window.calcMzdy = async function() {
     const logs = allAdminRecordsCache.filter(r =>
       r.userId === uid && r.date.startsWith(mesiac) && (r.stav === 'prichod' || r.stav === 'odchod')
     ).sort((a,b) => a.cas.localeCompare(b.cas));
-    let totalMs = 0, lastPrichod = null;
+    const breaks = allAdminRecordsCache.filter(r =>
+      r.userId === uid && r.date.startsWith(mesiac) && r.stav === 'prestavka'
+    );
+    let grossMs = 0, lastPrichod = null;
     logs.forEach(l => {
       if (l.stav === 'prichod') lastPrichod = new Date(l.cas);
-      else if (l.stav === 'odchod' && lastPrichod) { totalMs += new Date(l.cas) - lastPrichod; lastPrichod = null; }
+      else if (l.stav === 'odchod' && lastPrichod) { grossMs += new Date(l.cas) - lastPrichod; lastPrichod = null; }
     });
-    result[uid] = { name, totalMs, hours: totalMs/3600000 };
+    const breakMs = breaks.length * 15 * 60 * 1000;
+    const totalMs = Math.max(0, grossMs - breakMs);
+    result[uid] = { name, totalMs, grossMs, breakMs, breakCount: breaks.length, hours: totalMs/3600000 };
   }
   const entries = Object.values(result);
   const tbody = document.getElementById('mzdyTable');
@@ -2278,13 +2318,14 @@ window.calcMzdy = async function() {
     return `<tr>
       <td><div class="user-cell"><div class="user-avatar">${initials(e.name)}</div>${e.name}</div></td>
       <td>${getRoleBadgeHtml(uid)}</td>
-      <td><span class="time-cell">${msToHhMm(e.totalMs)}</span></td>
+      <td><span class="time-cell">${msToHhMm(e.grossMs||e.totalMs)}</span>${e.breakCount>0?`<span style="font-size:11px;color:var(--warning);margin-left:6px;">−${msToHhMm(e.breakMs)} (${e.breakCount}× prestávka)</span>`:''}</td>
+      <td><strong style="color:var(--success);">${msToHhMm(e.totalMs)}</strong></td>
       <td>${sadzba.toFixed(2)} €/h</td>
       <td><strong>${mzda.toFixed(2)} €</strong></td>
       <td style="font-size:12px; color:var(--text-muted);">${e.hours < 10 ? '⚠ Nízky počet hodín' : ''}</td>
     </tr>`;
   }).join('') +
-  `<tr style="background:var(--surface-2);"><td colspan="4" style="font-weight:700; text-align:right; color:var(--text-secondary);">CELKOM</td>
+  `<tr style="background:var(--surface-2);"><td colspan="5" style="font-weight:700; text-align:right; color:var(--text-secondary);">CELKOM</td>
   <td><strong style="color:var(--accent); font-size:16px;">${totalMzda.toFixed(2)} €</strong></td><td></td></tr>`;
 };
 window.exportMzdy = function() {
