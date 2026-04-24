@@ -548,7 +548,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-import { getDatabase, ref, get, push, set } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+import { getDatabase, ref, get, push, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBsYrbYtP4E5blWbKlrJ6iI9v6YPAYYp0g",
@@ -664,169 +664,6 @@ function calcDayPairs(dayRecords) {
   return { gross: totalMs, net: Math.max(0, totalMs - breakMs), breaks };
 }
 
-// ── FIREBASE RETRY ────────────────────────────────────────────────────────────
-window.retryLoad = function() {
-  document.getElementById('offlineBanner').classList.remove('show');
-  loadUserData();
-};
-
-// ── LOAD DATA ─────────────────────────────────────────────────────────────────
-async function loadUserData() {
-  try {
-    const [userSnap, smenySnap, rolesSnap, ziadostiSnap] = await Promise.all([
-      get(ref(db, `users/${userId}`)),
-      get(ref(db, 'smeny')),
-      get(ref(db, 'roles')),
-      get(ref(db, `ziadosti/${userId}`))
-    ]);
-
-    if (!userSnap.exists()) {
-      setStatus('st-neutral', 'Chyba: dáta nenájdené.');
-      return;
-    }
-
-    const u     = userSnap.val();
-    const smeny = smenySnap.exists() ? smenySnap.val() : {};
-    const roles = rolesSnap.exists() ? rolesSnap.val() : {};
-
-    myName = u.name || '(bez mena)';
-    document.getElementById('userName').textContent = myName;
-
-    // ── Žiadosti ──
-    myZiadosti = ziadostiSnap.exists()
-      ? Object.entries(ziadostiSnap.val()).map(([k,v])=>({...v, _key:k})).sort((a,b)=>b.podane.localeCompare(a.podane))
-      : [];
-    renderZiadosti();
-
-    // Badge pre nevybavené žiadosti
-    const pendingCount = myZiadosti.filter(z => z.stav==='pending').length;
-    const zBadge = document.getElementById('navZiadostBadge');
-    if (pendingCount > 0) { zBadge.textContent = pendingCount; zBadge.style.display='inline-flex'; }
-    else zBadge.style.display='none';
-
-    // ── Rola ──
-    const myRole = u.rola && roles[u.rola] ? roles[u.rola] : null;
-    if (myRole) {
-      const c = colorVarMap[myRole.color] || colorVarMap.accent;
-      const label = myRole.label || myRole.name;
-      const setRoleBadge = (el) => {
-        el.style.display='inline-flex'; el.style.background=c.bg;
-        el.style.color=c.text; el.style.borderColor=c.border;
-        el.innerHTML=`${myRole.emoji||''} ${label}`;
-      };
-      setRoleBadge(document.getElementById('topbarRoleBadge'));
-      setRoleBadge(document.getElementById('sidebarRoleBadge'));
-      document.getElementById('topbarSub').textContent = `${myRole.emoji||'💼'} ${myRole.name} · Tvoj osobný prehľad`;
-
-      const prEl = document.getElementById('profileRoleBadge');
-      prEl.className='profile-role';
-      prEl.style.display='inline-flex'; prEl.style.background=c.bg;
-      prEl.style.color=c.text; prEl.style.borderColor=c.border;
-      prEl.innerHTML=`${myRole.emoji||''} ${myRole.label||myRole.name}`;
-    }
-
-    // ── Profil karta ──
-    document.getElementById('profileCard').style.display='flex';
-    document.getElementById('profileAvatar').textContent=initials(myName);
-    document.getElementById('profileName').textContent=myName;
-    if (u.smena && smeny[u.smena]) {
-      const s = smeny[u.smena];
-      const el = document.getElementById('profileSmenaBadge');
-      el.style.display='inline-flex';
-      el.innerHTML=`🗓️ ${s.name} · ${s.start}–${s.end}`;
-    }
-
-    // ── Parse záznamy ──
-    const records=[], kom=[];
-    ['dochadzka','prestavky','pn'].forEach(logType => {
-      Object.values(u[logType]||{}).forEach(log => {
-        if (!log?.cas || !log?.typ) return;
-        let clean=String(log.cas), iso=clean, display=clean;
-        const m=clean.match(/(\d{1,2})\.(\d{1,2})\.(\d{4}) (\d{1,2}:\d{2})/);
-        if (m) {
-          const [,d,mo,y,t]=m;
-          iso=`${y}-${mo.padStart(2,'0')}-${d.padStart(2,'0')} ${t}`;
-          display=`${d.padStart(2,'0')}.${mo.padStart(2,'0')}.${y} ${t}`;
-        } else if (clean.includes('T')) {
-          iso=clean.replace('T',' ');
-          const [dt,ti]=iso.split(' '), [y,mo,d]=dt.split('-');
-          display=`${d}.${mo}.${y} ${(ti||'').substring(0,5)}`;
-        } else if (clean.includes('-') && clean.length>=16) {
-          iso=clean;
-          const [dt,ti]=iso.split(' '), [y,mo,d]=dt.split('-');
-          display=`${d}.${mo}.${y} ${(ti||'').substring(0,5)}`;
-        } else return;
-
-        const ct=String(log.typ).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-        let stav=null;
-        if (ct.includes('prichod')) stav='prichod';
-        else if (ct.includes('odchod')) stav='odchod';
-        else if (ct.includes('prestavka')) stav='prestavka';
-        else if (ct.includes('pn')) stav='pn';
-        if (!stav) return;
-
-        if (!records.some(r=>r.cas===iso&&r.stav===stav)) {
-          const rec={cas:iso,casDisplay:display,date:iso.substring(0,10),time:iso.substring(11,16),stav,rawType:log.typ.toUpperCase(),komentar:log.komentar||null,logType};
-          records.push(rec);
-          if (log.komentar) kom.push(rec);
-        }
-      });
-    });
-
-    records.sort((a,b)=>b.cas.localeCompare(a.cas));
-    allRecords=records; allKom=[...kom].sort((a,b)=>b.cas.localeCompare(a.cas));
-
-    // ── Status ──
-    const last=records.find(r=>r.stav!=='prestavka');
-    const sm={ prichod:['st-prichod','✅ Si prihlásený — posledný stav: PRÍCHOD'], odchod:['st-odchod','🔴 Si odhlásený — posledný stav: ODCHOD'], pn:['st-pn','🏥 Si na PN'] };
-    const [cls,txt]=sm[last?.stav]||['st-neutral','ℹ Žiadny záznam nenájdený'];
-    setStatus(cls,txt);
-
-    // ── Štatistiky (s odpočtom prestávok) ──
-    const today=todayStr(), mon=mondayStr(), month=today.substring(0,7);
-    const dnesNet = calcWorkNet(records, today);
-    const todayBreaks = records.filter(r=>r.stav==='prestavka'&&r.date===today).length;
-
-    document.getElementById('statDnes').textContent = msToHhMm(dnesNet);
-    document.getElementById('statDnesSub').textContent = todayBreaks > 0
-      ? `čistý čas (−${todayBreaks}× prestávka)`
-      : 'h:mm (čistý čas)';
-
-    document.getElementById('statMesiac').textContent = msToHhMm(calcWorkNet(records, month));
-    document.getElementById('statPrest').textContent  = todayBreaks;
-    document.getElementById('statPrestSub').textContent = `× ${BREAK_MINUTES} min = ${msToHhMm(todayBreaks*BREAK_MINUTES*60000)} odpočtu`;
-
-    let weekMs=0;
-    for (let i=0;i<7;i++) {
-      const d=new Date(mon); d.setDate(d.getDate()+i);
-      weekMs+=calcWorkNet(records, d.toISOString().substring(0,10));
-    }
-    document.getElementById('statTyzden').textContent=msToHhMm(weekMs);
-
-    // Nové komentáre
-    const seen=JSON.parse(localStorage.getItem(seenKey)||'[]');
-    const nc=allKom.filter(k=>!seen.includes(k.cas+'|'+k.komentar)).length;
-    document.getElementById('statNew').textContent=nc;
-    if (nc>0) { const b=document.getElementById('navBadge'); b.textContent=nc; b.style.display='inline-flex'; }
-
-    renderTables();
-    buildWeekChart(records,mon);
-    renderKomSection(seen);
-    renderDashKom(seen);
-    renderDovolenka(myName);
-
-  } catch(e) {
-    console.error(e);
-    document.getElementById('offlineBanner').classList.add('show');
-    setStatus('st-neutral','⚠ Chyba spojenia — skús znova neskôr.');
-  }
-}
-
-function setStatus(cls,txt) {
-  const b=document.getElementById('statusBox');
-  b.className='status-banner '+cls;
-  document.getElementById('statusText').textContent=txt;
-}
 
 // ── TABLES ────────────────────────────────────────────────────────────────────
 window.renderTables = function() {
@@ -1062,13 +899,142 @@ document.getElementById('logoutBtn').addEventListener('click',()=>{
   localStorage.removeItem('uid'); window.location.href='index.html';
 });
 
-// ── INIT ─────────────────────────────────────────────────────────────────────
-if (localStorage.getItem('darkMode')==='1') {
-  document.body.classList.add('dark');
-  document.getElementById('darkToggleBtn').innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg> Svetlý režim';
+// ── FIREBASE RETRY ────────────────────────────────────────────────────────────
+window.retryLoad = function() {
+  document.getElementById('offlineBanner').classList.remove('show');
+  listenerStarted = false;
+  startRealtimeListener();
+};
+
+// ── REALTIME LISTENERS ───────────────────────────────────────────────────────
+
+let staticDataLoaded = false;
+let smenyRTCache = {};
+let rolesRTCache = {};
+
+async function initStaticData() {
+  try {
+    const [smenySnap, rolesSnap] = await Promise.all([
+      get(ref(db, 'smeny')),
+      get(ref(db, 'roles'))
+    ]);
+    smenyRTCache = smenySnap.exists() ? smenySnap.val() : {};
+    rolesRTCache = rolesSnap.exists() ? rolesSnap.val() : {};
+    staticDataLoaded = true;
+  } catch(e) { console.error('Static data error:', e); }
 }
 
-loadUserData();
+function startRealtimeListener() {
+  // Listener na údaje používateľa
+  onValue(ref(db, `users/${userId}`), async (snap) => {
+    document.getElementById('offlineBanner').classList.remove('show');
+    if (!snap.exists()) { setStatus('st-neutral','Chyba: dáta nenájdené.'); return; }
+    if (!staticDataLoaded) await initStaticData();
+
+    const u = snap.val();
+    myName = u.name || '(bez mena)';
+    document.getElementById('userName').textContent = myName;
+
+    // Rola
+    const myRole = u.rola && rolesRTCache[u.rola] ? rolesRTCache[u.rola] : null;
+    if (myRole) {
+      const c = colorVarMap[myRole.color] || colorVarMap.accent;
+      const label = myRole.label || myRole.name;
+      const applyBadge = (el) => { el.style.display='inline-flex'; el.style.background=c.bg; el.style.color=c.text; el.style.borderColor=c.border; el.innerHTML=`${myRole.emoji||''} ${label}`; };
+      applyBadge(document.getElementById('topbarRoleBadge'));
+      applyBadge(document.getElementById('sidebarRoleBadge'));
+      document.getElementById('topbarSub').textContent=`${myRole.emoji||'💼'} ${myRole.name} · Tvoj osobný prehľad`;
+      const prEl=document.getElementById('profileRoleBadge');
+      prEl.className='profile-role'; prEl.style.display='inline-flex';
+      prEl.style.background=c.bg; prEl.style.color=c.text; prEl.style.borderColor=c.border;
+      prEl.innerHTML=`${myRole.emoji||''} ${myRole.label||myRole.name}`;
+    }
+
+    // Profil
+    document.getElementById('profileCard').style.display='flex';
+    document.getElementById('profileAvatar').textContent=initials(myName);
+    document.getElementById('profileName').textContent=myName;
+    if (u.smena && smenyRTCache[u.smena]) {
+      const s=smenyRTCache[u.smena];
+      const el=document.getElementById('profileSmenaBadge');
+      el.style.display='inline-flex'; el.innerHTML=`🗓️ ${s.name} · ${s.start}–${s.end}`;
+    }
+
+    // Parse záznamy
+    const records=[], kom=[];
+    ['dochadzka','prestavky','pn'].forEach(logType => {
+      Object.values(u[logType]||{}).forEach(log => {
+        if (!log?.cas||!log?.typ) return;
+        let clean=String(log.cas), iso=clean, display=clean;
+        const m=clean.match(/(\d{1,2})\.(\d{1,2})\.(\d{4}) (\d{1,2}:\d{2})/);
+        if (m) { const [,d,mo,y,t]=m; iso=`${y}-${mo.padStart(2,'0')}-${d.padStart(2,'0')} ${t}`; display=`${d.padStart(2,'0')}.${mo.padStart(2,'0')}.${y} ${t}`; }
+        else if (clean.includes('T')) { iso=clean.replace('T',' '); const [dt,ti]=iso.split(' '), [y,mo,d]=dt.split('-'); display=`${d}.${mo}.${y} ${(ti||'').substring(0,5)}`; }
+        else if (clean.includes('-')&&clean.length>=16) { iso=clean; const [dt,ti]=iso.split(' '), [y,mo,d]=dt.split('-'); display=`${d}.${mo}.${y} ${(ti||'').substring(0,5)}`; }
+        else return;
+        const ct=String(log.typ).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+        let stav=null;
+        if (ct.includes('prichod')) stav='prichod'; else if (ct.includes('odchod')) stav='odchod'; else if (ct.includes('prestavka')) stav='prestavka'; else if (ct.includes('pn')) stav='pn';
+        if (!stav) return;
+        if (!records.some(r=>r.cas===iso&&r.stav===stav)) {
+          const rec={cas:iso,casDisplay:display,date:iso.substring(0,10),time:iso.substring(11,16),stav,rawType:log.typ.toUpperCase(),komentar:log.komentar||null,logType};
+          records.push(rec); if (log.komentar) kom.push(rec);
+        }
+      });
+    });
+    records.sort((a,b)=>b.cas.localeCompare(a.cas));
+    allRecords=records; allKom=[...kom].sort((a,b)=>b.cas.localeCompare(a.cas));
+
+    // Status
+    const last=records.find(r=>r.stav!=='prestavka');
+    const sm={prichod:['st-prichod','✅ Si prihlásený — PRÍCHOD'],odchod:['st-odchod','🔴 Si odhlásený — ODCHOD'],pn:['st-pn','🏥 Si na PN']};
+    const [cls,txt]=sm[last?.stav]||['st-neutral','ℹ Žiadny záznam'];
+    setStatus(cls,txt);
+
+    // Štatistiky
+    const today=todayStr(), mon=mondayStr(), month=today.substring(0,7);
+    const dnesNet=calcWorkNet(records,today);
+    const todayBreaks=records.filter(r=>r.stav==='prestavka'&&r.date===today).length;
+    document.getElementById('statDnes').textContent=msToHhMm(dnesNet);
+    document.getElementById('statDnesSub').textContent=todayBreaks>0?`čistý čas (−${todayBreaks}× prestávka)`:'h:mm (čistý čas)';
+    document.getElementById('statMesiac').textContent=msToHhMm(calcWorkNet(records,month));
+    document.getElementById('statPrest').textContent=todayBreaks;
+    document.getElementById('statPrestSub').textContent=`× ${BREAK_MINUTES} min = ${msToHhMm(todayBreaks*BREAK_MINUTES*60000)} odpočtu`;
+    let weekMs=0;
+    for(let i=0;i<7;i++){const d=new Date(mon);d.setDate(d.getDate()+i);weekMs+=calcWorkNet(records,d.toISOString().substring(0,10));}
+    document.getElementById('statTyzden').textContent=msToHhMm(weekMs);
+
+    // Komentáre
+    const seen=JSON.parse(localStorage.getItem(seenKey)||'[]');
+    const nc=allKom.filter(k=>!seen.includes(k.cas+'|'+k.komentar)).length;
+    document.getElementById('statNew').textContent=nc;
+    const nb=document.getElementById('navBadge');
+    if(nc>0){nb.textContent=nc;nb.style.display='inline-flex';}else nb.style.display='none';
+
+    renderTables(); buildWeekChart(records,mon);
+    renderKomSection(seen); renderDashKom(seen);
+    renderDovolenka(myName);
+
+  }, (err) => {
+    console.error(err);
+    document.getElementById('offlineBanner').classList.add('show');
+    setStatus('st-neutral','⚠ Chyba spojenia.');
+  });
+
+  // Listener na žiadosti
+  onValue(ref(db, `ziadosti/${userId}`), (snap) => {
+    myZiadosti = snap.exists()
+      ? Object.entries(snap.val()).map(([k,v])=>({...v,_key:k})).sort((a,b)=>b.podane.localeCompare(a.podane))
+      : [];
+    renderZiadosti();
+    const pending=myZiadosti.filter(z=>z.stav==='pending').length;
+    const zb=document.getElementById('navZiadostBadge');
+    if(pending>0){zb.textContent=pending;zb.style.display='inline-flex';}else zb.style.display='none';
+  });
+}
+
+// Spusti
+initStaticData().then(startRealtimeListener).catch(startRealtimeListener);
+
 </script>
 </body>
 </html>
