@@ -604,9 +604,9 @@ window.closeSidebar = () => { document.getElementById('sidebar').classList.remov
 function initials(n) { return (n||'?').split(' ').map(w=>w[0]).join('').toUpperCase().substring(0,2); }
 
 function msToHhMm(ms) {
-  if (!ms || ms < 0) return '00:00';
+  if (!ms || ms < 0) return '0h 00m';
   const m = Math.floor(ms/60000), h = Math.floor(m/60);
-  return `${String(h).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;
+  return `${h}h ${String(m%60).padStart(2,'0')}m`;
 }
 
 function badgeFor(stav, raw) {
@@ -636,7 +636,6 @@ function nowStr() {
 const BREAK_MINUTES = 30;
 
 function calcWorkNet(records, prefix) {
-  // Hrubý odpracovaný čas
   const logs = records
     .filter(r => (r.stav==='prichod'||r.stav==='odchod') && r.cas.startsWith(prefix))
     .sort((a,b) => a.cas.localeCompare(b.cas));
@@ -645,10 +644,10 @@ function calcWorkNet(records, prefix) {
     if (l.stav==='prichod') last=new Date(l.cas);
     else if (l.stav==='odchod' && last) { totalMs+=new Date(l.cas)-last; last=null; }
   });
-  // Odpočet prestávok
+  // Ak je zamestnanec stále prihlásený (príchod bez odchodu), počítaj do teraz
+  if (last) totalMs += Date.now() - last.getTime();
   const breaks = records.filter(r => r.stav==='prestavka' && r.cas.startsWith(prefix)).length;
-  const breakMs = breaks * BREAK_MINUTES * 60000;
-  return Math.max(0, totalMs - breakMs);
+  return Math.max(0, totalMs - breaks * BREAK_MINUTES * 60000);
 }
 
 // Pre tabuľku — odpracovaný čas medzi príchodom a odchodom (bez prestávok)
