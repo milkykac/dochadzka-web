@@ -732,6 +732,12 @@ function buildWeekChart(records,mon) {
 }
 
 // ── KOMENTÁRE ─────────────────────────────────────────────────────────────────
+function setStatus(cls, txt) {
+  const box = document.getElementById('statusBox');
+  box.className = `status-banner ${cls}`;
+  document.getElementById('statusText').textContent = txt;
+}
+
 function typLabel(s){ return {prichod:'Príchod',odchod:'Odchod',prestavka:'Prestávka',pn:'PN'}[s]||s; }
 
 function renderKomSection(seen) {
@@ -927,6 +933,7 @@ async function initStaticData() {
 function startRealtimeListener() {
   // Listener na údaje používateľa
   onValue(ref(db, `users/${userId}`), async (snap) => {
+    try {
     document.getElementById('offlineBanner').classList.remove('show');
     if (!snap.exists()) { setStatus('st-neutral','Chyba: dáta nenájdené.'); return; }
     if (!staticDataLoaded) await initStaticData();
@@ -1014,6 +1021,11 @@ function startRealtimeListener() {
     renderKomSection(seen); renderDashKom(seen);
     renderDovolenka(myName);
 
+    } catch(err) {
+      console.error('onValue handler crash:', err);
+      document.getElementById('offlineBanner').classList.add('show');
+      setStatus('st-neutral','⚠ Chyba pri spracovaní dát.');
+    }
   }, (err) => {
     console.error(err);
     document.getElementById('offlineBanner').classList.add('show');
