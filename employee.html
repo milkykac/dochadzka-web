@@ -1046,6 +1046,21 @@ function startRealtimeListener() {
 // Spusti
 initStaticData().then(startRealtimeListener).catch(startRealtimeListener);
 
+// Každých 60 sekúnd prepočítaj živé štatistiky (dnes, týždeň, mesiac)
+setInterval(() => {
+  if (!allRecords.length) return;
+  const today = todayStr(), mon = mondayStr(), month = today.substring(0, 7);
+  const dnesNet = calcWorkNet(allRecords, today);
+  const todayBreaks = allRecords.filter(r => r.stav === 'prestavka' && r.date === today).length;
+  document.getElementById('statDnes').textContent = msToHhMm(dnesNet);
+  document.getElementById('statDnesSub').textContent = todayBreaks > 0 ? `čistý čas (−${todayBreaks}× prestávka)` : 'h:mm (čistý čas)';
+  document.getElementById('statMesiac').textContent = msToHhMm(calcWorkNet(allRecords, month));
+  let weekMs = 0;
+  for (let i = 0; i < 7; i++) { const d = new Date(mon); d.setDate(d.getDate() + i); weekMs += calcWorkNet(allRecords, d.toISOString().substring(0, 10)); }
+  document.getElementById('statTyzden').textContent = msToHhMm(weekMs);
+  buildWeekChart(allRecords, mon);
+}, 60000);
+
 </script>
 </body>
 </html>
