@@ -32,7 +32,6 @@
   body { font-family: 'DM Sans', sans-serif; background: var(--bg); min-height: 100vh; color: var(--text-primary); font-size: 14px; line-height: 1.5; transition: background 0.3s, color 0.3s; }
   .layout { display: flex; min-height: 100vh; }
 
-  /* ── OFFLINE BANNER ── */
   .offline-banner {
     display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 999;
     background: var(--danger); color: white; padding: 10px 20px;
@@ -41,9 +40,7 @@
   }
   .offline-banner.show { display: flex; }
   .offline-retry { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif; }
-  .offline-retry:hover { background: rgba(255,255,255,0.35); }
 
-  /* ── SIDEBAR ── */
   .sidebar {
     width: var(--sidebar-w); background: var(--surface); border-right: 1px solid var(--border);
     display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0;
@@ -72,13 +69,11 @@
   .dark-toggle { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: var(--radius-sm); border: none; background: transparent; color: var(--text-secondary); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s; width: 100%; text-align: left; }
   .dark-toggle:hover { background: var(--surface-2); color: var(--text-primary); }
 
-  /* ── MOBILE ── */
   .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 49; backdrop-filter: blur(2px); }
   .sidebar-overlay.open { display: block; }
   .hamburger { display: none; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface-2); cursor: pointer; flex-direction: column; gap: 4px; padding: 8px; }
   .hamburger span { display: block; width: 16px; height: 2px; background: var(--text-primary); border-radius: 2px; }
 
-  /* ── MAIN ── */
   .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
   .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 40; box-shadow: var(--shadow-sm); transition: background 0.3s; }
   .topbar-left h2 { font-size: 18px; font-weight: 700; letter-spacing: -0.4px; }
@@ -92,7 +87,6 @@
   section.active { display: block; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; } }
 
-  /* ── STATUS BANNER ── */
   .status-banner { padding: 16px 22px; border-radius: var(--radius-lg); margin-bottom: 24px; font-weight: 600; display: flex; align-items: center; gap: 12px; border: 1px solid; }
   .status-banner svg { width: 20px; height: 20px; flex-shrink: 0; }
   .st-prichod   { background: var(--success-light); color: var(--success); border-color: #A7F3D0; }
@@ -100,20 +94,18 @@
   .st-pn        { background: var(--purple-light);  color: var(--purple);  border-color: #DDD6FE; }
   .st-neutral   { background: var(--accent-light);  color: var(--accent);  border-color: #BFDBFE; }
 
-  /* ── PROFILE CARD ── */
   .profile-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px 24px; margin-bottom: 24px; display: flex; align-items: center; gap: 18px; box-shadow: var(--shadow-sm); }
   .profile-avatar { width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #7C3AED); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: white; flex-shrink: 0; }
   .profile-info { flex: 1; min-width: 0; }
-  .profile-name { font-size: 17px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.4px; }
+  .profile-name { font-size: 17px; font-weight: 700; letter-spacing: -0.4px; }
   .profile-meta { display: flex; align-items: center; gap: 8px; margin-top: 5px; flex-wrap: wrap; }
   .profile-role { display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px; border-radius: 20px; font-size: 13px; font-weight: 600; border: 1px solid; }
   .profile-smena { display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px; border-radius: 20px; font-size: 13px; font-weight: 600; background: var(--accent-light); color: var(--accent); border: 1px solid #BFDBFE; }
 
-  /* ── STAT GRID ── */
   .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 14px; margin-bottom: 24px; }
   .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 20px; box-shadow: var(--shadow-sm); transition: background 0.3s; }
   .stat-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-  .stat-value { font-size: 24px; font-weight: 700; letter-spacing: -1px; line-height: 1; font-family: 'DM Sans', sans-serif; }
+  .stat-value { font-size: 24px; font-weight: 700; letter-spacing: -1px; line-height: 1; }
   .stat-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
   .c-accent  { border-left: 3px solid var(--accent); }
   .c-success { border-left: 3px solid var(--success); }
@@ -122,38 +114,29 @@
   .c-danger  { border-left: 3px solid var(--danger); }
   .c-teal    { border-left: 3px solid var(--teal); }
 
-  /* ── BAR CHART ── */
   .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 80px; }
   .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
   .bar { width: 100%; border-radius: 4px 4px 0 0; min-height: 2px; transition: height 0.4s ease; }
   .bar-label { font-size: 10px; color: var(--text-muted); }
   .bar-val { font-size: 10px; color: var(--text-secondary); font-weight: 600; }
 
-  /* ── CARDS ── */
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; margin-bottom: 20px; transition: background 0.3s; }
   .card-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
   .card-title { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
   .card-body { padding: 20px 24px; }
 
-  /* ── BUTTONS ── */
   .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: var(--radius-sm); border: none; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
   .btn-primary { background: var(--accent); color: white; }
   .btn-primary:hover { background: #1E40AF; transform: translateY(-1px); box-shadow: 0 4px 10px rgba(29,78,216,0.25); }
-  .btn-success { background: var(--success); color: white; }
-  .btn-success:hover { background: #047857; }
-  .btn-danger  { background: var(--danger); color: white; }
-  .btn-danger:hover  { background: #B91C1C; }
   .btn-ghost { background: var(--surface-2); color: var(--text-secondary); border: 1px solid var(--border); }
   .btn-ghost:hover { background: var(--border); color: var(--text-primary); }
   .btn-sm { padding: 5px 10px; font-size: 12px; }
 
-  /* ── FILTERS ── */
   .filters { display: flex; gap: 10px; flex-wrap: wrap; padding: 16px 24px; background: var(--surface-2); border-bottom: 1px solid var(--border); }
   .filter-input { padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text-primary); background: var(--surface); transition: border-color 0.15s; outline: none; }
   .filter-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(29,78,216,0.08); }
   .filter-input[type="date"] { flex: 0 0 160px; }
 
-  /* ── TABLE ── */
   .table-wrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
   thead tr { background: var(--surface-2); border-bottom: 2px solid var(--border); }
@@ -166,7 +149,6 @@
   .loader-row td::before { content:''; display:inline-block; width:16px; height:16px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; margin-right:8px; vertical-align:-3px; }
   @keyframes spin { to { transform:rotate(360deg); } }
 
-  /* ── BADGES ── */
   .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; white-space: nowrap; }
   .badge::before { content:''; width:6px; height:6px; border-radius:50%; flex-shrink:0; }
   .badge-success { background:var(--success-light); color:var(--success); border:1px solid #A7F3D0; }
@@ -183,23 +165,43 @@
   .badge-accent::before  { background:var(--accent); }
   .time-cell { font-family:'DM Mono',monospace; font-size:13px; color:var(--text-secondary); }
 
-  /* ── KOMENTAR BUBBLE ── */
-  .komentar-bubble { display: inline-flex; align-items: flex-start; gap: 8px; background: #FFF7ED; border: 1px solid #FDE68A; color: #92400E; border-radius: 8px; padding: 7px 11px; font-size: 12px; line-height: 1.45; max-width: 300px; }
-  .komentar-bubble .kb-head { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; opacity: 0.65; margin-bottom: 2px; }
-  .komentar-bubble .kb-text { word-break: break-word; font-weight: 500; }
+  /* ── ADMIN COMMENT BUBBLE ── */
+  .komentar-bubble {
+    display: inline-flex; align-items: flex-start; gap: 8px;
+    background: #FFF7ED; border: 1px solid #FDE68A; color: #92400E;
+    border-radius: 8px; padding: 7px 11px; font-size: 12px; line-height: 1.45;
+    max-width: 320px;
+  }
+  body.dark .komentar-bubble { background: #2d1a00; border-color: #92400E; color: #FDE68A; }
+  .kb-head { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; opacity: 0.7; margin-bottom: 2px; }
+  .kb-text { word-break: break-word; font-weight: 500; }
 
-  /* ── KOMENTARE ── */
+  /* ── ADMIN MESSAGES / KOMENTÁRE ── */
   .comment-list { display: flex; flex-direction: column; gap: 10px; }
-  .comment-item { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: 10px; background: #FFF7ED; border: 1px solid #FDE68A; }
+  .comment-item {
+    display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px;
+    border-radius: 10px; background: #FFF7ED; border: 1px solid #FDE68A;
+  }
+  body.dark .comment-item { background: #2d1a00; border-color: #92400E; }
   .comment-item.is-new { border-color: var(--warning); box-shadow: 0 0 0 2px #FDE68A44; }
   .comment-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--warning); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
   .comment-body { flex: 1; min-width: 0; }
   .comment-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 3px; flex-wrap: wrap; }
   .comment-author { font-size: 13px; font-weight: 700; color: #92400E; }
+  body.dark .comment-author { color: #FDE68A; }
   .comment-time { font-size: 11px; color: #B45309; font-family: 'DM Mono', monospace; }
   .comment-what { font-size: 11px; color: #B45309; opacity: 0.8; margin-bottom: 5px; }
   .comment-text { font-size: 14px; color: #78350F; font-weight: 500; line-height: 1.5; }
+  body.dark .comment-text { color: #FDE68A; }
   .new-pill { background: var(--danger); color: white; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 10px; margin-left: 6px; vertical-align: middle; }
+
+  /* ── empty state for comments ── */
+  .empty-comments {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 40px 20px; text-align: center; color: var(--text-muted);
+  }
+  .empty-comments svg { opacity: 0.25; margin-bottom: 12px; }
+  .empty-comments p { font-size: 14px; }
 
   /* ── DOVOLENKA / ŽIADOSTI ── */
   .dov-list { display: flex; flex-direction: column; gap: 8px; }
@@ -207,42 +209,26 @@
   .dov-dates { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; }
   .dov-note { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 
-  /* ── ŽIADOSŤ FORM ── */
   .ziadost-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .form-group { display: flex; flex-direction: column; gap: 5px; }
   .form-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.4px; }
   .form-input { padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text-primary); background: var(--surface); outline: none; transition: border-color 0.15s; }
   .form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(29,78,216,0.08); }
 
-  /* ── ŽIADOSŤ STATUS CARD ── */
-  .ziadost-item {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 18px; border-radius: var(--radius-sm);
-    border: 1px solid var(--border); background: var(--surface-2);
-    gap: 12px; flex-wrap: wrap;
-    transition: box-shadow 0.15s;
-  }
+  .ziadost-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface-2); gap: 12px; flex-wrap: wrap; }
   .ziadost-item.pending  { border-left: 3px solid var(--warning); }
   .ziadost-item.approved { border-left: 3px solid var(--success); }
   .ziadost-item.rejected { border-left: 3px solid var(--danger); }
   .ziadost-left { display: flex; flex-direction: column; gap: 3px; }
-  .ziadost-dates { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  .ziadost-dates { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 600; }
   .ziadost-type  { font-size: 12px; color: var(--text-muted); }
   .ziadost-note  { font-size: 12px; color: var(--text-secondary); font-style: italic; }
   .ziadost-admin-note { font-size: 12px; color: var(--danger); font-weight: 500; margin-top: 2px; }
 
-  /* ── PRESTÁVKY LEGENDA ── */
-  .break-legend {
-    display: flex; align-items: center; gap: 8px;
-    font-size: 12px; color: var(--text-muted);
-    padding: 8px 12px; background: var(--surface-2);
-    border-radius: var(--radius-sm); border: 1px solid var(--border);
-    margin-bottom: 16px;
-  }
+  .break-legend { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted); padding: 8px 12px; background: var(--surface-2); border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 16px; }
 
   @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
 
-  /* ── RESPONSIVE ── */
   @media (max-width: 900px) {
     .sidebar { transform: translateX(-100%); z-index: 60; }
     .sidebar.mobile-open { transform: translateX(0); box-shadow: var(--shadow-lg); }
@@ -261,7 +247,6 @@
 </head>
 <body>
 
-<!-- OFFLINE BANNER -->
 <div class="offline-banner" id="offlineBanner">
   <span>⚠ Spojenie so serverom zlyhalo — dáta môžu byť neaktuálne</span>
   <button class="offline-retry" onclick="retryLoad()">↻ Skúsiť znova</button>
@@ -270,7 +255,6 @@
 <div class="layout">
   <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
-  <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
       <div class="logo-mark">
@@ -327,7 +311,6 @@
     </div>
   </aside>
 
-  <!-- MAIN -->
   <div class="main">
     <header class="topbar">
       <div style="display:flex; align-items:center; gap:12px;">
@@ -436,9 +419,7 @@
           </div>
           <div class="filters"><input type="date" id="datePrestavky" class="filter-input" onchange="renderTables()"></div>
           <div class="card-body" style="padding:12px 24px 0;">
-            <div class="break-legend">
-              ⏸ Prestávky sú automaticky odpočítané od odpracovaného času v štatistikách.
-            </div>
+            <div class="break-legend">⏸ Prestávky sú automaticky odpočítané od odpracovaného času.</div>
           </div>
           <div class="table-wrap">
             <table>
@@ -466,7 +447,7 @@
         </div>
       </section>
 
-      <!-- KOMENTARE -->
+      <!-- KOMENTARE / SPRÁVY OD ADMINA -->
       <section id="komentare">
         <div class="card">
           <div class="card-header">
@@ -475,7 +456,10 @@
           </div>
           <div class="card-body">
             <div class="comment-list" id="komList">
-              <p style="color:var(--text-muted);font-size:13px;">Admin ti zatiaľ nenapísal žiadnu správu.</p>
+              <div class="empty-comments">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                <p>Admin ti zatiaľ nenapísal žiadnu správu.</p>
+              </div>
             </div>
           </div>
         </div>
@@ -483,8 +467,6 @@
 
       <!-- DOVOLENKA + ŽIADOSTI -->
       <section id="dovolenka">
-
-        <!-- NOVÁ ŽIADOSŤ -->
         <div class="card" style="margin-bottom:20px;">
           <div class="card-header"><span class="card-title">Požiadať o neprítomnosť</span></div>
           <div class="card-body">
@@ -520,7 +502,6 @@
           </div>
         </div>
 
-        <!-- MOJE ŽIADOSTI -->
         <div class="card" style="margin-bottom:20px;">
           <div class="card-header">
             <span class="card-title">Moje žiadosti</span>
@@ -531,7 +512,6 @@
           </div>
         </div>
 
-        <!-- SCHVÁLENÉ NEPRÍTOMNOSTI (pridané adminom) -->
         <div class="card">
           <div class="card-header"><span class="card-title">Evidencia neprítomností</span></div>
           <div class="card-body">
@@ -565,17 +545,16 @@ const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);
 
 const userId = localStorage.getItem('uid');
-if (!userId)             { alert('Nie si prihlásený!'); window.location.href = 'index.html'; }
-else if (userId==='admin') { window.location.href = 'admin.html'; }
+if (!userId)              { alert('Nie si prihlásený!'); window.location.href = 'index.html'; }
+else if (userId === 'admin') { window.location.href = 'admin.html'; }
 
 // ── STATE ────────────────────────────────────────────────────────────────────
-let allRecords  = [];
-let allKom      = [];
+let allRecords  = [];   // všetky sparsované záznamy zamestnanca
+let allKom      = [];   // záznamy ktoré majú komentar od admina
 let myName      = '';
 let myZiadosti  = [];
 const seenKey   = `seenKom_${userId}`;
 
-// ── COLOR MAP ────────────────────────────────────────────────────────────────
 const colorVarMap = {
   accent:  { bg:'#EFF6FF', text:'#1D4ED8', border:'#BFDBFE' },
   success: { bg:'#ECFDF5', text:'#059669', border:'#A7F3D0' },
@@ -585,31 +564,18 @@ const colorVarMap = {
   teal:    { bg:'#F0FDFA', text:'#0D9488', border:'#99F6E4' },
 };
 
-// ── DARK MODE ─────────────────────────────────────────────────────────────────
-window.toggleDark = function() {
-  document.body.classList.toggle('dark');
-  const isDark = document.body.classList.contains('dark');
-  localStorage.setItem('darkMode', isDark ? '1' : '0');
-  const btn = document.getElementById('darkToggleBtn');
-  btn.innerHTML = isDark
-    ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg> Svetlý režim'
-    : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg> Tmavý režim';
-};
+const BREAK_MINUTES = 30;
 
-// ── MOBILE MENU ───────────────────────────────────────────────────────────────
-window.openSidebar  = () => { document.getElementById('sidebar').classList.add('mobile-open'); document.getElementById('sidebarOverlay').classList.add('open'); };
-window.closeSidebar = () => { document.getElementById('sidebar').classList.remove('mobile-open'); document.getElementById('sidebarOverlay').classList.remove('open'); };
-
-// ── HELPERS ───────────────────────────────────────────────────────────────────
+// ── UTILS ─────────────────────────────────────────────────────────────────────
 function initials(n) { return (n||'?').split(' ').map(w=>w[0]).join('').toUpperCase().substring(0,2); }
 
 function msToHhMm(ms) {
-  if (!ms || ms < 0) return '0h 00m';
-  const m = Math.floor(ms/60000), h = Math.floor(m/60);
-  return `${h}h ${String(m%60).padStart(2,'0')}m`;
+  if (!ms || ms <= 0) return '0h 00m';
+  const m = Math.floor(ms / 60000), h = Math.floor(m / 60);
+  return `${h}h ${String(m % 60).padStart(2,'0')}m`;
 }
 
-function badgeFor(stav, raw) {
+function badgeHtml(stav, raw) {
   const map = { prichod:'badge-success', odchod:'badge-danger', prestavka:'badge-warning', pn:'badge-purple' };
   return `<span class="badge ${map[stav]||'badge-neutral'}">${raw}</span>`;
 }
@@ -628,425 +594,605 @@ function nowStr() {
   return `${String(n.getDate()).padStart(2,'0')}.${String(n.getMonth()+1).padStart(2,'0')}.${n.getFullYear()} ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`;
 }
 
-// ── VÝPOČET ODPRACOVANÉHO ČASU (s odpočtom prestávok) ─────────────────────
-// Prestávky sú zaznamenané ako jednotlivé "prestavka" záznamy.
-// Predpokladáme pevnú dĺžku prestávky 30 min za každý záznam — alebo vypočítame
-// ak sú párové (začiatok/koniec). V tomto systéme je každý záznam jeden bod,
-// preto odčítame 30 min za každú prestávku v danom dni.
-const BREAK_MINUTES = 30;
-
-function calcWorkNet(records, prefix) {
-  const logs = records
-    .filter(r => (r.stav==='prichod'||r.stav==='odchod') && r.cas.startsWith(prefix))
-    .sort((a,b) => a.cas.localeCompare(b.cas));
-  let totalMs=0, last=null;
-  logs.forEach(l => {
-    if (l.stav==='prichod') last=new Date(l.cas);
-    else if (l.stav==='odchod' && last) { totalMs+=new Date(l.cas)-last; last=null; }
-  });
-  // Ak je zamestnanec stále prihlásený (príchod bez odchodu), počítaj do teraz
-  if (last) totalMs += Date.now() - last.getTime();
-  const breaks = records.filter(r => r.stav==='prestavka' && r.cas.startsWith(prefix)).length;
-  return Math.max(0, totalMs - breaks * BREAK_MINUTES * 60000);
-}
-
-// Pre tabuľku — odpracovaný čas medzi príchodom a odchodom (bez prestávok)
-function calcDayPairs(dayRecords) {
-  const io = dayRecords.filter(r => r.stav==='prichod'||r.stav==='odchod').sort((a,b)=>a.cas.localeCompare(b.cas));
-  const breaks = dayRecords.filter(r => r.stav==='prestavka').length;
-  let totalMs=0, last=null;
-  io.forEach(l => {
-    if (l.stav==='prichod') last=new Date(l.cas);
-    else if (l.stav==='odchod' && last) { totalMs+=new Date(l.cas)-last; last=null; }
-  });
-  const breakMs = breaks * BREAK_MINUTES * 60000;
-  return { gross: totalMs, net: Math.max(0, totalMs - breakMs), breaks };
-}
-
-
-// ── TABLES ────────────────────────────────────────────────────────────────────
-window.renderTables = function() {
-  renderDocSection();
-  renderSec('prestavkyTable',['prestavka'],document.getElementById('datePrestavky').value);
-  renderSec('pnTable',['pn'],document.getElementById('datePN').value);
-};
-
-// Dochádzka — s odpočtom prestávok po pároch
-function renderDocSection() {
-  const tbody=document.getElementById('dochadzkaTable');
-  const filterDate=document.getElementById('dateDochadzka').value;
-  let rows=allRecords.filter(r=>r.stav==='prichod'||r.stav==='odchod');
-  if (filterDate) rows=rows.filter(r=>r.date===filterDate);
-  if (!rows.length) { tbody.innerHTML='<tr class="empty-row"><td colspan="4">Žiadne záznamy</td></tr>'; return; }
-
-  // Zoskup podľa dňa pre výpočet
-  const byDate={};
-  allRecords.forEach(r=>{ if (!byDate[r.date]) byDate[r.date]=[]; byDate[r.date].push(r); });
-
-  // Zoraď chronologicky a pridaj info o odprac. čase pri odchode
-  const sorted=[...rows].sort((a,b)=>b.cas.localeCompare(a.cas));
-  tbody.innerHTML=sorted.map(r=>{
-    let timeHtml='<span style="color:var(--text-muted);font-size:12px;">—</span>';
-    if (r.stav==='odchod') {
-      const dayRecs=byDate[r.date]||[];
-      const {net,breaks}=calcDayPairs(dayRecs);
-      if (net>0) {
-        timeHtml=`<span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--success);font-weight:600;">${msToHhMm(net)}</span>`;
-        if (breaks>0) timeHtml+=`<span style="font-size:11px;color:var(--text-muted);margin-left:5px;">(−${breaks}× prest.)</span>`;
-      }
-    }
-    const kHtml=r.komentar
-      ? `<div class="komentar-bubble"><div><div class="kb-head">💬 Admin napísal</div><div class="kb-text">${r.komentar}</div></div></div>`
-      : `<span style="color:var(--text-muted);font-size:12px;">—</span>`;
-    return `<tr><td><span class="time-cell">${r.casDisplay}</span></td><td>${badgeFor(r.stav,r.rawType)}</td><td>${timeHtml}</td><td>${kHtml}</td></tr>`;
-  }).join('');
-}
-
-function renderSec(tbodyId,stavArr,filterDate) {
-  const tbody=document.getElementById(tbodyId);
-  let rows=allRecords.filter(r=>stavArr.includes(r.stav));
-  if (filterDate) rows=rows.filter(r=>r.date===filterDate);
-  if (!rows.length) { tbody.innerHTML='<tr class="empty-row"><td colspan="3">Žiadne záznamy</td></tr>'; return; }
-  tbody.innerHTML=rows.map(r=>{
-    const kHtml=r.komentar
-      ? `<div class="komentar-bubble"><div><div class="kb-head">💬 Admin napísal</div><div class="kb-text">${r.komentar}</div></div></div>`
-      : `<span style="color:var(--text-muted);font-size:12px;">—</span>`;
-    return `<tr><td><span class="time-cell">${r.casDisplay}</span></td><td>${badgeFor(r.stav,r.rawType)}</td><td>${kHtml}</td></tr>`;
-  }).join('');
-}
-
-// ── BAR CHART ─────────────────────────────────────────────────────────────────
-function buildWeekChart(records,mon) {
-  const labels=['Po','Ut','St','Št','Pi','So','Ne'];
-  const todayIdx=(new Date().getDay()+6)%7;
-  const data=labels.map((_,i)=>{
-    const d=new Date(mon); d.setDate(d.getDate()+i);
-    return {label:labels[i], h:calcWorkNet(records,d.toISOString().substring(0,10))/3600000};
-  });
-  const maxH=Math.max(...data.map(d=>d.h),1);
-  document.getElementById('weekChart').innerHTML=data.map((d,i)=>{
-    const px=Math.round((d.h/maxH)*65);
-    return `<div class="bar-col"><div class="bar-val">${d.h>0?d.h.toFixed(1)+'h':''}</div><div class="bar" style="height:${px}px;background:${i===todayIdx?'var(--accent)':'#BFDBFE'};"></div><div class="bar-label">${d.label}</div></div>`;
-  }).join('');
-}
-
-// ── KOMENTÁRE ─────────────────────────────────────────────────────────────────
 function setStatus(cls, txt) {
   const box = document.getElementById('statusBox');
   box.className = `status-banner ${cls}`;
   document.getElementById('statusText').textContent = txt;
 }
 
-function typLabel(s){ return {prichod:'Príchod',odchod:'Odchod',prestavka:'Prestávka',pn:'PN'}[s]||s; }
+// ── PARSOVANIE ZÁZNAMOV ───────────────────────────────────────────────────────
+/**
+ * Parsuje jeden Firebase log objekt a vracia štruktúrovaný záznam.
+ * OPRAVA: Teraz správne načítava komentar z log.komentar a neunikne žiadny záznam.
+ */
+function parseLog(log, logType, logKey) {
+  if (!log || !log.cas || !log.typ) return null;
+
+  let cleanTime = String(log.cas);
+  let isoTime = cleanTime;
+  let displayTime = cleanTime;
+
+  // Formát: "DD.MM.YYYY HH:MM"
+  const m = cleanTime.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})\s+(\d{1,2}:\d{2})/);
+  if (m) {
+    const [, d, mo, y, t] = m;
+    isoTime = `${y}-${mo.padStart(2,'0')}-${d.padStart(2,'0')} ${t}`;
+    displayTime = `${d.padStart(2,'0')}.${mo.padStart(2,'0')}.${y} ${t}`;
+  }
+  // Formát: "YYYY-MM-DDTHH:MM" alebo "YYYY-MM-DD HH:MM"
+  else if (cleanTime.includes('-') && cleanTime.length >= 16) {
+    isoTime = cleanTime.replace('T', ' ');
+    const [dt, ti] = isoTime.split(' ');
+    const [y, mo, d] = dt.split('-');
+    displayTime = `${d}.${mo}.${y} ${(ti||'').substring(0,5)}`;
+  } else {
+    return null; // nerozpoznaný formát
+  }
+
+  // Normalizuj typ
+  const typNorm = String(log.typ).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  let stav = null;
+  if (typNorm.includes('prichod')) stav = 'prichod';
+  else if (typNorm.includes('odchod')) stav = 'odchod';
+  else if (typNorm.includes('prestavka')) stav = 'prestavka';
+  else if (typNorm.includes('pn')) stav = 'pn';
+  if (!stav) return null;
+
+  // KĽÚČOVÁ OPRAVA: komentar je priamo v log objekte
+  const komentar = (log.komentar && String(log.komentar).trim()) ? String(log.komentar).trim() : null;
+
+  return {
+    logKey,
+    logType,
+    cas: isoTime,
+    casDisplay: displayTime,
+    date: isoTime.substring(0, 10),
+    time: isoTime.substring(11, 16),
+    stav,
+    rawType: String(log.typ).toUpperCase(),
+    komentar   // null alebo string — TOTO je správa od admina
+  };
+}
+
+// ── VÝPOČET ODPRACOVANÉHO ČASU ────────────────────────────────────────────────
+function calcWorkNet(records, prefix) {
+  const logs = records
+    .filter(r => (r.stav==='prichod' || r.stav==='odchod') && r.cas.startsWith(prefix))
+    .sort((a,b) => a.cas.localeCompare(b.cas));
+  let totalMs = 0, last = null;
+  logs.forEach(l => {
+    if (l.stav === 'prichod') last = new Date(l.cas);
+    else if (l.stav === 'odchod' && last) { totalMs += new Date(l.cas) - last; last = null; }
+  });
+  if (last) totalMs += Date.now() - last.getTime(); // stále prihlásený
+  const breaks = records.filter(r => r.stav === 'prestavka' && r.cas.startsWith(prefix)).length;
+  return Math.max(0, totalMs - breaks * BREAK_MINUTES * 60000);
+}
+
+function calcDayPairs(dayRecords) {
+  const io = dayRecords.filter(r => r.stav==='prichod' || r.stav==='odchod').sort((a,b) => a.cas.localeCompare(b.cas));
+  const breaks = dayRecords.filter(r => r.stav === 'prestavka').length;
+  let totalMs = 0, last = null;
+  io.forEach(l => {
+    if (l.stav === 'prichod') last = new Date(l.cas);
+    else if (l.stav === 'odchod' && last) { totalMs += new Date(l.cas) - last; last = null; }
+  });
+  return { gross: totalMs, net: Math.max(0, totalMs - breaks * BREAK_MINUTES * 60000), breaks };
+}
+
+// ── TABUĽKY ───────────────────────────────────────────────────────────────────
+window.renderTables = function() {
+  renderDocSection();
+  renderSimpleSection('prestavkyTable', ['prestavka'], document.getElementById('datePrestavky').value, 3);
+  renderSimpleSection('pnTable', ['pn'], document.getElementById('datePN').value, 3);
+};
+
+function renderDocSection() {
+  const tbody = document.getElementById('dochadzkaTable');
+  const filterDate = document.getElementById('dateDochadzka').value;
+  let rows = allRecords.filter(r => r.stav === 'prichod' || r.stav === 'odchod');
+  if (filterDate) rows = rows.filter(r => r.date === filterDate);
+  rows.sort((a,b) => b.cas.localeCompare(a.cas));
+
+  if (!rows.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="4">Žiadne záznamy pre zvolený filter.</td></tr>';
+    return;
+  }
+
+  // Zoskup všetky záznamy podľa dňa pre výpočet čistého času
+  const byDate = {};
+  allRecords.forEach(r => {
+    if (!byDate[r.date]) byDate[r.date] = [];
+    byDate[r.date].push(r);
+  });
+
+  tbody.innerHTML = rows.map(r => {
+    let timeHtml = '<span style="color:var(--text-muted);font-size:12px;">—</span>';
+    if (r.stav === 'odchod') {
+      const { net, breaks } = calcDayPairs(byDate[r.date] || []);
+      if (net > 0) {
+        timeHtml = `<span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--success);font-weight:600;">${msToHhMm(net)}</span>`;
+        if (breaks > 0) timeHtml += `<span style="font-size:11px;color:var(--text-muted);margin-left:5px;">(−${breaks}× prest.)</span>`;
+      }
+    }
+
+    // OPRAVA: Render komentára admina
+    const komHtml = renderKomentarBubble(r.komentar);
+
+    return `<tr>
+      <td><span class="time-cell">${r.casDisplay}</span></td>
+      <td>${badgeHtml(r.stav, r.rawType)}</td>
+      <td>${timeHtml}</td>
+      <td>${komHtml}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderSimpleSection(tbodyId, stavArr, filterDate, cols) {
+  const tbody = document.getElementById(tbodyId);
+  let rows = allRecords.filter(r => stavArr.includes(r.stav));
+  if (filterDate) rows = rows.filter(r => r.date === filterDate);
+  rows.sort((a,b) => b.cas.localeCompare(a.cas));
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="${cols}">Žiadne záznamy pre zvolený filter.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r => {
+    const komHtml = renderKomentarBubble(r.komentar);
+    return `<tr>
+      <td><span class="time-cell">${r.casDisplay}</span></td>
+      <td>${badgeHtml(r.stav, r.rawType)}</td>
+      <td>${komHtml}</td>
+    </tr>`;
+  }).join('');
+}
+
+/**
+ * Renderuje bubble s komentárom od admina.
+ * Ak komentar je null/prázdny → zobrazí "—"
+ */
+function renderKomentarBubble(komentar) {
+  if (!komentar) {
+    return '<span style="color:var(--text-muted);font-size:12px;">—</span>';
+  }
+  return `<div class="komentar-bubble">
+    <div>
+      <div class="kb-head">💬 Admin napísal</div>
+      <div class="kb-text">${escapeHtml(komentar)}</div>
+    </div>
+  </div>`;
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ── BAR CHART ─────────────────────────────────────────────────────────────────
+function buildWeekChart(records, mon) {
+  const labels = ['Po','Ut','St','Št','Pi','So','Ne'];
+  const todayIdx = (new Date().getDay()+6)%7;
+  const data = labels.map((_,i) => {
+    const d = new Date(mon); d.setDate(d.getDate()+i);
+    return { label: labels[i], h: calcWorkNet(records, d.toISOString().substring(0,10)) / 3600000 };
+  });
+  const maxH = Math.max(...data.map(d=>d.h), 1);
+  document.getElementById('weekChart').innerHTML = data.map((d,i) => {
+    const px = Math.round((d.h / maxH) * 65);
+    return `<div class="bar-col">
+      <div class="bar-val">${d.h > 0 ? d.h.toFixed(1)+'h' : ''}</div>
+      <div class="bar" style="height:${px}px; background:${i===todayIdx?'var(--accent)':'#BFDBFE'};"></div>
+      <div class="bar-label">${d.label}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── KOMENTÁRE / SPRÁVY OD ADMINA ─────────────────────────────────────────────
+/**
+ * OPRAVA: Zbiera všetky záznamy s komentárom a renderuje ich ako správy.
+ * Komentáre sú zoradené od najnovšieho.
+ */
+function buildKomentare() {
+  // Vyber záznamy ktoré majú komentar (nie null)
+  allKom = allRecords.filter(r => r.komentar).sort((a,b) => b.cas.localeCompare(a.cas));
+}
+
+function typLabel(s) {
+  return { prichod:'Príchod', odchod:'Odchod', prestavka:'Prestávka', pn:'PN' }[s] || s;
+}
 
 function renderKomSection(seen) {
-  const list=document.getElementById('komList'), cnt=document.getElementById('komCount');
-  if (!allKom.length) { list.innerHTML='<p style="color:var(--text-muted);font-size:13px;">Admin ti zatiaľ nenapísal žiadnu správu.</p>'; cnt.textContent=''; return; }
-  cnt.textContent=`${allKom.length} správ`;
-  list.innerHTML=allKom.map(k=>{
-    const isNew=!seen.includes(k.cas+'|'+k.komentar);
-    return `<div class="comment-item${isNew?' is-new':''}"><div class="comment-avatar">💬</div><div class="comment-body"><div class="comment-top"><span class="comment-author">👨‍💼 Admin ${isNew?'<span class="new-pill">NOVÉ</span>':''}</span><span class="comment-time">${k.casDisplay}</span></div><div class="comment-what">K záznamu: ${typLabel(k.stav)} (${k.rawType})</div><div class="comment-text">${k.komentar}</div></div></div>`;
+  const list = document.getElementById('komList');
+  const cnt  = document.getElementById('komCount');
+
+  if (!allKom.length) {
+    list.innerHTML = `<div class="empty-comments">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <p>Admin ti zatiaľ nenapísal žiadnu správu.</p>
+    </div>`;
+    cnt.textContent = '';
+    return;
+  }
+
+  cnt.textContent = `${allKom.length} správ${allKom.length === 1 ? 'a' : allKom.length < 5 ? 'y' : ''}`;
+
+  list.innerHTML = allKom.map(k => {
+    // Unikátny identifikátor správy pre "seen" tracking
+    const uid = k.cas + '|' + k.logKey;
+    const isNew = !seen.includes(uid);
+    return `<div class="comment-item${isNew ? ' is-new' : ''}">
+      <div class="comment-avatar">💬</div>
+      <div class="comment-body">
+        <div class="comment-top">
+          <span class="comment-author">👨‍💼 Admin ${isNew ? '<span class="new-pill">NOVÉ</span>' : ''}</span>
+          <span class="comment-time">${k.casDisplay}</span>
+        </div>
+        <div class="comment-what">K záznamu: ${typLabel(k.stav)} (${k.rawType})</div>
+        <div class="comment-text">${escapeHtml(k.komentar)}</div>
+      </div>
+    </div>`;
   }).join('');
 }
 
 function renderDashKom(seen) {
-  const el=document.getElementById('dashKom');
-  const top3=allKom.slice(0,3);
-  if (!top3.length) { el.innerHTML='<p style="color:var(--text-muted);font-size:13px;">Žiadne správy od admina.</p>'; return; }
-  el.innerHTML=top3.map(k=>{
-    const isNew=!seen.includes(k.cas+'|'+k.komentar);
-    return `<div class="comment-item${isNew?' is-new':''}" style="margin-bottom:8px;"><div class="comment-avatar" style="width:28px;height:28px;font-size:13px;">💬</div><div class="comment-body"><div class="comment-top"><span class="comment-author" style="font-size:12px;">Admin ${isNew?'<span class="new-pill">NOVÉ</span>':''}</span><span class="comment-time" style="font-size:10px;">${k.casDisplay}</span></div><div class="comment-what" style="font-size:10px;">K záznamu: ${typLabel(k.stav)}</div><div class="comment-text" style="font-size:13px;">${k.komentar}</div></div></div>`;
+  const el = document.getElementById('dashKom');
+  const top3 = allKom.slice(0, 3);
+  if (!top3.length) {
+    el.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">Žiadne správy od admina.</p>';
+    return;
+  }
+  el.innerHTML = top3.map(k => {
+    const uid = k.cas + '|' + k.logKey;
+    const isNew = !seen.includes(uid);
+    return `<div class="comment-item${isNew ? ' is-new' : ''}" style="margin-bottom:8px;">
+      <div class="comment-avatar" style="width:28px;height:28px;font-size:12px;">💬</div>
+      <div class="comment-body">
+        <div class="comment-top">
+          <span class="comment-author" style="font-size:12px;">Admin ${isNew ? '<span class="new-pill">NOVÉ</span>' : ''}</span>
+          <span class="comment-time" style="font-size:10px;">${k.casDisplay}</span>
+        </div>
+        <div class="comment-what" style="font-size:10px;">K záznamu: ${typLabel(k.stav)}</div>
+        <div class="comment-text" style="font-size:13px;">${escapeHtml(k.komentar)}</div>
+      </div>
+    </div>`;
   }).join('');
 }
 
+function getSeenIds() {
+  try { return JSON.parse(localStorage.getItem(seenKey) || '[]'); } catch { return []; }
+}
+
 function markSeen() {
-  const ids=allKom.map(k=>k.cas+'|'+k.komentar);
-  localStorage.setItem(seenKey,JSON.stringify(ids));
-  document.getElementById('navBadge').style.display='none';
-  document.getElementById('statNew').textContent='0';
+  const ids = allKom.map(k => k.cas + '|' + k.logKey);
+  localStorage.setItem(seenKey, JSON.stringify(ids));
+  document.getElementById('navBadge').style.display = 'none';
+  document.getElementById('statNew').textContent = '0';
 }
 
 // ── ŽIADOSTI O DOVOLENKU ──────────────────────────────────────────────────────
 window.submitZiadost = async function() {
-  const od=document.getElementById('ziadOd').value;
-  const doDo=document.getElementById('ziadDo').value;
-  const typ=document.getElementById('ziadTyp').value;
-  const poznamka=document.getElementById('ziadPoznamka').value.trim();
-  if (!od||!doDo) return alert('Vyplň dátumy od a do.');
-  if (od>doDo) return alert('Dátum "od" musí byť pred "do".');
+  const od = document.getElementById('ziadOd').value;
+  const doDo = document.getElementById('ziadDo').value;
+  const typ = document.getElementById('ziadTyp').value;
+  const poznamka = document.getElementById('ziadPoznamka').value.trim();
+  if (!od || !doDo) return alert('Vyplň dátumy od a do.');
+  if (od > doDo) return alert('Dátum "od" musí byť pred "do".');
 
-  const entry={
-    meno: myName, od, do: doDo, typ, poznamka,
-    stav: 'pending',
-    podane: nowStr(),
-    userId
-  };
+  const entry = { meno: myName, od, do: doDo, typ, poznamka, stav: 'pending', podane: nowStr(), userId };
   try {
-    const newRef=push(ref(db,`ziadosti/${userId}`));
-    await set(newRef,entry);
-    // Tiež notifikuj admina cez spoločný node
-    await set(ref(db,`adminNotifications/${newRef.key}`),{...entry, ziadostKey: newRef.key});
-    myZiadosti.unshift({...entry,_key:newRef.key});
+    const newRef = push(ref(db, `ziadosti/${userId}`));
+    await set(newRef, entry);
+    await set(ref(db, `adminNotifications/${newRef.key}`), { ...entry, ziadostKey: newRef.key });
+    myZiadosti.unshift({ ...entry, _key: newRef.key });
     renderZiadosti();
-    document.getElementById('ziadOd').value='';
-    document.getElementById('ziadDo').value='';
-    document.getElementById('ziadPoznamka').value='';
+    document.getElementById('ziadOd').value = '';
+    document.getElementById('ziadDo').value = '';
+    document.getElementById('ziadPoznamka').value = '';
     alert('✅ Žiadosť odoslaná! Admin ju čoskoro spracuje.');
   } catch(e) { alert('Chyba pri odosielaní. Skús znova.'); console.error(e); }
 };
 
 function renderZiadosti() {
-  const el=document.getElementById('ziadostList');
-  const cnt=document.getElementById('ziadostCount');
-  if (!myZiadosti.length) { el.innerHTML='<p style="color:var(--text-muted);font-size:13px;">Žiadne odoslané žiadosti.</p>'; cnt.textContent=''; return; }
-  cnt.textContent=`${myZiadosti.length} žiadost${myZiadosti.length===1?'':'í'}`;
-  const tLabel={dovolenka:'Dovolenka',navsteva_lekara:'Lekár',ospravedlnena:'Ospravedlnená',ine:'Iné'};
-  const stavMap={
-    pending: { badge:'badge-warning', label:'⏳ Čaká na schválenie' },
-    approved:{ badge:'badge-success', label:'✅ Schválená' },
-    rejected:{ badge:'badge-danger',  label:'❌ Zamietnutá' },
+  const el = document.getElementById('ziadostList');
+  const cnt = document.getElementById('ziadostCount');
+  if (!myZiadosti.length) {
+    el.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">Žiadne odoslané žiadosti.</p>';
+    cnt.textContent = '';
+    return;
+  }
+  cnt.textContent = `${myZiadosti.length} žiadost${myZiadosti.length===1?'':'í'}`;
+  const tLabel = { dovolenka:'Dovolenka', navsteva_lekara:'Lekár', ospravedlnena:'Ospravedlnená', ine:'Iné' };
+  const stavMap = {
+    pending:  { badge:'badge-warning', label:'⏳ Čaká na schválenie' },
+    approved: { badge:'badge-success', label:'✅ Schválená' },
+    rejected: { badge:'badge-danger',  label:'❌ Zamietnutá' },
   };
-  el.innerHTML='<div style="display:flex;flex-direction:column;gap:8px;">'+
-    myZiadosti.map(z=>{
-      const s=stavMap[z.stav]||stavMap.pending;
-      return `<div class="ziadost-item ${z.stav}">
+  el.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;">' +
+    myZiadosti.map(z => {
+      const s = stavMap[z.stav] || stavMap.pending;
+      return `<div class="ziadost-item ${z.stav||'pending'}">
         <div class="ziadost-left">
           <div class="ziadost-dates">📅 ${z.od} → ${z.do}</div>
           <div class="ziadost-type">${tLabel[z.typ]||z.typ} · Podané: ${z.podane}</div>
-          ${z.poznamka?`<div class="ziadost-note">„${z.poznamka}"</div>`:''}
-          ${z.adminNote?`<div class="ziadost-admin-note">💬 Admin: ${z.adminNote}</div>`:''}
+          ${z.poznamka ? `<div class="ziadost-note">„${escapeHtml(z.poznamka)}"</div>` : ''}
+          ${z.adminNote ? `<div class="ziadost-admin-note">💬 Admin: ${escapeHtml(z.adminNote)}</div>` : ''}
         </div>
         <span class="badge ${s.badge}">${s.label}</span>
       </div>`;
-    }).join('')+'</div>';
+    }).join('') + '</div>';
 }
 
-// ── DOVOLENKA (evidencia od admina) ──────────────────────────────────────────
 async function renderDovolenka(name) {
-  let mine=[];
+  let mine = [];
   try {
-    const snap=await get(ref(db,'dovolenky'));
-    if (snap.exists()) mine=Object.values(snap.val()).filter(d=>(d.meno||'').toLowerCase()===name.toLowerCase());
+    const snap = await get(ref(db, 'dovolenky'));
+    if (snap.exists()) {
+      mine = Object.values(snap.val()).filter(d => (d.meno||'').toLowerCase() === name.toLowerCase());
+    }
   } catch(e) {
-    mine=JSON.parse(localStorage.getItem('dovolenky')||'[]').filter(d=>(d.meno||'').toLowerCase()===name.toLowerCase());
+    mine = JSON.parse(localStorage.getItem('dovolenky')||'[]').filter(d => (d.meno||'').toLowerCase() === name.toLowerCase());
   }
-  const list=document.getElementById('dovolList');
-  if (!mine.length) { list.innerHTML='<p style="color:var(--text-muted);font-size:13px;">Žiadne záznamy od admina.</p>'; return; }
-  const tLabel={dovolenka:'Dovolenka',navsteva_lekara:'Návšteva lekára',ospravedlnena:'Ospravedlnená absencia',ine:'Iné'};
-  const tBadge={dovolenka:'badge-warning',navsteva_lekara:'badge-neutral',ospravedlnena:'badge-neutral',ine:'badge-neutral'};
-  const today=todayStr();
-  list.innerHTML='<div style="display:flex;flex-direction:column;gap:8px;">'+
-    mine.sort((a,b)=>b.od.localeCompare(a.od)).map(d=>{
-      const isActive=d.od<=today&&d.do>=today;
-      const isPast=d.do<today;
+  const list = document.getElementById('dovolList');
+  if (!mine.length) { list.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">Žiadne záznamy od admina.</p>'; return; }
+  const tLabel = { dovolenka:'Dovolenka', navsteva_lekara:'Návšteva lekára', ospravedlnena:'Ospravedlnená absencia', ine:'Iné' };
+  const tBadge = { dovolenka:'badge-warning', navsteva_lekara:'badge-neutral', ospravedlnena:'badge-neutral', ine:'badge-neutral' };
+  const today = todayStr();
+  list.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;">' +
+    mine.sort((a,b) => b.od.localeCompare(a.od)).map(d => {
+      const isActive = d.od <= today && d.do >= today;
+      const isPast = d.do < today;
       return `<div class="dov-item" style="${isActive?'border-color:var(--warning);background:var(--warning-light);':isPast?'opacity:0.6;':''}">
-        <div><div class="dov-dates">${d.od} → ${d.do}</div>${d.poznamka?`<div class="dov-note">${d.poznamka}</div>`:''}${isActive?'<div style="font-size:11px;font-weight:700;color:var(--warning);margin-top:3px;">● Momentálne aktívne</div>':''}</div>
+        <div>
+          <div class="dov-dates">${d.od} → ${d.do}</div>
+          ${d.poznamka ? `<div class="dov-note">${escapeHtml(d.poznamka)}</div>` : ''}
+          ${isActive ? '<div style="font-size:11px;font-weight:700;color:var(--warning);margin-top:3px;">● Momentálne aktívne</div>' : ''}
+        </div>
         <span class="badge ${tBadge[d.typ]||'badge-neutral'}">${tLabel[d.typ]||d.typ}</span>
       </div>`;
-    }).join('')+'</div>';
+    }).join('') + '</div>';
 }
 
 // ── EXPORT ────────────────────────────────────────────────────────────────────
 window.exportTable = function(type) {
-  const filterDate=document.getElementById(`date${type.charAt(0).toUpperCase()+type.slice(1)}`).value;
-  const stavMap={dochadzka:['prichod','odchod'],prestavky:['prestavka'],pn:['pn']};
-  let rows=allRecords.filter(r=>stavMap[type].includes(r.stav));
-  if (filterDate) rows=rows.filter(r=>r.date===filterDate);
-  rows.sort((a,b)=>a.cas.localeCompare(b.cas));
+  const capType = type.charAt(0).toUpperCase() + type.slice(1);
+  const filterDate = document.getElementById(`date${capType}`)?.value || '';
+  const stavMap = { dochadzka:['prichod','odchod'], prestavky:['prestavka'], pn:['pn'] };
+  let rows = allRecords.filter(r => stavMap[type].includes(r.stav));
+  if (filterDate) rows = rows.filter(r => r.date === filterDate);
+  rows.sort((a,b) => a.cas.localeCompare(b.cas));
 
-  const data=[['Typ:',type],['Používateľ:',myName],[],
-    type==='dochadzka'?['Dátum','Čas','Typ','Čistý odprac. čas','Komentár admina']:['Dátum a Čas','Typ','Komentár admina']
+  const data = [['Typ:', type], ['Používateľ:', myName], [],
+    type === 'dochadzka'
+      ? ['Dátum','Čas','Typ','Čistý odprac. čas','Komentár admina']
+      : ['Dátum a Čas','Typ','Komentár admina']
   ];
 
-  if (type==='dochadzka') {
-    const byDate={};
-    allRecords.forEach(r=>{ if(!byDate[r.date]) byDate[r.date]=[]; byDate[r.date].push(r); });
-    let totalNet=0;
-    const dates=[...new Set(rows.map(r=>r.date))].sort();
-    dates.forEach(date=>{
-      const dayRecs=byDate[date]||[];
-      const {net,breaks}=calcDayPairs(dayRecs);
-      const dayRows=rows.filter(r=>r.date===date);
-      dayRows.forEach(r=>data.push([r.date,r.time,r.rawType,r.stav==='odchod'?msToHhMm(net):'',r.komentar||'']));
-      if (net>0) { data.push(['','Deň celkom (čistý):','',msToHhMm(net),breaks>0?`(−${breaks} prestávok)`:'']); totalNet+=net; }
+  if (type === 'dochadzka') {
+    const byDate = {};
+    allRecords.forEach(r => { if (!byDate[r.date]) byDate[r.date] = []; byDate[r.date].push(r); });
+    let totalNet = 0;
+    const dates = [...new Set(rows.map(r => r.date))].sort();
+    dates.forEach(date => {
+      const { net, breaks } = calcDayPairs(byDate[date] || []);
+      rows.filter(r => r.date === date).forEach(r => {
+        data.push([r.date, r.time, r.rawType, r.stav==='odchod' ? msToHhMm(net) : '', r.komentar || '']);
+      });
+      if (net > 0) { data.push(['','Deň celkom:','', msToHhMm(net), breaks > 0 ? `(−${breaks} prestávok)` : '']); totalNet += net; }
       data.push([]);
     });
-    data.push(['Celkový čistý čas:','','',msToHhMm(totalNet),'']);
+    data.push(['Celkový čistý čas:','','', msToHhMm(totalNet), '']);
   } else {
-    rows.forEach(r=>data.push([r.casDisplay,r.rawType,r.komentar||'']));
+    rows.forEach(r => data.push([r.casDisplay, r.rawType, r.komentar || '']));
   }
 
-  const wb=XLSX.utils.book_new();
-  const ws=XLSX.utils.aoa_to_sheet(data);
-  ws['!cols']=[{wpx:100},{wpx:150},{wpx:100},{wpx:130},{wpx:200}];
-  XLSX.utils.book_append_sheet(wb,ws,'Export');
-  XLSX.writeFile(wb,`${type}_${myName.replace(/[^a-zA-Z0-9]/g,'_')}_export.xlsx`);
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  ws['!cols'] = [{wpx:100},{wpx:150},{wpx:100},{wpx:130},{wpx:200}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Export');
+  XLSX.writeFile(wb, `${type}_${myName.replace(/[^a-zA-Z0-9]/g,'_')}_export.xlsx`);
 
-  const btn=document.querySelector(`[data-export-table="${type}"]`);
-  if (btn) { btn.textContent='✓ Stiahnuté'; setTimeout(()=>{btn.textContent='Export XLSX';},2000); }
+  const btn = document.querySelector(`[data-export-table="${type}"]`);
+  if (btn) { btn.textContent = '✓ Stiahnuté'; setTimeout(() => { btn.textContent = 'Export XLSX'; }, 2000); }
 };
 
-// ── NAV ───────────────────────────────────────────────────────────────────────
-function goTo(target) {
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  document.querySelector(`[data-target="${target}"]`)?.classList.add('active');
-  document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
-  document.getElementById(target).classList.add('active');
-  if (target==='komentare') markSeen();
-  closeSidebar();
-}
-window.goTo=goTo;
+// ── DARK MODE & MOBILE ────────────────────────────────────────────────────────
+window.toggleDark = function() {
+  document.body.classList.toggle('dark');
+  const isDark = document.body.classList.contains('dark');
+  localStorage.setItem('darkMode', isDark ? '1' : '0');
+  document.getElementById('darkToggleBtn').innerHTML = isDark
+    ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg> Svetlý režim'
+    : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg> Tmavý režim';
+};
 
-document.querySelectorAll('.nav-btn[data-target]').forEach(btn=>{
-  btn.addEventListener('click',()=>goTo(btn.dataset.target));
-});
-document.getElementById('logoutBtn').addEventListener('click',()=>{
-  localStorage.removeItem('uid'); window.location.href='index.html';
-});
+window.openSidebar  = () => { document.getElementById('sidebar').classList.add('mobile-open'); document.getElementById('sidebarOverlay').classList.add('open'); };
+window.closeSidebar = () => { document.getElementById('sidebar').classList.remove('mobile-open'); document.getElementById('sidebarOverlay').classList.remove('open'); };
 
-// ── FIREBASE RETRY ────────────────────────────────────────────────────────────
 window.retryLoad = function() {
   document.getElementById('offlineBanner').classList.remove('show');
-  listenerStarted = false;
-  startRealtimeListener();
+  startListeners();
 };
 
-// ── REALTIME LISTENERS ───────────────────────────────────────────────────────
+// ── NAVIGÁCIA ─────────────────────────────────────────────────────────────────
+function goTo(target) {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-target="${target}"]`)?.classList.add('active');
+  document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+  document.getElementById(target)?.classList.add('active');
+  if (target === 'komentare') markSeen();
+  closeSidebar();
+}
+window.goTo = goTo;
 
-let staticDataLoaded = false;
-let smenyRTCache = {};
-let rolesRTCache = {};
+document.querySelectorAll('.nav-btn[data-target]').forEach(btn => {
+  btn.addEventListener('click', () => goTo(btn.dataset.target));
+});
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  localStorage.removeItem('uid');
+  window.location.href = 'index.html';
+});
 
-async function initStaticData() {
+// ── FIREBASE REALTIME LISTENERS ───────────────────────────────────────────────
+let smenyCache = {}, rolesCache = {}, staticLoaded = false;
+
+async function loadStaticData() {
   try {
     const [smenySnap, rolesSnap] = await Promise.all([
       get(ref(db, 'smeny')),
       get(ref(db, 'roles'))
     ]);
-    smenyRTCache = smenySnap.exists() ? smenySnap.val() : {};
-    rolesRTCache = rolesSnap.exists() ? rolesSnap.val() : {};
-    staticDataLoaded = true;
-  } catch(e) { console.error('Static data error:', e); }
+    smenyCache = smenySnap.exists() ? smenySnap.val() : {};
+    rolesCache = rolesSnap.exists() ? rolesSnap.val() : {};
+    staticLoaded = true;
+  } catch(e) { console.error('Static data load error:', e); }
 }
 
-function startRealtimeListener() {
-  // Listener na údaje používateľa
+function startListeners() {
+  // ── Listener na dáta používateľa ──
   onValue(ref(db, `users/${userId}`), async (snap) => {
     try {
-    document.getElementById('offlineBanner').classList.remove('show');
-    if (!snap.exists()) { setStatus('st-neutral','Chyba: dáta nenájdené.'); return; }
-    if (!staticDataLoaded) await initStaticData();
+      document.getElementById('offlineBanner').classList.remove('show');
+      if (!snap.exists()) { setStatus('st-neutral', 'Chyba: dáta nenájdené.'); return; }
+      if (!staticLoaded) await loadStaticData();
 
-    const u = snap.val();
-    myName = u.name || '(bez mena)';
-    document.getElementById('userName').textContent = myName;
+      const u = snap.val();
+      myName = u.name || '(bez mena)';
+      document.getElementById('userName').textContent = myName;
+      document.getElementById('profileCard').style.display = 'flex';
+      document.getElementById('profileAvatar').textContent = initials(myName);
+      document.getElementById('profileName').textContent = myName;
 
-    // Rola
-    const myRole = u.rola && rolesRTCache[u.rola] ? rolesRTCache[u.rola] : null;
-    if (myRole) {
-      const c = colorVarMap[myRole.color] || colorVarMap.accent;
-      const label = myRole.label || myRole.name;
-      const applyBadge = (el) => { el.style.display='inline-flex'; el.style.background=c.bg; el.style.color=c.text; el.style.borderColor=c.border; el.innerHTML=`${myRole.emoji||''} ${label}`; };
-      applyBadge(document.getElementById('topbarRoleBadge'));
-      applyBadge(document.getElementById('sidebarRoleBadge'));
-      document.getElementById('topbarSub').textContent=`${myRole.emoji||'💼'} ${myRole.name} · Tvoj osobný prehľad`;
-      const prEl=document.getElementById('profileRoleBadge');
-      prEl.className='profile-role'; prEl.style.display='inline-flex';
-      prEl.style.background=c.bg; prEl.style.color=c.text; prEl.style.borderColor=c.border;
-      prEl.innerHTML=`${myRole.emoji||''} ${myRole.label||myRole.name}`;
-    }
+      // Rola
+      const myRole = u.rola && rolesCache[u.rola] ? rolesCache[u.rola] : null;
+      if (myRole) {
+        const c = colorVarMap[myRole.color] || colorVarMap.accent;
+        const label = myRole.label || myRole.name;
+        const html = `${myRole.emoji || ''} ${label}`;
+        const applyBadge = (el) => {
+          el.style.cssText = `display:inline-flex;background:${c.bg};color:${c.text};border-color:${c.border};`;
+          el.innerHTML = html;
+        };
+        applyBadge(document.getElementById('topbarRoleBadge'));
+        applyBadge(document.getElementById('sidebarRoleBadge'));
+        document.getElementById('topbarSub').textContent = `${myRole.emoji || '💼'} ${myRole.name} · Tvoj osobný prehľad`;
+        const prEl = document.getElementById('profileRoleBadge');
+        prEl.className = 'profile-role';
+        prEl.style.cssText = `display:inline-flex;background:${c.bg};color:${c.text};border-color:${c.border};`;
+        prEl.innerHTML = html;
+      }
 
-    // Profil
-    document.getElementById('profileCard').style.display='flex';
-    document.getElementById('profileAvatar').textContent=initials(myName);
-    document.getElementById('profileName').textContent=myName;
-    if (u.smena && smenyRTCache[u.smena]) {
-      const s=smenyRTCache[u.smena];
-      const el=document.getElementById('profileSmenaBadge');
-      el.style.display='inline-flex'; el.innerHTML=`🗓️ ${s.name} · ${s.start}–${s.end}`;
-    }
+      // Zmena/smena
+      if (u.smena && smenyCache[u.smena]) {
+        const s = smenyCache[u.smena];
+        const el = document.getElementById('profileSmenaBadge');
+        el.style.display = 'inline-flex';
+        el.innerHTML = `🗓️ ${s.name} · ${s.start}–${s.end}`;
+      }
 
-    // Parse záznamy
-    const records=[], kom=[];
-    ['dochadzka','prestavky','pn'].forEach(logType => {
-      Object.values(u[logType]||{}).forEach(log => {
-        if (!log?.cas||!log?.typ) return;
-        let clean=String(log.cas), iso=clean, display=clean;
-        const m=clean.match(/(\d{1,2})\.(\d{1,2})\.(\d{4}) (\d{1,2}:\d{2})/);
-        if (m) { const [,d,mo,y,t]=m; iso=`${y}-${mo.padStart(2,'0')}-${d.padStart(2,'0')} ${t}`; display=`${d.padStart(2,'0')}.${mo.padStart(2,'0')}.${y} ${t}`; }
-        else if (clean.includes('T')) { iso=clean.replace('T',' '); const [dt,ti]=iso.split(' '), [y,mo,d]=dt.split('-'); display=`${d}.${mo}.${y} ${(ti||'').substring(0,5)}`; }
-        else if (clean.includes('-')&&clean.length>=16) { iso=clean; const [dt,ti]=iso.split(' '), [y,mo,d]=dt.split('-'); display=`${d}.${mo}.${y} ${(ti||'').substring(0,5)}`; }
-        else return;
-        const ct=String(log.typ).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-        let stav=null;
-        if (ct.includes('prichod')) stav='prichod'; else if (ct.includes('odchod')) stav='odchod'; else if (ct.includes('prestavka')) stav='prestavka'; else if (ct.includes('pn')) stav='pn';
-        if (!stav) return;
-        if (!records.some(r=>r.cas===iso&&r.stav===stav)) {
-          const rec={cas:iso,casDisplay:display,date:iso.substring(0,10),time:iso.substring(11,16),stav,rawType:log.typ.toUpperCase(),komentar:log.komentar||null,logType};
-          records.push(rec); if (log.komentar) kom.push(rec);
-        }
+      // ── KĽÚČOVÁ ČASŤ: Parsovanie všetkých záznamov vrátane komentárov ──
+      const records = [];
+      ['dochadzka', 'prestavky', 'pn'].forEach(logType => {
+        const logsObj = u[logType] || {};
+        // Iterujeme cez páry kľúč→hodnota aby sme zachovali logKey
+        Object.entries(logsObj).forEach(([logKey, log]) => {
+          const parsed = parseLog(log, logType, logKey);
+          if (parsed) records.push(parsed);
+        });
       });
-    });
-    records.sort((a,b)=>b.cas.localeCompare(a.cas));
-    allRecords=records; allKom=[...kom].sort((a,b)=>b.cas.localeCompare(a.cas));
 
-    // Status
-    const last=records.find(r=>r.stav!=='prestavka');
-    const sm={prichod:['st-prichod','✅ Si prihlásený — PRÍCHOD'],odchod:['st-odchod','🔴 Si odhlásený — ODCHOD'],pn:['st-pn','🏥 Si na PN']};
-    const [cls,txt]=sm[last?.stav]||['st-neutral','ℹ Žiadny záznam'];
-    setStatus(cls,txt);
+      // Zoraď podľa času (najnovší prvý)
+      records.sort((a,b) => b.cas.localeCompare(a.cas));
+      allRecords = records;
 
-    // Štatistiky
-    const today=todayStr(), mon=mondayStr(), month=today.substring(0,7);
-    const dnesNet=calcWorkNet(records,today);
-    const todayBreaks=records.filter(r=>r.stav==='prestavka'&&r.date===today).length;
-    document.getElementById('statDnes').textContent=msToHhMm(dnesNet);
-    document.getElementById('statDnesSub').textContent=todayBreaks>0?`čistý čas (−${todayBreaks}× prestávka)`:'h:mm (čistý čas)';
-    document.getElementById('statMesiac').textContent=msToHhMm(calcWorkNet(records,month));
-    document.getElementById('statPrest').textContent=todayBreaks;
-    document.getElementById('statPrestSub').textContent=`× ${BREAK_MINUTES} min = ${msToHhMm(todayBreaks*BREAK_MINUTES*60000)} odpočtu`;
-    let weekMs=0;
-    for(let i=0;i<7;i++){const d=new Date(mon);d.setDate(d.getDate()+i);weekMs+=calcWorkNet(records,d.toISOString().substring(0,10));}
-    document.getElementById('statTyzden').textContent=msToHhMm(weekMs);
+      // Vyber záznamy s komentármi
+      buildKomentare();
 
-    // Komentáre
-    const seen=JSON.parse(localStorage.getItem(seenKey)||'[]');
-    const nc=allKom.filter(k=>!seen.includes(k.cas+'|'+k.komentar)).length;
-    document.getElementById('statNew').textContent=nc;
-    const nb=document.getElementById('navBadge');
-    if(nc>0){nb.textContent=nc;nb.style.display='inline-flex';}else nb.style.display='none';
+      // ── Status ──
+      const last = records.find(r => r.stav !== 'prestavka');
+      const statusMap = {
+        prichod: ['st-prichod', '✅ Si prihlásený — PRÍCHOD zaregistrovaný'],
+        odchod:  ['st-odchod',  '🔴 Si odhlásený — ODCHOD zaregistrovaný'],
+        pn:      ['st-pn',      '🏥 Si na PN (pracovná neschopnosť)'],
+      };
+      const [cls, txt] = statusMap[last?.stav] || ['st-neutral', 'ℹ Žiadny záznam dnes'];
+      setStatus(cls, txt);
 
-    renderTables(); buildWeekChart(records,mon);
-    renderKomSection(seen); renderDashKom(seen);
-    renderDovolenka(myName);
+      // ── Štatistiky ──
+      const today = todayStr(), mon = mondayStr(), month = today.substring(0, 7);
+      const dnesNet = calcWorkNet(records, today);
+      const todayBreaks = records.filter(r => r.stav === 'prestavka' && r.date === today).length;
+
+      document.getElementById('statDnes').textContent = msToHhMm(dnesNet);
+      document.getElementById('statDnesSub').textContent = todayBreaks > 0
+        ? `čistý čas (−${todayBreaks}× prestávka)`
+        : 'h:mm (čistý čas)';
+      document.getElementById('statMesiac').textContent = msToHhMm(calcWorkNet(records, month));
+      document.getElementById('statPrest').textContent = todayBreaks;
+      document.getElementById('statPrestSub').textContent = `× ${BREAK_MINUTES} min = ${msToHhMm(todayBreaks * BREAK_MINUTES * 60000)} odpočtu`;
+
+      let weekMs = 0;
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(mon); d.setDate(d.getDate() + i);
+        weekMs += calcWorkNet(records, d.toISOString().substring(0, 10));
+      }
+      document.getElementById('statTyzden').textContent = msToHhMm(weekMs);
+
+      // ── Komentáre / správy od admina ──
+      const seen = getSeenIds();
+      const newCount = allKom.filter(k => !seen.includes(k.cas + '|' + k.logKey)).length;
+      document.getElementById('statNew').textContent = newCount;
+      const nb = document.getElementById('navBadge');
+      if (newCount > 0) { nb.textContent = newCount; nb.style.display = 'inline-flex'; }
+      else nb.style.display = 'none';
+
+      // ── Render všetkého ──
+      renderTables();
+      buildWeekChart(records, mon);
+      renderKomSection(seen);
+      renderDashKom(seen);
+      renderDovolenka(myName);
 
     } catch(err) {
-      console.error('onValue handler crash:', err);
+      console.error('Chyba pri spracovaní dát:', err);
       document.getElementById('offlineBanner').classList.add('show');
-      setStatus('st-neutral','⚠ Chyba pri spracovaní dát.');
+      setStatus('st-neutral', '⚠ Chyba pri spracovaní dát.');
     }
   }, (err) => {
-    console.error(err);
+    console.error('Firebase error:', err);
     document.getElementById('offlineBanner').classList.add('show');
-    setStatus('st-neutral','⚠ Chyba spojenia.');
+    setStatus('st-neutral', '⚠ Chyba spojenia so serverom.');
   });
 
-  // Listener na žiadosti
+  // ── Listener na žiadosti ──
   onValue(ref(db, `ziadosti/${userId}`), (snap) => {
     myZiadosti = snap.exists()
-      ? Object.entries(snap.val()).map(([k,v])=>({...v,_key:k})).sort((a,b)=>b.podane.localeCompare(a.podane))
+      ? Object.entries(snap.val())
+          .map(([k,v]) => ({ ...v, _key: k }))
+          .sort((a,b) => (b.podane||'').localeCompare(a.podane||''))
       : [];
     renderZiadosti();
-    const pending=myZiadosti.filter(z=>z.stav==='pending').length;
-    const zb=document.getElementById('navZiadostBadge');
-    if(pending>0){zb.textContent=pending;zb.style.display='inline-flex';}else zb.style.display='none';
+    const pending = myZiadosti.filter(z => z.stav === 'pending').length;
+    const zb = document.getElementById('navZiadostBadge');
+    if (pending > 0) { zb.textContent = pending; zb.style.display = 'inline-flex'; }
+    else zb.style.display = 'none';
   });
 }
 
-// Spusti
-initStaticData().then(startRealtimeListener).catch(startRealtimeListener);
+// ── INIT ──────────────────────────────────────────────────────────────────────
+if (localStorage.getItem('darkMode') === '1') {
+  document.body.classList.add('dark');
+  document.getElementById('darkToggleBtn').innerHTML =
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg> Svetlý režim';
+}
 
-// Každých 60 sekúnd prepočítaj živé štatistiky (dnes, týždeň, mesiac)
+loadStaticData().then(startListeners).catch(startListeners);
+
+// Živá aktualizácia každých 60 sekúnd
 setInterval(() => {
   if (!allRecords.length) return;
   const today = todayStr(), mon = mondayStr(), month = today.substring(0, 7);
@@ -1056,11 +1202,10 @@ setInterval(() => {
   document.getElementById('statDnesSub').textContent = todayBreaks > 0 ? `čistý čas (−${todayBreaks}× prestávka)` : 'h:mm (čistý čas)';
   document.getElementById('statMesiac').textContent = msToHhMm(calcWorkNet(allRecords, month));
   let weekMs = 0;
-  for (let i = 0; i < 7; i++) { const d = new Date(mon); d.setDate(d.getDate() + i); weekMs += calcWorkNet(allRecords, d.toISOString().substring(0, 10)); }
+  for (let i = 0; i < 7; i++) { const d = new Date(mon); d.setDate(d.getDate()+i); weekMs += calcWorkNet(allRecords, d.toISOString().substring(0,10)); }
   document.getElementById('statTyzden').textContent = msToHhMm(weekMs);
   buildWeekChart(allRecords, mon);
 }, 60000);
-
 </script>
 </body>
 </html>
