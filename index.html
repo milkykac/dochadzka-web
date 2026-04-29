@@ -1,238 +1,398 @@
 <!DOCTYPE html>
 <html lang="sk">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Prihlásenie – Dochádzkový systém</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg-light: #f4f7fe;
-      --white: #ffffff;
-      --success-green: #10b981; /* To pekné zelené tlačidlo */
-      --text-muted: #888;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dochádzka – Prihlásenie</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F0F2F5; --surface: #FFFFFF; --surface-2: #F7F8FA;
+    --border: #E2E5EA; --text-primary: #111827; --text-secondary: #6B7280;
+    --text-muted: #9CA3AF; --accent: #1D4ED8; --accent-hover: #1E40AF; --accent-light: #EFF6FF;
+    --success: #059669; --success-light: #ECFDF5;
+    --danger: #DC2626; --danger-light: #FEF2F2;
+    --warning: #D97706; --warning-light: #FFFBEB;
+    --purple: #7C3AED; --purple-light: #F5F3FF;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-lg: 0 10px 30px rgba(0,0,0,0.10), 0 4px 8px rgba(0,0,0,0.05);
+    --radius-sm: 6px; --radius-lg: 14px;
+  }
+  body.dark {
+    --bg: #0F1117; --surface: #1A1D27; --surface-2: #22263A;
+    --border: #2D3148; --text-primary: #F1F5F9; --text-secondary: #94A3B8;
+    --text-muted: #64748B; --accent-light: #1e3a5f;
+    --danger-light: #3b0a0a; --success-light: #052e16;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3); --shadow-lg: 0 10px 30px rgba(0,0,0,0.5);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    color: var(--text-primary);
+    font-size: 14px; line-height: 1.5;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+    transition: background 0.3s, color 0.3s;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0; z-index: -1;
+    background:
+      radial-gradient(800px circle at 20% 20%, rgba(29,78,216,0.08), transparent 50%),
+      radial-gradient(700px circle at 80% 80%, rgba(124,58,237,0.07), transparent 50%);
+    pointer-events: none;
+  }
 
-    body {
-      font-family: 'Poppins', sans-serif;
-      background-color: var(--bg-light);
-      margin: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-    }
+  .login-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: 36px 32px 28px;
+    width: 100%;
+    max-width: 410px;
+    transition: background 0.3s, border-color 0.3s;
+  }
 
-    /* Karta prihlásenia vycentrovaná na stred */
-    .login-card {
-      background: var(--white);
-      width: 100%;
-      max-width: 400px;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-      padding: 40px;
-      animation: fadeIn 0.5s ease-in-out;
-    }
+  .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .logo-mark {
+    width: 40px; height: 40px;
+    background: var(--accent);
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 10px rgba(29,78,216,0.25);
+  }
+  .logo-mark svg { width: 20px; height: 20px; fill: white; }
+  .brand-text h1 { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+  .brand-text p { font-size: 11px; color: var(--text-muted); margin-top: 2px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+  .title { font-size: 20px; font-weight: 700; letter-spacing: -0.4px; margin-bottom: 4px; }
+  .subtitle { font-size: 13px; color: var(--text-secondary); margin-bottom: 24px; }
 
-    .card-header {
-      margin-bottom: 30px;
-      text-align: center;
-    }
+  .field { margin-bottom: 14px; }
+  label {
+    display: block; font-size: 11px; font-weight: 600;
+    color: var(--text-muted); margin-bottom: 6px;
+    text-transform: uppercase; letter-spacing: 0.6px;
+  }
+  .input-wrap { position: relative; }
+  .input-wrap svg.icon {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    width: 16px; height: 16px; color: var(--text-muted); pointer-events: none;
+  }
+  input {
+    width: 100%;
+    padding: 11px 14px 11px 38px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif; font-size: 14px;
+    background: var(--surface);
+    color: var(--text-primary);
+    transition: border 0.15s, box-shadow 0.15s, background 0.3s;
+  }
+  input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(29,78,216,0.12);
+  }
+  input::placeholder { color: var(--text-muted); }
 
-    .card-header h2 {
-      margin: 0;
-      font-size: 24px;
-      color: #111827;
-      font-weight: 600;
-    }
+  .btn-primary {
+    width: 100%;
+    padding: 12px;
+    background: var(--accent); color: white;
+    border: none; border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer; margin-top: 22px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+  }
+  .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(29,78,216,0.3); }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+  .spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
-    .card-header p {
-      color: var(--text-muted);
-      font-size: 14px;
-      margin-top: 5px;
-    }
+  .alert {
+    margin-top: 16px; padding: 11px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 500;
+    display: none; align-items: center; gap: 10px;
+    border: 1px solid;
+  }
+  .alert.show { display: flex; }
+  .alert.error { background: var(--danger-light); color: var(--danger); border-color: #FECACA; }
+  body.dark .alert.error { border-color: #7F1D1D; }
+  .alert.success { background: var(--success-light); color: var(--success); border-color: #A7F3D0; }
+  body.dark .alert.success { border-color: #14532D; }
+  .alert svg { width: 16px; height: 16px; flex-shrink: 0; }
 
-    .input-group {
-      margin-bottom: 20px;
-      position: relative;
-    }
+  .info-list {
+    margin-top: 22px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .info-row {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 12px; color: var(--text-secondary); line-height: 1.5;
+  }
+  .info-pill {
+    flex-shrink: 0;
+    display: inline-flex; align-items: center;
+    padding: 2px 9px; border-radius: 12px;
+    font-size: 11px; font-weight: 600;
+    border: 1px solid;
+  }
+  .info-pill.admin   { background: var(--accent-light);  color: var(--accent);  border-color: #BFDBFE; }
+  .info-pill.subadmin{ background: var(--purple-light); color: var(--purple); border-color: #DDD6FE; }
+  .info-pill.zam     { background: var(--success-light); color: var(--success); border-color: #A7F3D0; }
+  body.dark .info-pill.admin    { border-color: #1E3A8A; }
+  body.dark .info-pill.subadmin { border-color: #4C1D95; }
+  body.dark .info-pill.zam      { border-color: #14532D; }
+  .info-row code {
+    background: var(--surface-2); color: var(--text-primary);
+    padding: 1px 6px; border-radius: 4px;
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    border: 1px solid var(--border);
+  }
 
-    label {
-      display: block;
-      font-size: 13px;
-      color: #374151;
-      margin-bottom: 8px;
-      font-weight: 500;
-    }
+  .footer-actions {
+    display: flex; justify-content: center; align-items: center;
+    margin-top: 18px; gap: 6px;
+  }
+  .dark-toggle {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 20px;
+    background: var(--surface); color: var(--text-secondary);
+    border: 1px solid var(--border);
+    font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .dark-toggle:hover { background: var(--surface-2); color: var(--text-primary); }
+  .dark-toggle svg { width: 14px; height: 14px; }
 
-    input {
-      width: 100%;
-      padding: 12px 15px;
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
-      font-family: 'Poppins', sans-serif;
-      font-size: 14px;
-      outline: none;
-      box-sizing: border-box;
-      transition: all 0.2s;
-      background-color: #f9fafb;
-    }
-
-    input:focus {
-      border-color: var(--success-green);
-      background-color: #fff;
-      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-    }
-
-    /* Zelené tlačidlo podľa vášho výberu */
-    .btn-login {
-      width: 100%;
-      background: var(--success-green);
-      color: white;
-      border: none;
-      padding: 12px;
-      border-radius: 10px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.2s;
-      margin-top: 10px;
-    }
-
-    .btn-login:hover {
-      background: #059669;
-      transform: translateY(-1px);
-    }
-
-    .eye-toggle {
-      position: absolute;
-      right: 15px;
-      top: 38px;
-      cursor: pointer;
-      color: #9ca3af;
-    }
-
-    .error-msg {
-      background: #fef2f2;
-      color: #dc2626;
-      padding: 10px;
-      border-radius: 8px;
-      margin-top: 20px;
-      font-size: 13px;
-      display: none;
-      text-align: center;
-      border: 1px solid #fee2e2;
-    }
-
-    .footer-text {
-      text-align: center;
-      margin-top: 25px;
-      font-size: 12px;
-      color: var(--text-muted);
-      letter-spacing: 0.5px;
-    }
-  </style>
+  @media (max-width: 480px) {
+    .login-card { padding: 28px 22px 22px; }
+    .title { font-size: 18px; }
+  }
+</style>
 </head>
 <body>
 
-  <div class="login-card">
-    <div class="card-header">
-      <h2>Prihlásenie</h2>
-      <p>Zadajte svoje údaje pre prístup</p>
+<div class="login-card">
+  <div class="brand">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
+      </svg>
     </div>
-    
-    <div class="input-group">
-      <label>Meno</label>
-      <input type="text" id="username" placeholder="Vaše meno">
-    </div>
-    
-    <div class="input-group">
-      <label>Heslo</label>
-      <input type="password" id="password" placeholder="••••••••">
-      <span class="eye-toggle" id="togglePassword">👁️‍🗨️</span>
-    </div>
-    
-    <button id="loginBtn" class="btn-login">Prihlásiť sa</button>
-    
-    <div id="errorMsg" class="error-msg"></div>
-    
-    <div class="footer-text">
-      © 2025 DOCHÁDZKOVÝ SYSTÉM
+    <div class="brand-text">
+      <h1>Dochádzka</h1>
+      <p>Systém evidencie</p>
     </div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+  <div class="title">Prihlásenie</div>
+  <div class="subtitle">Zadaj svoje prihlasovacie meno a heslo.</div>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBsYrbYtP4E5blWbKlrJ6iI9v6YPAYp0g",
-      authDomain: "maturita-395fd.firebaseapp.com",
-      databaseURL: "https://maturita-395fd-default-rtdb.firebaseio.com",
-      projectId: "maturita-395fd",
-      storageBucket: "maturita-395fd.firebasestorage.app",
-      messagingSenderId: "754745500563",
-      appId: "1:754745500563:web:74fd4d6ab5765ee788be66",
-      measurementId: "G-F6KQQS48GD"
-    };
+  <form id="loginForm" autocomplete="off">
+    <div class="field">
+      <label for="username">Prihlasovacie meno</label>
+      <div class="input-wrap">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <input type="text" id="username" placeholder="napr. admin alebo Jano Novák" autocomplete="username" required>
+      </div>
+    </div>
+    <div class="field">
+      <label for="password">Heslo</label>
+      <div class="input-wrap">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" required>
+      </div>
+    </div>
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+    <button type="submit" class="btn-primary" id="loginBtn">
+      <span id="btnLabel">Prihlásiť sa</span>
+    </button>
 
-    const loginBtn = document.getElementById("loginBtn");
-    const errorMsg = document.getElementById("errorMsg");
-    const togglePassword = document.getElementById("togglePassword");
-    const passwordInput = document.getElementById("password");
+    <div class="alert error" id="errorBox">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span id="errorText"></span>
+    </div>
+  </form>
 
-    togglePassword.addEventListener("click", () => {
-      const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
-      passwordInput.setAttribute("type", type);
-    });
+  <div class="info-list">
+    <div class="info-row">
+      <span class="info-pill admin">Admin</span>
+      <span>Prihlasovacie meno <code>admin</code>. Pri prvom prihlásení sa vytvorí s heslom, ktoré zadáš.</span>
+    </div>
+    <div class="info-row">
+      <span class="info-pill subadmin">Sub-admin</span>
+      <span>Prihlasovacie meno, ktoré ti zadal hlavný admin.</span>
+    </div>
+    <div class="info-row">
+      <span class="info-pill zam">Zamestnanec</span>
+      <span>Tvoje meno a heslo, ktoré ti pridelil admin.</span>
+    </div>
+  </div>
 
-    function showError(message) {
-      errorMsg.textContent = message;
-      errorMsg.style.display = "block";
-      setTimeout(() => errorMsg.style.display = "none", 4000);
+  <div class="footer-actions">
+    <button type="button" class="dark-toggle" id="darkToggle">
+      <svg id="darkIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <span id="darkLabel">Tmavý režim</span>
+    </button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+
+// ── Dark mode ────────────────────────────────────────────────────────────────
+const darkBtn = document.getElementById('darkToggle');
+const darkLabel = document.getElementById('darkLabel');
+const darkIcon = document.getElementById('darkIcon');
+const sunSvg  = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+const moonSvg = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+function applyDark(on) {
+  document.body.classList.toggle('dark', on);
+  darkIcon.innerHTML = on ? sunSvg : moonSvg;
+  darkLabel.textContent = on ? 'Svetlý režim' : 'Tmavý režim';
+  localStorage.setItem('darkMode', on ? '1' : '0');
+}
+applyDark(localStorage.getItem('darkMode') === '1');
+darkBtn.addEventListener('click', () => applyDark(!document.body.classList.contains('dark')));
+
+// ── Firebase ─────────────────────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyBsYrbYtP4E5blWbKlrJ6iI9v6YPAYYp0g",
+  authDomain: "maturita-395fd.firebaseapp.com",
+  databaseURL: "https://maturita-395fd-default-rtdb.firebaseio.com",
+  projectId: "maturita-395fd",
+  storageBucket: "maturita-395fd.firebasestorage.app",
+  messagingSenderId: "754745500563",
+  appId: "1:754745500563:web:74fd4d6ab5765ee788be66",
+  measurementId: "G-F6KQQS48GD"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+const form     = document.getElementById('loginForm');
+const errorBox = document.getElementById('errorBox');
+const errorTxt = document.getElementById('errorText');
+const loginBtn = document.getElementById('loginBtn');
+const btnLabel = document.getElementById('btnLabel');
+
+function showError(msg) {
+  errorTxt.textContent = msg;
+  errorBox.classList.add('show');
+}
+function clearError() { errorBox.classList.remove('show'); }
+function setLoading(on) {
+  loginBtn.disabled = on;
+  btnLabel.innerHTML = on ? '<span class="spinner"></span> Prihlasujem…' : 'Prihlásiť sa';
+}
+
+// ── Auto-redirect už prihláseného používateľa ───────────────────────────────
+(function () {
+  const uid = localStorage.getItem('uid');
+  if (!uid) return;
+  if (uid === 'admin' || uid.startsWith('subadmin:')) {
+    window.location.href = 'admin.html';
+  } else {
+    window.location.href = 'zamestnanec.html';
+  }
+})();
+
+// ── Submit ───────────────────────────────────────────────────────────────────
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  clearError();
+  const username = document.getElementById('username').value.trim().toLowerCase();
+  const password = document.getElementById('password').value;
+  if (!username || !password) return;
+
+  setLoading(true);
+  try {
+    // 1) Hlavný admin (kľúč 'admin' v users/)
+    if (username === 'admin') {
+      const snap = await get(ref(db, 'users/admin'));
+      if (!snap.exists()) {
+        if (password.length < 4) {
+          showError('Hlavný admin ešte neexistuje. Zadaj heslo (min. 4 znaky), ktorým ho chceš vytvoriť.');
+          return;
+        }
+        const ok = confirm('Hlavný admin v databáze ešte neexistuje.\n\nChceš ho teraz vytvoriť so zadaným heslom?');
+        if (!ok) return;
+        await set(ref(db, 'users/admin'), {
+          name: 'Hlavný administrátor',
+          password: password,
+          chipUid: null,
+          createdAt: Date.now()
+        });
+        localStorage.setItem('uid', 'admin');
+        window.location.href = 'admin.html';
+        return;
+      }
+      if (snap.val().password === password) {
+        localStorage.setItem('uid', 'admin');
+        window.location.href = 'admin.html';
+        return;
+      }
+      showError('Nesprávne heslo hlavného admina.');
+      return;
     }
 
-    loginBtn.addEventListener("click", async () => {
-      const name = document.getElementById("username").value.trim();
-      const password = passwordInput.value.trim();
-
-      if (!name || !password) {
-        showError("Zadajte prihlasovacie údaje!");
-        return;
-      }
-
-      if (name === "admin" && password === "1234") {
-        localStorage.setItem("uid", "admin");
-        window.location.href = "admin.html";
-        return;
-      }
-
-      try {
-        const snapshot = await get(ref(db, "users/"));
-        let found = false;
-        if (snapshot.exists()) {
-          snapshot.forEach(child => {
-            const user = child.val();
-            if (user.name === name && user.password === password) {
-              localStorage.setItem("uid", child.key);
-              found = true;
-              window.location.href = "employee.html";
-            }
-          });
+    // 2) Sub-admin (admins/{key} podľa username)
+    const adminsSnap = await get(ref(db, 'admins'));
+    if (adminsSnap.exists()) {
+      const admins = adminsSnap.val();
+      for (const key in admins) {
+        const a = admins[key];
+        if ((a.username || '').toLowerCase() === username) {
+          if (a.password === password) {
+            localStorage.setItem('uid', 'subadmin:' + key);
+            window.location.href = 'admin.html';
+            return;
+          }
+          showError('Nesprávne heslo.');
+          return;
         }
-        if (!found) showError("Nesprávne meno alebo heslo!");
-      } catch (err) {
-        showError("Chyba pripojenia!");
       }
-    });
-  </script>
+    }
+
+    // 3) Zamestnanec (users/{key} podľa name, case-insensitive)
+    const usersSnap = await get(ref(db, 'users'));
+    if (usersSnap.exists()) {
+      const users = usersSnap.val();
+      for (const key in users) {
+        if (key === 'admin') continue;
+        const u = users[key];
+        if ((u.name || '').toLowerCase() === username) {
+          if (u.password === password) {
+            localStorage.setItem('uid', key);
+            window.location.href = 'zamestnanec.html';
+            return;
+          }
+          showError('Nesprávne heslo.');
+          return;
+        }
+      }
+    }
+
+    showError('Používateľ s týmto menom neexistuje.');
+  } catch (err) {
+    console.error(err);
+    showError('Chyba pripojenia. Skontroluj internetové pripojenie.');
+  } finally {
+    setLoading(false);
+  }
+});
+</script>
 </body>
 </html>
