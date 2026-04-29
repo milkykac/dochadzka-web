@@ -639,7 +639,9 @@ function parseLog(log, logType, logKey) {
   if (!stav) return null;
 
   // KĽÚČOVÁ OPRAVA: komentar je priamo v log objekte
-  const komentar = (log.komentar && String(log.komentar).trim()) ? String(log.komentar).trim() : null;
+  const komentar      = (log.komentar && String(log.komentar).trim()) ? String(log.komentar).trim() : null;
+  const komentarAutor = (log.komentarAutor && String(log.komentarAutor).trim()) ? String(log.komentarAutor).trim() : null;
+  const komentarTs    = log.komentarTs || null;
 
   return {
     logKey,
@@ -650,7 +652,9 @@ function parseLog(log, logType, logKey) {
     time: isoTime.substring(11, 16),
     stav,
     rawType: String(log.typ).toUpperCase(),
-    komentar   // null alebo string — TOTO je správa od admina
+    komentar,        // null alebo string — TOTO je správa od admina
+    komentarAutor,   // meno admina/sub-admina, ktorý komentár napísal
+    komentarTs       // timestamp, kedy bol komentár napísaný
   };
 }
 
@@ -717,7 +721,7 @@ function renderDocSection() {
     }
 
     // OPRAVA: Render komentára admina
-    const komHtml = renderKomentarBubble(r.komentar);
+    const komHtml = renderKomentarBubble(r.komentar, r.komentarAutor);
 
     return `<tr>
       <td><span class="time-cell">${r.casDisplay}</span></td>
@@ -740,7 +744,7 @@ function renderSimpleSection(tbodyId, stavArr, filterDate, cols) {
   }
 
   tbody.innerHTML = rows.map(r => {
-    const komHtml = renderKomentarBubble(r.komentar);
+    const komHtml = renderKomentarBubble(r.komentar, r.komentarAutor);
     return `<tr>
       <td><span class="time-cell">${r.casDisplay}</span></td>
       <td>${badgeHtml(r.stav, r.rawType)}</td>
@@ -751,15 +755,17 @@ function renderSimpleSection(tbodyId, stavArr, filterDate, cols) {
 
 /**
  * Renderuje bubble s komentárom od admina.
- * Ak komentar je null/prázdny → zobrazí "—"
+ * Ak komentar je null/prázdny → zobrazí "—".
+ * Ak je k dispozícii autor, zobrazí jeho meno; inak "Admin".
  */
-function renderKomentarBubble(komentar) {
+function renderKomentarBubble(komentar, autor) {
   if (!komentar) {
     return '<span style="color:var(--text-muted);font-size:12px;">—</span>';
   }
+  const autorTxt = (autor && String(autor).trim()) ? String(autor).trim() : 'Admin';
   return `<div class="komentar-bubble">
     <div>
-      <div class="kb-head">💬 Admin napísal</div>
+      <div class="kb-head">💬 ${escapeHtml(autorTxt)} napísal</div>
       <div class="kb-text">${escapeHtml(komentar)}</div>
     </div>
   </div>`;
@@ -829,7 +835,7 @@ function renderKomSection(seen) {
       <div class="comment-avatar">💬</div>
       <div class="comment-body">
         <div class="comment-top">
-          <span class="comment-author">👨‍💼 Admin ${isNew ? '<span class="new-pill">NOVÉ</span>' : ''}</span>
+          <span class="comment-author">👨‍💼 ${escapeHtml(k.komentarAutor || 'Admin')} ${isNew ? '<span class="new-pill">NOVÉ</span>' : ''}</span>
           <span class="comment-time">${k.casDisplay}</span>
         </div>
         <div class="comment-what">K záznamu: ${typLabel(k.stav)} (${k.rawType})</div>
@@ -853,7 +859,7 @@ function renderDashKom(seen) {
       <div class="comment-avatar" style="width:28px;height:28px;font-size:12px;">💬</div>
       <div class="comment-body">
         <div class="comment-top">
-          <span class="comment-author" style="font-size:12px;">Admin ${isNew ? '<span class="new-pill">NOVÉ</span>' : ''}</span>
+          <span class="comment-author" style="font-size:12px;">${escapeHtml(k.komentarAutor || 'Admin')} ${isNew ? '<span class="new-pill">NOVÉ</span>' : ''}</span>
           <span class="comment-time" style="font-size:10px;">${k.casDisplay}</span>
         </div>
         <div class="comment-what" style="font-size:10px;">K záznamu: ${typLabel(k.stav)}</div>
